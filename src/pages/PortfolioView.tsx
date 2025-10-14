@@ -120,8 +120,8 @@ export default function PortfolioView() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Portfolio View</h2>
-        <p className="text-sm text-gray-600 mt-1">
+        <h2 className="text-3xl font-bold text-gray-900">Portfolio View</h2>
+        <p className="text-sm text-gray-600 mt-2">
           Complete view of all portfolio companies
         </p>
       </div>

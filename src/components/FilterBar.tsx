@@ -22,9 +22,9 @@ export default function FilterBar() {
   const hasFilters = hasActiveFilters();
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center gap-4 flex-wrap">
-        <span className="text-sm font-semibold text-gray-700 uppercase">Filters</span>
+    <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide mr-2">Filters:</span>
 
         <MultiSelect
           label="LOB"
@@ -61,9 +61,9 @@ export default function FilterBar() {
         {hasFilters && (
           <button
             onClick={clearGlobalFilters}
-            className="ml-auto px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors border border-gray-300"
+            className="ml-auto px-3 py-1.5 text-xs font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors border border-gray-300"
           >
-            Clear All Filters
+            Clear All
           </button>
         )}
       </div>

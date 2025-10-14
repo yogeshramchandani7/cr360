@@ -118,7 +118,7 @@ export default function Dashboard() {
     <div className="space-y-12">
       {/* SECTION 1: Portfolio Health */}
       <section>
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Portfolio Health</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-8">Portfolio Health</h2>
         <AdvancedKPIBar />
 
         {/* Trend Charts */}
@@ -220,8 +220,8 @@ export default function Dashboard() {
 
       {/* SECTION 2: Delinquency Matrix */}
       <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Delinquency Matrix</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">Delinquency Matrix</h2>
           <InsightButton
             chartId="delinquency-matrix"
             insightCount={getInsightCountByChartId('delinquency-matrix')}
@@ -348,8 +348,8 @@ export default function Dashboard() {
 
       {/* SECTION 3: Top Exposures */}
       <section>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Top Exposures</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">Top Exposures</h2>
           <InsightButton
             chartId="top-exposures"
             insightCount={getInsightCountByChartId('top-exposures')}
