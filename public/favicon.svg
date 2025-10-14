@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EA4335;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E1342D;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="yellow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FBBC04;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F9AB00;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="green" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#34A853;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2F9E4F;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Red segment -->
+  <path d="M96 32 L163 145 L96 145 Z" fill="url(#red)" transform="rotate(-30 96 96)"/>
+
+  <!-- Yellow segment -->
+  <path d="M96 32 L163 145 L96 145 Z" fill="url(#yellow)" transform="rotate(90 96 96)"/>
+
+  <!-- Green segment -->
+  <path d="M96 32 L163 145 L96 145 Z" fill="url(#green)" transform="rotate(210 96 96)"/>
+
+  <!-- Blue center circle -->
+  <circle cx="96" cy="96" r="40" fill="#4285F4"/>
+
+  <!-- White inner circle -->
+  <circle cx="96" cy="96" r="32" fill="white"/>
+
+  <!-- Blue inner circle -->
+  <circle cx="96" cy="96" r="28" fill="#4285F4"/>
+</svg>
