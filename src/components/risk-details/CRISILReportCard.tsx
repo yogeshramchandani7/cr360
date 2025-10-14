@@ -29,7 +29,7 @@ export default function CRISILReportCard({ reports }: CRISILReportCardProps) {
 
       <div className="space-y-4">
         {reports.map((report, index) => (
-          <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
+          <div key={index} className="border border-oracle-border rounded-lg overflow-hidden">
             {/* Report Header */}
             <button
               onClick={() => toggleReport(index)}

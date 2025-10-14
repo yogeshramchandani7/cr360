@@ -81,9 +81,9 @@ export default function MultiSelect({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-full min-w-[240px] bg-white border border-gray-200 rounded-md shadow-lg max-h-80 overflow-auto">
+        <div className="absolute z-50 mt-2 w-full min-w-[240px] bg-white border border-oracle-border rounded-md shadow-lg max-h-80 overflow-auto">
           {/* Select All / Clear All */}
-          <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-3 py-2 flex gap-2">
+          <div className="sticky top-0 bg-oracle-bgAlt border-b border-oracle-border px-3 py-2 flex gap-2">
             <button
               type="button"
               onClick={selectAll}

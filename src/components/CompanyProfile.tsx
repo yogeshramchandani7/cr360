@@ -209,7 +209,7 @@ export default function CompanyProfile() {
       {/* Drawer */}
       <div className="fixed inset-y-0 right-0 w-[90vw] bg-white shadow-2xl z-50 flex animate-slide-in-right">
         {/* Left Sidebar - Connected Counterparties */}
-        <div className="w-64 bg-gray-50 border-r border-gray-200 p-4 overflow-y-auto">
+        <div className="w-64 bg-gray-50 border-r border-oracle-border p-4 overflow-y-auto">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">
             Group of Connected Counterparties
           </h3>
@@ -220,7 +220,7 @@ export default function CompanyProfile() {
             </div>
             {/* Related companies */}
             {profileData.connectedCounterparties.map((name, idx) => (
-              <div key={idx} className="p-3 bg-white border border-gray-200 rounded hover:bg-gray-50">
+              <div key={idx} className="p-3 bg-white border border-oracle-border rounded hover:bg-gray-50">
                 <p className="text-sm text-gray-700">{name}</p>
               </div>
             ))}
@@ -230,7 +230,7 @@ export default function CompanyProfile() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-white border-b border-gray-200 p-6 flex items-center justify-between">
+          <div className="bg-white border-b border-oracle-border p-6 flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">{company.customerName}</h2>
               <p className="text-sm text-gray-600 mt-1">{company.group}</p>
@@ -252,7 +252,7 @@ export default function CompanyProfile() {
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Profile Summary */}
-            <section className="bg-white border border-gray-200 rounded-lg p-4">
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Summary</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -303,7 +303,7 @@ export default function CompanyProfile() {
             </section>
 
             {/* Risk Summary */}
-            <section className="bg-white border border-gray-200 rounded-lg p-4">
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Risk Summary</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -346,7 +346,7 @@ export default function CompanyProfile() {
             </section>
 
             {/* Exposure Summary */}
-            <section className="bg-white border border-gray-200 rounded-lg p-4">
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Exposure Summary</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -403,11 +403,11 @@ export default function CompanyProfile() {
             </section>
 
             {/* Group/Related Party Exposures */}
-            <section className="bg-white border border-gray-200 rounded-lg p-4">
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Group/Related Party Exposures</h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-oracle-bgAlt">
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Group</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No of Obligors</th>
@@ -436,7 +436,7 @@ export default function CompanyProfile() {
             </section>
 
             {/* Covenants Summary */}
-            <section className="bg-white border border-gray-200 rounded-lg p-4">
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Covenants Summary</h3>
               <div className="grid grid-cols-2 gap-6">
                 <div>
@@ -465,7 +465,7 @@ export default function CompanyProfile() {
             </section>
 
             {/* Customer Profitability Summary */}
-            <section className="bg-white border border-gray-200 rounded-lg p-4">
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Profitability Summary</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -492,7 +492,7 @@ export default function CompanyProfile() {
             </section>
 
             {/* KYC & Compliance Summary */}
-            <section className="bg-white border border-gray-200 rounded-lg p-4">
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">KYC & ALM Risk & Compliance Summary</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -522,7 +522,7 @@ export default function CompanyProfile() {
             </section>
 
             {/* Climate Risk Summary */}
-            <section className="bg-white border border-gray-200 rounded-lg p-4">
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Climate Risk Summary</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -545,7 +545,7 @@ export default function CompanyProfile() {
             </section>
 
             {/* Approvals History */}
-            <section className="bg-white border border-gray-200 rounded-lg p-4">
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Approvals History</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -560,7 +560,7 @@ export default function CompanyProfile() {
             </section>
 
             {/* Account Summary */}
-            <section className="bg-white border border-gray-200 rounded-lg p-4">
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Summary</h3>
               <div className="grid grid-cols-4 gap-4">
                 <div>

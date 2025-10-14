@@ -46,7 +46,7 @@ export default function ChatInput({ onSend, disabled, placeholder = 'Ask me anyt
   };
 
   return (
-    <div className="border-t border-gray-200 p-4 bg-white">
+    <div className="border-t border-oracle-border p-4 bg-white">
       <div className="flex gap-2 items-end">
         <textarea
           ref={textareaRef}

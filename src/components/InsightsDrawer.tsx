@@ -109,7 +109,7 @@ function InsightCard({ insight, onDrillDown }: InsightCardProps) {
           <p className="text-sm text-gray-700 mb-3">{insight.description}</p>
 
           {insight.metrics && insight.metrics.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-gray-200">
+            <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-oracle-border">
               {insight.metrics.map((metric, idx) => (
                 <div key={idx}>
                   <p className="text-xs text-gray-600">{metric.label}</p>
@@ -235,7 +235,7 @@ export default function InsightsDrawer() {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 p-4 bg-gray-50">
+        <div className="border-t border-oracle-border p-4 bg-gray-50">
           <p className="text-xs text-gray-600 text-center">
             AI-powered insights generated based on portfolio data and historical trends
             <br />

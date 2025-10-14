@@ -13,7 +13,7 @@ export default function ExposureSummaryCard({ summary }: ExposureSummaryCardProp
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Exposure Summary</h3>
 
       {/* Top Metrics */}
-      <div className="mb-6 pb-6 border-b border-gray-200">
+      <div className="mb-6 pb-6 border-b border-oracle-border">
         <div className="grid grid-cols-2 gap-6">
           <div>
             <p className="text-sm text-gray-500 mb-1">Total Exposure</p>

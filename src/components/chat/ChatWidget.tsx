@@ -211,7 +211,7 @@ export default function ChatWidget() {
                     <button
                       key={idx}
                       onClick={() => handleSuggestedQuery(query)}
-                      className="w-full text-left px-4 py-2 bg-white border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-sm"
+                      className="w-full text-left px-4 py-2 bg-white border border-oracle-border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-sm"
                     >
                       {query}
                     </button>

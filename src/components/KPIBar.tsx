@@ -27,7 +27,7 @@ function KPICard({ label, kpi }: KPICardProps) {
     kpi.unit === 'currency' ? formatCurrency(kpi.value) : formatPercent(kpi.value);
 
   return (
-    <div className="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-lg p-4 border border-oracle-border hover:shadow-md transition-shadow">
       <p className="text-xs text-gray-600 mb-1">{label}</p>
       <div className="flex items-baseline justify-between">
         <p className={cn('text-2xl font-bold', statusColor)}>{formattedValue}</p>
@@ -76,7 +76,7 @@ export default function KPIBar() {
   }, [lob, partyType, rating, assetClassification]);
 
   return (
-    <div className="bg-gray-100 border-b border-gray-200 p-6">
+    <div className="bg-gray-100 border-b border-oracle-border p-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
         <KPICard label="NPA %" kpi={kpis.npa} />
         <KPICard label="Total Exposure" kpi={kpis.totalExposure} />

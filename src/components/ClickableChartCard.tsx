@@ -150,7 +150,7 @@ export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardP
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+    <div className="bg-white rounded-lg p-6 border border-oracle-border hover:shadow-lg transition-shadow">
       {/* Chart Header */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900">{chart.title}</h3>

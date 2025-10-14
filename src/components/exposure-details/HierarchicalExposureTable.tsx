@@ -60,7 +60,7 @@ export default function HierarchicalExposureTable({ hierarchy }: HierarchicalExp
               {expandedSections.has('loan-exposure') && (
                 <div className="ml-6 space-y-1">
                   {/* Fund Based */}
-                  <div className="px-4 py-2 bg-white border border-gray-200 rounded">
+                  <div className="px-4 py-2 bg-white border border-oracle-border rounded">
                     <div className="font-medium text-sm text-gray-700 mb-2">FB (Fund Based)</div>
                     <div className="ml-4 space-y-1">
                       {hierarchy.bankingBook.loanExposure.fundBased.map((item, idx) => (
@@ -75,7 +75,7 @@ export default function HierarchicalExposureTable({ hierarchy }: HierarchicalExp
                   </div>
 
                   {/* Non Fund Based */}
-                  <div className="px-4 py-2 bg-white border border-gray-200 rounded">
+                  <div className="px-4 py-2 bg-white border border-oracle-border rounded">
                     <div className="font-medium text-sm text-gray-700 mb-2">NFB (Non Fund Based)</div>
                     <div className="ml-4 space-y-1">
                       {hierarchy.bankingBook.loanExposure.nonFundBased.map((item, idx) => (
@@ -104,13 +104,13 @@ export default function HierarchicalExposureTable({ hierarchy }: HierarchicalExp
 
               {expandedSections.has('investment-exposure') && (
                 <div className="ml-6 space-y-1">
-                  <div className="px-4 py-2 bg-white border border-gray-200 rounded flex justify-between">
+                  <div className="px-4 py-2 bg-white border border-oracle-border rounded flex justify-between">
                     <span className="text-sm text-gray-700">FB</span>
                     <span className="text-sm font-medium text-gray-900">
                       {formatCurrency(hierarchy.bankingBook.investmentExposure.fundBased)}
                     </span>
                   </div>
-                  <div className="px-4 py-2 bg-white border border-gray-200 rounded flex justify-between">
+                  <div className="px-4 py-2 bg-white border border-oracle-border rounded flex justify-between">
                     <span className="text-sm text-gray-700">NFB</span>
                     <span className="text-sm font-medium text-gray-900">
                       {formatCurrency(hierarchy.bankingBook.investmentExposure.nonFundBased)}
@@ -152,13 +152,13 @@ export default function HierarchicalExposureTable({ hierarchy }: HierarchicalExp
 
               {expandedSections.has('trading-investment') && (
                 <div className="ml-6 space-y-1">
-                  <div className="px-4 py-2 bg-white border border-gray-200 rounded flex justify-between">
+                  <div className="px-4 py-2 bg-white border border-oracle-border rounded flex justify-between">
                     <span className="text-sm text-gray-700">FB</span>
                     <span className="text-sm font-medium text-gray-900">
                       {formatCurrency(hierarchy.tradingBook.investmentExposure.fundBased)}
                     </span>
                   </div>
-                  <div className="px-4 py-2 bg-white border border-gray-200 rounded flex justify-between">
+                  <div className="px-4 py-2 bg-white border border-oracle-border rounded flex justify-between">
                     <span className="text-sm text-gray-700">NFB</span>
                     <span className="text-sm font-medium text-gray-900">
                       {formatCurrency(hierarchy.tradingBook.investmentExposure.nonFundBased)}
@@ -167,7 +167,7 @@ export default function HierarchicalExposureTable({ hierarchy }: HierarchicalExp
                 </div>
               )}
 
-              <div className="px-4 py-2 bg-white border border-gray-200 rounded">
+              <div className="px-4 py-2 bg-white border border-oracle-border rounded">
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-sm text-gray-800">Derivatives Exposure</span>
                   <span className="text-sm font-medium text-gray-900">
@@ -181,7 +181,7 @@ export default function HierarchicalExposureTable({ hierarchy }: HierarchicalExp
       </div>
 
       {/* Tabs */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
+      <div className="mt-6 pt-4 border-t border-oracle-border">
         <div className="flex gap-2">
           <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors">
             Product Filters

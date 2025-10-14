@@ -8,7 +8,7 @@ export default function DashboardLayout() {
   const isCompanyPage = location.pathname.startsWith('/company/');
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-oracle-bg">
       {/* Header */}
       <header className="bg-oracle-navy border-b border-oracle-darkNavy">
         {/* Top Bar */}

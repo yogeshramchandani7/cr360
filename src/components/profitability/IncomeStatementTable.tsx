@@ -41,7 +41,7 @@ export default function IncomeStatementTable({
 
       <div className="overflow-x-auto">
         <table className="min-w-full">
-          <thead className="bg-gray-50 border-b-2 border-gray-200">
+          <thead className="bg-gray-50 border-b-2 border-oracle-border">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Line Item Identifier

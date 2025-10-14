@@ -85,7 +85,7 @@ export default function KPIDrilldownModal({ kpi, isOpen, onClose }: KPIDrilldown
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative w-full max-w-6xl bg-white rounded-lg shadow-xl transform transition-all">
           {/* Header */}
-          <div className="flex items-start justify-between p-6 border-b border-gray-200">
+          <div className="flex items-start justify-between p-6 border-b border-oracle-border">
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900">{kpi.label}</h2>
               <div className="flex items-center gap-4 mt-2 text-sm">
@@ -145,7 +145,7 @@ export default function KPIDrilldownModal({ kpi, isOpen, onClose }: KPIDrilldown
           </div>
 
           {/* Footer (optional - for future use) */}
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="px-6 py-4 border-t border-oracle-border bg-gray-50">
             <p className="text-xs text-gray-500 text-center">
               Click on any chart element to view filtered companies in Portfolio View
             </p>

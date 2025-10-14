@@ -9,9 +9,9 @@ export default function ClimateRiskReportCard({ report }: ClimateRiskReportCardP
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Climate Risk Report</h3>
 
-      <div className="border-2 border-gray-200 rounded-lg p-4">
+      <div className="border-2 border-oracle-border rounded-lg p-4">
         {/* Header */}
-        <div className="mb-4 pb-4 border-b border-gray-200">
+        <div className="mb-4 pb-4 border-b border-oracle-border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xl font-bold text-gray-900">{report.companyName}</p>

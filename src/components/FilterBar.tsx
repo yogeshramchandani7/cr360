@@ -22,7 +22,7 @@ export default function FilterBar() {
   const hasFilters = hasActiveFilters();
 
   return (
-    <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+    <div className="bg-oracle-bgAlt border-b border-oracle-border px-6 py-3">
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide mr-2">Filters:</span>
 

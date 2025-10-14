@@ -11,14 +11,14 @@ export default function ComplianceSummaryCards({ summary }: ComplianceSummaryCar
 
       <div className="grid grid-cols-3 gap-4">
         {/* Case Details */}
-        <button className="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all text-left">
+        <button className="border-2 border-oracle-border rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all text-left">
           <h4 className="text-sm font-medium text-gray-700 mb-4">Case Details</h4>
           <div className="space-y-3">
             <div>
               <p className="text-2xl font-bold text-gray-900">{summary.caseDetails.totalCases}</p>
               <p className="text-xs text-gray-600">Total Cases</p>
             </div>
-            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200">
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-oracle-border">
               <div>
                 <p className="text-lg font-semibold text-orange-600">
                   {summary.caseDetails.openCases}
@@ -36,14 +36,14 @@ export default function ComplianceSummaryCards({ summary }: ComplianceSummaryCar
         </button>
 
         {/* Events */}
-        <button className="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all text-left">
+        <button className="border-2 border-oracle-border rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all text-left">
           <h4 className="text-sm font-medium text-gray-700 mb-4">Events</h4>
           <div className="space-y-3">
             <div>
               <p className="text-2xl font-bold text-gray-900">{summary.events.totalEvents}</p>
               <p className="text-xs text-gray-600">Total Events</p>
             </div>
-            <div className="pt-2 border-t border-gray-200">
+            <div className="pt-2 border-t border-oracle-border">
               <p className="text-lg font-semibold text-blue-600">{summary.events.recentEvents}</p>
               <p className="text-xs text-gray-600">Recent Events</p>
             </div>
@@ -51,14 +51,14 @@ export default function ComplianceSummaryCards({ summary }: ComplianceSummaryCar
         </button>
 
         {/* SARs */}
-        <button className="border-2 border-gray-200 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all text-left">
+        <button className="border-2 border-oracle-border rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all text-left">
           <h4 className="text-sm font-medium text-gray-700 mb-4">SARs</h4>
           <div className="space-y-3">
             <div>
               <p className="text-2xl font-bold text-gray-900">{summary.sars.totalSARs}</p>
               <p className="text-xs text-gray-600">Total SARs</p>
             </div>
-            <div className="pt-2 border-t border-gray-200">
+            <div className="pt-2 border-t border-oracle-border">
               <p className="text-lg font-semibold text-red-600">{summary.sars.pendingSARs}</p>
               <p className="text-xs text-gray-600">Pending</p>
             </div>

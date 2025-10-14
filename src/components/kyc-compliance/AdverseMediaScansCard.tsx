@@ -11,7 +11,7 @@ export default function AdverseMediaScansCard({ scans }: AdverseMediaScansCardPr
 
       <div className="space-y-4">
         {/* Header Info */}
-        <div className="grid grid-cols-2 gap-4 pb-4 border-b border-gray-200">
+        <div className="grid grid-cols-2 gap-4 pb-4 border-b border-oracle-border">
           <div>
             <p className="text-sm text-gray-600">Common Name</p>
             <p className="font-medium text-gray-900">{scans.commonName}</p>

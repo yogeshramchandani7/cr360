@@ -54,7 +54,7 @@ export default function PeerComparisonTable({ peers }: PeerComparisonTableProps)
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-oracle-bgAlt">
             <tr>
               <th
                 onClick={() => handleSort('obligor')}

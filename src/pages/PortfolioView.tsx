@@ -155,7 +155,7 @@ export default function PortfolioView() {
       )}
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg p-4 border border-gray-200">
+      <div className="bg-white rounded-lg p-4 border border-oracle-border">
         <div className="flex items-center gap-3 mb-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -200,127 +200,127 @@ export default function PortfolioView() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-oracle-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-oracle-bgAlt border-b border-oracle-border">
               <tr>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('customerName')}
                 >
                   Customer Name <SortIcon field="customerName" />
                 </th>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('custId')}
                 >
                   Cust ID <SortIcon field="custId" />
                 </th>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('partyType')}
                 >
                   Party Type <SortIcon field="partyType" />
                 </th>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('group')}
                 >
                   Group <SortIcon field="group" />
                 </th>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('orgStructure')}
                 >
                   Org Structure <SortIcon field="orgStructure" />
                 </th>
                 <th
-                  className="text-center p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-center p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('lineOfBusiness')}
                 >
                   Line of Business <SortIcon field="lineOfBusiness" />
                 </th>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('industry')}
                 >
                   Industry <SortIcon field="industry" />
                 </th>
                 <th
-                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('creditLimit')}
                 >
                   Credit Limit <SortIcon field="creditLimit" />
                 </th>
                 <th
-                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('grossCreditExposure')}
                 >
                   Gross Credit Exposure <SortIcon field="grossCreditExposure" />
                 </th>
                 <th
-                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('creditExposure')}
                 >
                   Credit Exposure <SortIcon field="creditExposure" />
                 </th>
                 <th
-                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('undrawnExposure')}
                 >
                   Undrawn Exposure <SortIcon field="undrawnExposure" />
                 </th>
                 <th
-                  className="text-center p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-center p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('overdues')}
                 >
                   Overdues <SortIcon field="overdues" />
                 </th>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('creditStatus')}
                 >
                   Credit Status <SortIcon field="creditStatus" />
                 </th>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('assetClass')}
                 >
                   Asset Class <SortIcon field="assetClass" />
                 </th>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('borrowerExternalRating')}
                 >
                   Borrower External Rating <SortIcon field="borrowerExternalRating" />
                 </th>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('borrowerInternalRating')}
                 >
                   Borrower Internal Rating <SortIcon field="borrowerInternalRating" />
                 </th>
                 <th
-                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('borrowerCreditScore')}
                 >
                   Borrower Credit Score <SortIcon field="borrowerCreditScore" />
                 </th>
                 <th
-                  className="text-center p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-center p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('stageClassification')}
                 >
                   Stage Classification <SortIcon field="stageClassification" />
                 </th>
                 <th
-                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-left p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('securityStatus')}
                 >
                   Security Status <SortIcon field="securityStatus" />
                 </th>
                 <th
-                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="text-right p-3 font-semibold text-gray-900 cursor-pointer hover:bg-oracle-bgAlt"
                   onClick={() => handleSort('securityValue')}
                 >
                   Security Value <SortIcon field="securityValue" />

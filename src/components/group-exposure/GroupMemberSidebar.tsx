@@ -70,7 +70,7 @@ export default function GroupMemberSidebar({
       </div>
 
       {/* Summary Stats */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
+      <div className="mt-4 pt-4 border-t border-oracle-border">
         <div className="text-xs text-gray-500 space-y-1">
           <div className="flex justify-between">
             <span>Total Members:</span>

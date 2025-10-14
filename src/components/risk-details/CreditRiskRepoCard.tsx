@@ -17,7 +17,7 @@ export default function CreditRiskRepoCard({ riskRepo }: CreditRiskRepoCardProps
       case 'Low Risk':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-gray-800 border-oracle-border';
     }
   };
 
@@ -30,7 +30,7 @@ export default function CreditRiskRepoCard({ riskRepo }: CreditRiskRepoCardProps
       case 'Weak':
         return 'bg-yellow-50 text-yellow-700 border-yellow-200';
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-gray-50 text-gray-700 border-oracle-border';
     }
   };
 
@@ -112,7 +112,7 @@ export default function CreditRiskRepoCard({ riskRepo }: CreditRiskRepoCardProps
       )}
 
       {/* Footer */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
+      <div className="mt-6 pt-4 border-t border-oracle-border">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
             <span className="text-white text-xs">Q</span>

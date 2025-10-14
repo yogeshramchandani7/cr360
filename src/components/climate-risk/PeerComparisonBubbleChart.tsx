@@ -65,7 +65,7 @@ export default function PeerComparisonBubbleChart({ peers }: PeerComparisonBubbl
               if (active && payload && payload.length) {
                 const data = payload[0].payload;
                 return (
-                  <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
+                  <div className="bg-white border border-oracle-border rounded-lg shadow-lg p-3">
                     <p className="font-semibold text-gray-900 mb-2">{data.name}</p>
                     <p className="text-sm text-gray-700">Exposure: ₹{data.x.toFixed(2)} Cr</p>
                     <p className="text-sm text-gray-700">Emissions: {data.y}</p>

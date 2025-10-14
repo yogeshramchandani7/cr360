@@ -27,7 +27,7 @@ export default function GroupHeaderCard({ groupInfo }: GroupHeaderCardProps) {
         </div>
 
         {/* Count Metrics */}
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-oracle-border">
           <div className="bg-blue-50 rounded-lg p-4">
             <p className="text-3xl font-bold text-blue-600">{groupInfo.numberOfFundedCompanies}</p>
             <p className="text-sm text-gray-600 mt-1">Funded Companies</p>

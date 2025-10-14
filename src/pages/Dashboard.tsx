@@ -122,7 +122,7 @@ export default function Dashboard() {
         <AdvancedKPIBar />
 
         {/* Trend Charts */}
-        <div className="bg-white rounded-lg p-6 border border-gray-200 mb-6">
+        <div className="bg-white rounded-lg p-6 border border-oracle-border mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">12-Month Trends</h3>
             <InsightButton
@@ -159,7 +159,7 @@ export default function Dashboard() {
         {/* Breakdown Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Region Breakdown */}
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
+          <div className="bg-white rounded-lg p-6 border border-oracle-border">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 Exposure by Region
@@ -194,7 +194,7 @@ export default function Dashboard() {
           </div>
 
           {/* Product Breakdown */}
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
+          <div className="bg-white rounded-lg p-6 border border-oracle-border">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 Exposure by Product
@@ -230,10 +230,10 @@ export default function Dashboard() {
         </div>
 
         {/* Matrix */}
-        <div className="bg-white rounded-lg p-6 border border-gray-200 overflow-x-auto mb-6">
+        <div className="bg-white rounded-lg p-6 border border-oracle-border overflow-x-auto mb-6">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
+              <tr className="border-b border-oracle-border">
                 <th className="text-left p-3 text-sm font-semibold text-gray-900">
                   Region
                 </th>
@@ -283,7 +283,7 @@ export default function Dashboard() {
 
         {/* Drilldown */}
         {selectedCell && (
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
+          <div className="bg-white rounded-lg p-6 border border-oracle-border">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 {selectedCell.region} - {selectedCell.bucket} Days
@@ -299,7 +299,7 @@ export default function Dashboard() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
+                  <tr className="bg-oracle-bgAlt border-b border-oracle-border">
                     <th className="text-left p-3 text-sm font-semibold text-gray-900">
                       Account
                     </th>
@@ -359,17 +359,17 @@ export default function Dashboard() {
 
         {/* Concentration Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
+          <div className="bg-white rounded-lg p-6 border border-oracle-border">
             <p className="text-sm text-gray-600 mb-2">Single Largest Exposure</p>
             <p className="text-2xl font-bold text-gray-900">{formatCurrency(50000000)}</p>
             <p className="text-sm text-success mt-1">4.0% of Portfolio</p>
           </div>
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
+          <div className="bg-white rounded-lg p-6 border border-oracle-border">
             <p className="text-sm text-gray-600 mb-2">Top 10 Concentration</p>
             <p className="text-2xl font-bold text-gray-900">30.4%</p>
             <p className="text-sm text-success mt-1">Within Limits</p>
           </div>
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
+          <div className="bg-white rounded-lg p-6 border border-oracle-border">
             <p className="text-sm text-gray-600 mb-2">Top 20 Concentration</p>
             <p className="text-2xl font-bold text-gray-900">50.0%</p>
             <p className="text-sm text-success mt-1">Within Limits</p>
@@ -377,14 +377,14 @@ export default function Dashboard() {
         </div>
 
         {/* Top 20 Table */}
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-6 border border-oracle-border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Top 20 Exposures by Account
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
+                <tr className="bg-oracle-bgAlt border-b border-oracle-border">
                   <th className="text-left p-3 text-sm font-semibold text-gray-900">
                     Rank
                   </th>

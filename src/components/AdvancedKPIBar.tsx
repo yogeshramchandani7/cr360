@@ -13,7 +13,7 @@ const KPITooltip = ({ kpi, isVisible }: TooltipProps) => {
   if (!isVisible) return null;
 
   return (
-    <div className="absolute z-50 w-80 p-4 bg-white border border-gray-200 rounded-lg shadow-xl top-full mt-2 left-1/2 transform -translate-x-1/2">
+    <div className="absolute z-50 w-80 p-4 bg-white border border-oracle-border rounded-lg shadow-xl top-full mt-2 left-1/2 transform -translate-x-1/2">
       <div className="space-y-3">
         <div>
           <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">Definition</h4>
@@ -42,7 +42,7 @@ const KPITooltip = ({ kpi, isVisible }: TooltipProps) => {
         )}
       </div>
       {/* Triangle pointer */}
-      <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-200 rotate-45"></div>
+      <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-oracle-border rotate-45"></div>
     </div>
   );
 };
