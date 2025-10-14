@@ -11,6 +11,11 @@ export default {
           DEFAULT: '#1e40af',
           hover: '#1e3a8a',
         },
+        oracle: {
+          navy: '#2C3E50',
+          darkNavy: '#1E3A5F',
+          red: '#C74634',
+        },
         success: '#10b981',
         warning: '#f59e0b',
         error: '#ef4444',
