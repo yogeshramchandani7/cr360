@@ -33,14 +33,14 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       {/* Avatar */}
       <div
         className={cn(
-          'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-          isUser ? 'bg-blue-600' : 'bg-gray-700'
+          'flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center',
+          isUser ? 'bg-blue-600' : 'bg-oracle-chatBotAvatar'
         )}
       >
         {isUser ? (
           <User className="w-5 h-5 text-white" />
         ) : (
-          <Bot className="w-5 h-5 text-white" />
+          <Bot className="w-6 h-6 text-white" />
         )}
       </div>
 
@@ -48,12 +48,12 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       <div className={cn('flex flex-col gap-1 max-w-[80%]', isUser ? 'items-end' : 'items-start')}>
         <div
           className={cn(
-            'rounded-lg px-4 py-2 shadow-sm',
+            'rounded-lg px-4 py-3 shadow-sm',
             isUser
               ? 'bg-blue-600 text-white'
               : isError
               ? 'bg-red-50 text-red-900 border border-red-200'
-              : 'bg-gray-100 text-gray-900'
+              : 'bg-oracle-chatBotBubble text-gray-900'
           )}
         >
           {isUser ? (
@@ -66,7 +66,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         </div>
 
         {/* Timestamp */}
-        <span className="text-xs text-gray-500 px-1">{formatTime(message.timestamp)}</span>
+        <span className="text-xs text-gray-400 px-1">{formatTime(message.timestamp)}</span>
       </div>
     </div>
   );

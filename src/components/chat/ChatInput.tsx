@@ -12,7 +12,7 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
-export default function ChatInput({ onSend, disabled, placeholder = 'Ask me anything about your portfolio...' }: ChatInputProps) {
+export default function ChatInput({ onSend, disabled, placeholder = 'Type here...' }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -46,7 +46,7 @@ export default function ChatInput({ onSend, disabled, placeholder = 'Ask me anyt
   };
 
   return (
-    <div className="border-t border-oracle-border p-4 bg-white">
+    <div className="border-t border-gray-700 p-4 bg-white">
       <div className="flex gap-2 items-end">
         <textarea
           ref={textareaRef}
