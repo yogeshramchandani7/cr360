@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { MessageCircle, X, Trash2, Sparkles } from 'lucide-react';
+import { X, Trash2, Sparkles } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { useFilterStore } from '../../stores/filterStore';
 import { buildAppContext } from '../../services/contextBuilder';
@@ -13,6 +13,7 @@ import { sendMessageToGemini } from '../../services/geminiService';
 import ChatMessage from './ChatMessage';
 import TypingIndicator from './TypingIndicator';
 import ChatInput from './ChatInput';
+import chatIcon from '../../assets/chat.png';
 
 const SUGGESTED_QUERIES = [
   'What is my current NPA rate?',
@@ -128,11 +129,14 @@ export default function ChatWidget() {
       {!isOpen && (
         <button
           onClick={toggleChat}
-          className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110 z-50 group"
+          className="fixed bottom-6 right-6 shadow-lg transition-all duration-300 hover:scale-110 z-50 group"
           aria-label="Open chat"
         >
-          <MessageCircle className="w-6 h-6" />
-          <span className="absolute -top-1 -right-1 bg-green-500 w-3 h-3 rounded-full animate-pulse"></span>
+          <img
+            src={chatIcon}
+            alt="Chat"
+            className="w-16 h-16 rounded-full"
+          />
         </button>
       )}
 
