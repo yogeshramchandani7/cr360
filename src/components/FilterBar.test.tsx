@@ -16,7 +16,7 @@ describe('FilterBar', () => {
 
   it('renders filter label', () => {
     render(<FilterBar />);
-    expect(screen.getByText('Filters')).toBeInTheDocument();
+    expect(screen.getByText('Filters:')).toBeInTheDocument();
   });
 
   it('renders all filter dropdowns', () => {
@@ -28,12 +28,12 @@ describe('FilterBar', () => {
     expect(screen.getByText('Asset Classification')).toBeInTheDocument();
   });
 
-  it('does not show "Clear All Filters" button when no filters are active', () => {
+  it('does not show "Clear All" button when no filters are active', () => {
     render(<FilterBar />);
-    expect(screen.queryByText('Clear All Filters')).not.toBeInTheDocument();
+    expect(screen.queryByText('Clear All')).not.toBeInTheDocument();
   });
 
-  it('shows "Clear All Filters" button when filters are active', () => {
+  it('shows "Clear All" button when filters are active', () => {
     // Set some filters
     useFilterStore.setState({
       lob: ['Corporate'],
@@ -43,10 +43,10 @@ describe('FilterBar', () => {
     });
 
     render(<FilterBar />);
-    expect(screen.getByText('Clear All Filters')).toBeInTheDocument();
+    expect(screen.getByText('Clear All')).toBeInTheDocument();
   });
 
-  it('clears all filters when "Clear All Filters" is clicked', () => {
+  it('clears all filters when "Clear All" is clicked', () => {
     // Set some filters
     useFilterStore.setState({
       lob: ['Corporate'],
@@ -57,7 +57,7 @@ describe('FilterBar', () => {
 
     render(<FilterBar />);
 
-    const clearButton = screen.getByText('Clear All Filters');
+    const clearButton = screen.getByText('Clear All');
     fireEvent.click(clearButton);
 
     // Check that filters are cleared in the store
@@ -71,14 +71,14 @@ describe('FilterBar', () => {
   it('applies proper styling classes', () => {
     const { container } = render(<FilterBar />);
 
-    const filterBar = container.querySelector('.bg-white.border-b.border-gray-200');
+    const filterBar = container.querySelector('.bg-oracle-bgAlt.border-b.border-oracle-border');
     expect(filterBar).toBeInTheDocument();
   });
 
   it('displays filters in a flex layout', () => {
     const { container } = render(<FilterBar />);
 
-    const flexContainer = container.querySelector('.flex.items-center.gap-4');
+    const flexContainer = container.querySelector('.flex.items-center.gap-3');
     expect(flexContainer).toBeInTheDocument();
   });
 });
