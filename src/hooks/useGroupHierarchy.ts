@@ -4,8 +4,8 @@
  */
 
 import { useMemo } from 'react';
-import { Node, Edge } from 'reactflow';
-import { PortfolioCompany } from '../lib/mockData';
+import type { Node, Edge } from 'reactflow';
+import type { PortfolioCompany } from '../lib/mockData';
 
 export interface TreeNode {
   id: string;
@@ -63,10 +63,10 @@ function buildNode(company: PortfolioCompany, allCompanies: PortfolioCompany[]):
  */
 function treeToReactFlowNodes(
   root: TreeNode | null,
-  nodeWidth = 320,
-  nodeHeight = 200,
-  horizontalSpacing = 80,
-  verticalSpacing = 120
+  nodeWidth = 300,
+  nodeHeight = 380,
+  horizontalSpacing = 100,
+  verticalSpacing = 150
 ): { nodes: Node[]; edges: Edge[] } {
   if (!root) return { nodes: [], edges: [] };
 
@@ -118,7 +118,7 @@ function treeToReactFlowNodes(
         target: nodeId,
         type: 'smoothstep',
         animated: false,
-        style: { stroke: '#D4D2D1', strokeWidth: 2 },
+        style: { stroke: '#9CA3AF', strokeWidth: 3 },
       });
     }
 

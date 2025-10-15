@@ -5,7 +5,8 @@
  */
 
 import { useEffect, useMemo } from 'react';
-import ReactFlow, { Background, Controls, MiniMap, NodeTypes } from 'reactflow';
+import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
+import type { NodeTypes } from 'reactflow';
 import { X } from 'lucide-react';
 import { mockPortfolioCompanies } from '../lib/mockData';
 import { useGroupHierarchy } from '../hooks/useGroupHierarchy';

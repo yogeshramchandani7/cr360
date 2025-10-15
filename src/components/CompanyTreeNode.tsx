@@ -6,7 +6,7 @@
 
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { PortfolioCompany } from '../lib/mockData';
+import type { PortfolioCompany } from '../lib/mockData';
 
 interface CompanyTreeNodeProps {
   data: PortfolioCompany;
@@ -31,7 +31,7 @@ function CompanyTreeNode({ data }: CompanyTreeNodeProps) {
   };
 
   return (
-    <div className="bg-white border-2 border-oracle-border rounded-lg shadow-md p-4 w-[300px]">
+    <div className="bg-white border-2 border-oracle-border rounded-lg shadow-md p-4 w-[300px] min-h-[320px]">
       {/* Input handle for parent connections */}
       <Handle type="target" position={Position.Top} className="w-3 h-3 bg-oracle-navy" />
 
