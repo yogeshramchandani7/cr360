@@ -311,6 +311,7 @@ export interface PortfolioCompany {
   custId: number;
   partyType: string;
   group: string;
+  parentId: string | null;  // Parent company ID for hierarchical relationships (null for root/parent companies)
   orgStructure: string;
   lineOfBusiness: string;
   industry: string;
@@ -347,6 +348,89 @@ const regionDistribution = ['NORTH', 'SOUTH', 'EAST', 'WEST'];
 // Ensure even distribution across segments
 const segmentDistribution = ['RETAIL', 'SME', 'CORPORATE'];
 
+// Parent-child relationships within groups (company name -> parent company name)
+const parentChildMapping: Record<string, string | null> = {
+  // Reliance Group - Reliance Industries is parent
+  'Reliance Industries': null, // Parent/root
+
+  // Tata Group - Tata Steel is parent
+  'Tata Steel': null, // Parent/root
+  'TCS Limited': 'Tata Steel',
+  'Titan Company': 'Tata Steel',
+
+  // Adani Group - Adani Ports is parent
+  'Adani Ports': null, // Parent/root
+  'ONGC Limited': 'Adani Ports',
+  'Power Grid Corp': 'Adani Ports',
+  'NTPC Limited': 'Adani Ports',
+  'Coal India': 'Adani Ports',
+
+  // Aditya Birla Group - Grasim Industries is parent
+  'Grasim Industries': null, // Parent/root
+  'UltraTech Cement': 'Grasim Industries',
+  'Hindalco Industries': 'Grasim Industries',
+  'ABB India': 'Grasim Industries',
+
+  // Mahindra Group - Mahindra & Mahindra is parent
+  'Mahindra & Mahindra': null, // Parent/root
+  'Tech Mahindra': 'Mahindra & Mahindra',
+
+  // Bajaj Group - Bajaj Finance is parent
+  'Bajaj Finance': null, // Parent/root
+  'Bajaj Auto': 'Bajaj Finance',
+
+  // Hinduja Group - IDL Logistics Limited is parent
+  'IDL Logistics Limited': null, // Parent/root
+
+  // HDFC Banking Group - HDFC Bank is parent
+  'HDFC Bank': null, // Parent/root
+  'ICICI Bank': 'HDFC Bank',
+  'Axis Bank': 'HDFC Bank',
+  'Kotak Mahindra Bank': 'HDFC Bank',
+  'SBI Bank': 'HDFC Bank',
+  'IndusInd Bank': 'HDFC Bank',
+
+  // Pharma & Healthcare Group - Sun Pharma is parent
+  'Sun Pharma': null, // Parent/root
+  'Dr Reddy Labs': 'Sun Pharma',
+  'Cipla Limited': 'Sun Pharma',
+  'Divi Laboratories': 'Sun Pharma',
+  'Apollo Hospitals': 'Sun Pharma',
+
+  // IT Services Group - Infosys Limited is parent
+  'Infosys Limited': null, // Parent/root
+  'Wipro Limited': 'Infosys Limited',
+  'HCL Technologies': 'Infosys Limited',
+
+  // FMCG Group - Hindustan Unilever is parent
+  'Hindustan Unilever': null, // Parent/root
+  'Nestle India': 'Hindustan Unilever',
+  'Britannia Industries': 'Hindustan Unilever',
+
+  // Auto Manufacturing Group - Maruti Suzuki is parent
+  'Maruti Suzuki': null, // Parent/root
+  'Eicher Motors': 'Maruti Suzuki',
+
+  // Industrials Group - Asian Paints is parent
+  'Asian Paints': null, // Parent/root
+  'Berger Paints': 'Asian Paints',
+  'Pidilite Industries': 'Asian Paints',
+  'Siemens Limited': 'Asian Paints',
+  'Bosch Limited': 'Asian Paints',
+  'Havells India': 'Asian Paints',
+  'Voltas Limited': 'Asian Paints',
+
+  // Steel & Metals Group - JSW Steel is parent
+  'JSW Steel': null, // Parent/root
+  'Shree Cement': 'JSW Steel',
+
+  // Standalone/single-entity groups (all are parents)
+  'Deepak Cables': null,
+  'Larsen & Toubro': null,
+  'Godrej Consumer': null,
+  'Bharti Airtel': null,
+};
+
 export const mockPortfolioCompanies: PortfolioCompany[] = portfolioCompanies.map((name, i) => {
   const creditLimit = Math.floor(Math.random() * 2000) + 500;
   const grossExposure = Math.floor(creditLimit * (0.7 + Math.random() * 0.3));
@@ -361,12 +445,21 @@ export const mockPortfolioCompanies: PortfolioCompany[] = portfolioCompanies.map
   // Use company-to-group mapping for realistic groupings
   const companyGroup = companyToGroupMapping[name] || 'Independent';
 
+  // Determine parent ID based on parent-child mapping
+  const parentCompanyName = parentChildMapping[name] !== undefined ? parentChildMapping[name] : null;
+  const parentId = parentCompanyName
+    ? portfolioCompanies.findIndex(c => c === parentCompanyName) !== -1
+      ? `portfolio-${portfolioCompanies.findIndex(c => c === parentCompanyName) + 1}`
+      : null
+    : null;
+
   return {
     id: `portfolio-${i + 1}`,
     customerName: name,
     custId: 1234 + i,
     partyType: partyTypes[i % 3],
     group: companyGroup,
+    parentId,
     orgStructure: orgStructures[i % orgStructures.length],
     lineOfBusiness: lineOfBusiness[i % lineOfBusiness.length],
     industry: industries[i % industries.length],

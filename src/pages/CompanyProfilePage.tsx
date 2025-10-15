@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Network } from 'lucide-react';
 import { mockPortfolioCompanies, type PortfolioCompany } from '../lib/mockData';
 import SectionHeader from '../components/SectionHeader';
+import GroupHierarchyModal from '../components/GroupHierarchyModal';
 
 interface CompanyProfileData {
   company: PortfolioCompany;
@@ -180,6 +182,7 @@ const getCompanyProfileData = (companyId: string): CompanyProfileData | null => 
 export default function CompanyProfilePage() {
   const { companyId } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
+  const [isHierarchyModalOpen, setIsHierarchyModalOpen] = useState(false);
 
   const profileData = companyId ? getCompanyProfileData(companyId) : null;
 
@@ -209,9 +212,21 @@ export default function CompanyProfilePage() {
     <div className="flex gap-6 min-h-screen">
       {/* Left Sidebar - Connected Counterparties */}
       <div className="w-64 bg-white border border-oracle-border rounded-lg p-4 h-fit sticky top-6">
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">
-          Group of Connected Counterparties
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-gray-700">
+            Group of Connected Counterparties
+          </h3>
+          {company.group !== 'Independent' && (
+            <button
+              onClick={() => setIsHierarchyModalOpen(true)}
+              className="p-1.5 hover:bg-oracle-bg rounded-lg transition-colors"
+              title="View Group Hierarchy"
+              aria-label="View Group Hierarchy"
+            >
+              <Network className="w-4 h-4 text-oracle-navy" />
+            </button>
+          )}
+        </div>
         <div className="space-y-2">
           {/* Current company highlighted */}
           <div className="p-3 bg-blue-100 border-l-4 border-blue-600 rounded">
@@ -608,6 +623,14 @@ export default function CompanyProfilePage() {
           </div>
         </section>
       </div>
+
+      {/* Group Hierarchy Modal */}
+      <GroupHierarchyModal
+        isOpen={isHierarchyModalOpen}
+        onClose={() => setIsHierarchyModalOpen(false)}
+        groupName={company.group}
+        currentCompanyId={companyId}
+      />
     </div>
   );
 }
