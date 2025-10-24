@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
-import type { PortfolioCompany } from '../types';
+import type { PortfolioCompany } from './mockData';
 import {
   getRiskDetails,
   getExposureDetails,
@@ -312,7 +312,9 @@ const generateCoverPage = (ctx: PDFContext, company: PortfolioCompany): void => 
 
 /**
  * Generate table of contents
+ * NOTE: Currently unused - reserved for future implementation
  */
+/*
 const generateTableOfContents = (ctx: PDFContext): void => {
   const doc = ctx.doc;
   const tocPageStart = ctx.currentPage;
@@ -357,6 +359,7 @@ const generateTableOfContents = (ctx: PDFContext): void => {
   // Update TOC page numbers (they were placeholders)
   // In a real implementation, you'd need a second pass to fill in actual page numbers
 };
+*/
 
 /**
  * Generate Profile Summary section
