@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
@@ -9,19 +10,29 @@ import GroupExposuresPage from './pages/details/GroupExposuresPage';
 import ProfitabilityPage from './pages/details/ProfitabilityPage';
 import ClimateRiskPage from './pages/details/ClimateRiskPage';
 import ApprovalsPage from './pages/details/ApprovalsPage';
+import AlertDashboard from './pages/AlertDashboard';
+import KPIDrilldownPage from './pages/KPIDrilldownPage';
+import { initializeAlertMonitoring } from './lib/alertGenerator';
 
 function App() {
+  // Initialize alert monitoring system on app startup
+  useEffect(() => {
+    const cleanup = initializeAlertMonitoring();
+    return cleanup;
+  }, []);
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="portfolio" element={<PortfolioView />} />
+          <Route path="alerts" element={<AlertDashboard />} />
           <Route path="company/:companyId" element={<CompanyProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
 
         {/* Detail pages - open in new tabs */}
+        <Route path="/kpi/:kpiId" element={<KPIDrilldownPage />} />
         <Route path="/company/:companyId/risk-details" element={<RiskDetailsPage />} />
         <Route path="/company/:companyId/exposure-details" element={<ExposureDetailsPage />} />
         <Route path="/company/:companyId/group-exposures" element={<GroupExposuresPage />} />

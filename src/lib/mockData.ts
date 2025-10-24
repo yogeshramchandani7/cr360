@@ -148,6 +148,240 @@ export const mockDelinquencyMatrix = {
   ],
 };
 
+// Portfolio Waterfall Data (Month-over-Month Changes)
+export const mockPortfolioWaterfallData = {
+  period: 'Oct 2024',
+  previousPeriod: 'Sep 2024',
+  data: [
+    { category: 'Opening Balance', value: 1150000000, type: 'total', color: '#6b7280' },
+    { category: 'New Loans', value: 125000000, type: 'increase', color: '#10b981' },
+    { category: 'Additional Drawdowns', value: 45000000, type: 'increase', color: '#10b981' },
+    { category: 'Repayments', value: -85000000, type: 'decrease', color: '#ef4444' },
+    { category: 'Write-offs', value: -12000000, type: 'decrease', color: '#dc2626' },
+    { category: 'Prepayments', value: -28000000, type: 'decrease', color: '#f97316' },
+    { category: 'Restructuring', value: 15000000, type: 'increase', color: '#8b5cf6' },
+    { category: 'FX Revaluation', value: 8000000, type: 'increase', color: '#3b82f6' },
+    { category: 'Interest Accrual', value: 32000000, type: 'increase', color: '#06b6d4' },
+    { category: 'Closing Balance', value: 1250000000, type: 'total', color: '#1f2937' },
+  ],
+  drilldownData: {
+    'New Loans': [
+      { segment: 'Personal Loans', amount: 45000000, count: 1250 },
+      { segment: 'Business Loans', amount: 50000000, count: 180 },
+      { segment: 'Home Loans', amount: 20000000, count: 85 },
+      { segment: 'Auto Loans', amount: 10000000, count: 320 },
+    ],
+    Repayments: [
+      { segment: 'Scheduled Repayments', amount: -65000000, count: 5800 },
+      { segment: 'Early Settlements', amount: -20000000, count: 125 },
+    ],
+    'Write-offs': [
+      { segment: 'NPA Write-offs', amount: -8000000, count: 45 },
+      { segment: 'Bad Debt Write-offs', amount: -4000000, count: 28 },
+    ],
+  },
+};
+
+// Group Contagion Network Data
+import type { ConcentrationData } from '../types';
+
+export const mockGroupContagionNetwork: ConcentrationData = {
+  concentrationIndex: 0.65, // Herfindahl-Hirschman Index
+  nodes: [
+    // Parent companies
+    { id: 'tata-group', name: 'Tata Group', exposure: 5000, type: 'group', pd: 0.02, lgd: 0.35 },
+    { id: 'reliance-group', name: 'Reliance Group', exposure: 4500, type: 'group', pd: 0.015, lgd: 0.30 },
+    { id: 'adani-group', name: 'Adani Group', exposure: 4000, type: 'group', pd: 0.025, lgd: 0.40 },
+    { id: 'birla-group', name: 'Aditya Birla Group', exposure: 3500, type: 'group', pd: 0.02, lgd: 0.35 },
+    { id: 'mahindra-group', name: 'Mahindra Group', exposure: 2500, type: 'group', pd: 0.018, lgd: 0.32 },
+
+    // Tata subsidiaries
+    { id: 'tata-steel', name: 'Tata Steel', exposure: 1800, type: 'borrower', pd: 0.02, lgd: 0.35 },
+    { id: 'tcs', name: 'TCS Limited', exposure: 1500, type: 'borrower', pd: 0.015, lgd: 0.25 },
+    { id: 'titan', name: 'Titan Company', exposure: 1700, type: 'borrower', pd: 0.018, lgd: 0.30 },
+
+    // Reliance subsidiaries
+    { id: 'reliance-ind', name: 'Reliance Industries', exposure: 2500, type: 'borrower', pd: 0.015, lgd: 0.30 },
+    { id: 'jio', name: 'Jio Platforms', exposure: 2000, type: 'borrower', pd: 0.02, lgd: 0.35 },
+
+    // Adani subsidiaries
+    { id: 'adani-ports', name: 'Adani Ports', exposure: 1500, type: 'borrower', pd: 0.025, lgd: 0.40 },
+    { id: 'adani-power', name: 'Adani Power', exposure: 1200, type: 'borrower', pd: 0.03, lgd: 0.45 },
+    { id: 'adani-green', name: 'Adani Green Energy', exposure: 1300, type: 'borrower', pd: 0.028, lgd: 0.42 },
+
+    // Birla subsidiaries
+    { id: 'ultratech', name: 'UltraTech Cement', exposure: 1600, type: 'borrower', pd: 0.02, lgd: 0.35 },
+    { id: 'hindalco', name: 'Hindalco Industries', exposure: 1200, type: 'borrower', pd: 0.022, lgd: 0.38 },
+    { id: 'grasim', name: 'Grasim Industries', exposure: 700, type: 'borrower', pd: 0.018, lgd: 0.32 },
+
+    // Mahindra subsidiaries
+    { id: 'mm', name: 'Mahindra & Mahindra', exposure: 1500, type: 'borrower', pd: 0.018, lgd: 0.32 },
+    { id: 'tech-mahindra', name: 'Tech Mahindra', exposure: 1000, type: 'borrower', pd: 0.016, lgd: 0.28 },
+
+    // Independent borrowers (high exposure)
+    { id: 'hdfc', name: 'HDFC Bank', exposure: 3000, type: 'borrower', pd: 0.01, lgd: 0.20 },
+    { id: 'infosys', name: 'Infosys', exposure: 2800, type: 'borrower', pd: 0.012, lgd: 0.22 },
+    { id: 'bharti', name: 'Bharti Airtel', exposure: 2200, type: 'borrower', pd: 0.022, lgd: 0.35 },
+  ],
+  links: [
+    // Tata Group connections
+    { source: 'tata-group', target: 'tata-steel', relationship: 'parent' },
+    { source: 'tata-group', target: 'tcs', relationship: 'parent' },
+    { source: 'tata-group', target: 'titan', relationship: 'parent' },
+
+    // Reliance Group connections
+    { source: 'reliance-group', target: 'reliance-ind', relationship: 'parent' },
+    { source: 'reliance-group', target: 'jio', relationship: 'parent' },
+
+    // Adani Group connections
+    { source: 'adani-group', target: 'adani-ports', relationship: 'parent' },
+    { source: 'adani-group', target: 'adani-power', relationship: 'parent' },
+    { source: 'adani-group', target: 'adani-green', relationship: 'parent' },
+
+    // Birla Group connections
+    { source: 'birla-group', target: 'ultratech', relationship: 'parent' },
+    { source: 'birla-group', target: 'hindalco', relationship: 'parent' },
+    { source: 'birla-group', target: 'grasim', relationship: 'parent' },
+
+    // Mahindra Group connections
+    { source: 'mahindra-group', target: 'mm', relationship: 'parent' },
+    { source: 'mahindra-group', target: 'tech-mahindra', relationship: 'parent' },
+
+    // Cross-holdings/common promoter (illustrative - showing interconnection risk)
+    { source: 'reliance-ind', target: 'bharti', relationship: 'common_promoter' },
+    { source: 'tata-steel', target: 'ultratech', relationship: 'common_promoter' },
+  ],
+};
+
+// Historical delinquency matrix data (12 months of history)
+export const mockHistoricalDelinquencyMatrix = Array.from({ length: 12 }, (_, monthIndex) => {
+  const date = new Date();
+  date.setMonth(date.getMonth() - (11 - monthIndex)); // Go back 11 months, then forward
+
+  const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+
+  // Add slight variations to simulate trend changes over time
+  const trendFactor = 1 + (Math.random() * 0.2 - 0.1); // ±10% variation
+  const improvementTrend = monthIndex * 0.02; // Gradual improvement over time
+
+  return {
+    month: monthLabel,
+    timestamp: date.toISOString(),
+    rows: ['NORTH', 'SOUTH', 'EAST', 'WEST'],
+    buckets: ['current', '0-30', '31-60', '61-90', '91-180', '180+'],
+    data: [
+      {
+        region: 'NORTH',
+        current: {
+          count: Math.floor(10000 * (1 + improvementTrend)),
+          exposure: Math.floor(400000000 * (1 + improvementTrend))
+        },
+        '0-30': {
+          count: Math.floor(450 * trendFactor * (1 - improvementTrend * 0.5)),
+          exposure: Math.floor(18000000 * trendFactor * (1 - improvementTrend * 0.5))
+        },
+        '31-60': {
+          count: Math.floor(120 * trendFactor * (1 - improvementTrend * 0.6)),
+          exposure: Math.floor(4800000 * trendFactor * (1 - improvementTrend * 0.6))
+        },
+        '61-90': {
+          count: Math.floor(80 * trendFactor * (1 - improvementTrend * 0.7)),
+          exposure: Math.floor(3200000 * trendFactor * (1 - improvementTrend * 0.7))
+        },
+        '91-180': {
+          count: Math.floor(50 * trendFactor * (1 - improvementTrend * 0.8)),
+          exposure: Math.floor(2000000 * trendFactor * (1 - improvementTrend * 0.8))
+        },
+        '180+': {
+          count: Math.floor(20 * trendFactor * (1 - improvementTrend * 0.9)),
+          exposure: Math.floor(800000 * trendFactor * (1 - improvementTrend * 0.9))
+        },
+      },
+      {
+        region: 'SOUTH',
+        current: {
+          count: Math.floor(8000 * (1 + improvementTrend)),
+          exposure: Math.floor(300000000 * (1 + improvementTrend))
+        },
+        '0-30': {
+          count: Math.floor(300 * trendFactor * (1 - improvementTrend * 0.5)),
+          exposure: Math.floor(12000000 * trendFactor * (1 - improvementTrend * 0.5))
+        },
+        '31-60': {
+          count: Math.floor(90 * trendFactor * (1 - improvementTrend * 0.6)),
+          exposure: Math.floor(3600000 * trendFactor * (1 - improvementTrend * 0.6))
+        },
+        '61-90': {
+          count: Math.floor(60 * trendFactor * (1 - improvementTrend * 0.7)),
+          exposure: Math.floor(2400000 * trendFactor * (1 - improvementTrend * 0.7))
+        },
+        '91-180': {
+          count: Math.floor(35 * trendFactor * (1 - improvementTrend * 0.8)),
+          exposure: Math.floor(1400000 * trendFactor * (1 - improvementTrend * 0.8))
+        },
+        '180+': {
+          count: Math.floor(15 * trendFactor * (1 - improvementTrend * 0.9)),
+          exposure: Math.floor(600000 * trendFactor * (1 - improvementTrend * 0.9))
+        },
+      },
+      {
+        region: 'EAST',
+        current: {
+          count: Math.floor(7000 * (1 + improvementTrend)),
+          exposure: Math.floor(260000000 * (1 + improvementTrend))
+        },
+        '0-30': {
+          count: Math.floor(280 * trendFactor * (1 - improvementTrend * 0.5)),
+          exposure: Math.floor(11000000 * trendFactor * (1 - improvementTrend * 0.5))
+        },
+        '31-60': {
+          count: Math.floor(85 * trendFactor * (1 - improvementTrend * 0.6)),
+          exposure: Math.floor(3400000 * trendFactor * (1 - improvementTrend * 0.6))
+        },
+        '61-90': {
+          count: Math.floor(50 * trendFactor * (1 - improvementTrend * 0.7)),
+          exposure: Math.floor(2000000 * trendFactor * (1 - improvementTrend * 0.7))
+        },
+        '91-180': {
+          count: Math.floor(40 * trendFactor * (1 - improvementTrend * 0.8)),
+          exposure: Math.floor(1600000 * trendFactor * (1 - improvementTrend * 0.8))
+        },
+        '180+': {
+          count: Math.floor(18 * trendFactor * (1 - improvementTrend * 0.9)),
+          exposure: Math.floor(720000 * trendFactor * (1 - improvementTrend * 0.9))
+        },
+      },
+      {
+        region: 'WEST',
+        current: {
+          count: Math.floor(5000 * (1 + improvementTrend)),
+          exposure: Math.floor(190000000 * (1 + improvementTrend))
+        },
+        '0-30': {
+          count: Math.floor(170 * trendFactor * (1 - improvementTrend * 0.5)),
+          exposure: Math.floor(7000000 * trendFactor * (1 - improvementTrend * 0.5))
+        },
+        '31-60': {
+          count: Math.floor(55 * trendFactor * (1 - improvementTrend * 0.6)),
+          exposure: Math.floor(2200000 * trendFactor * (1 - improvementTrend * 0.6))
+        },
+        '61-90': {
+          count: Math.floor(30 * trendFactor * (1 - improvementTrend * 0.7)),
+          exposure: Math.floor(1200000 * trendFactor * (1 - improvementTrend * 0.7))
+        },
+        '91-180': {
+          count: Math.floor(25 * trendFactor * (1 - improvementTrend * 0.8)),
+          exposure: Math.floor(1000000 * trendFactor * (1 - improvementTrend * 0.8))
+        },
+        '180+': {
+          count: Math.floor(10 * trendFactor * (1 - improvementTrend * 0.9)),
+          exposure: Math.floor(400000 * trendFactor * (1 - improvementTrend * 0.9))
+        },
+      },
+    ],
+  };
+});
+
 const topIndianCompanies = [
   'Reliance Industries Limited',
   'Tata Consultancy Services',
@@ -1905,4 +2139,122 @@ export const getClimateRiskDetails = (companyId: string): ClimateRiskDetails | n
 
     peerComparison: generatePeerComparison(),
   };
+};
+
+// Sankey Diagram Data - Exposure Flow Visualization
+// Shows how exposures flow through different dimensions: Product → Risk Rating → Region
+export const mockExposureFlowData = {
+  nodes: [
+    // Source nodes (Products)
+    { id: 'term-loan', name: 'Term Loan', category: 'product', color: '#3b82f6' },
+    { id: 'working-capital', name: 'Working Capital', category: 'product', color: '#8b5cf6' },
+    { id: 'trade-finance', name: 'Trade Finance', category: 'product', color: '#10b981' },
+    { id: 'structured-finance', name: 'Structured Finance', category: 'product', color: '#f59e0b' },
+
+    // Middle nodes (Risk Ratings)
+    { id: 'aaa', name: 'AAA', category: 'rating', color: '#10b981' },
+    { id: 'aa', name: 'AA', category: 'rating', color: '#84cc16' },
+    { id: 'a', name: 'A', category: 'rating', color: '#eab308' },
+    { id: 'bbb', name: 'BBB', category: 'rating', color: '#f59e0b' },
+    { id: 'bb', name: 'BB', category: 'rating', color: '#f97316' },
+    { id: 'b-below', name: 'B & Below', category: 'rating', color: '#ef4444' },
+
+    // Target nodes (Regions)
+    { id: 'north', name: 'North', category: 'region', color: '#3b82f6' },
+    { id: 'south', name: 'South', category: 'region', color: '#8b5cf6' },
+    { id: 'east', name: 'East', category: 'region', color: '#10b981' },
+    { id: 'west', name: 'West', category: 'region', color: '#f59e0b' },
+  ] as const,
+  links: [
+    // Term Loan flows to ratings
+    { source: 'term-loan', target: 'aaa', value: 120000000 },
+    { source: 'term-loan', target: 'aa', value: 150000000 },
+    { source: 'term-loan', target: 'a', value: 180000000 },
+    { source: 'term-loan', target: 'bbb', value: 100000000 },
+    { source: 'term-loan', target: 'bb', value: 50000000 },
+    { source: 'term-loan', target: 'b-below', value: 25000000 },
+
+    // Working Capital flows to ratings
+    { source: 'working-capital', target: 'aaa', value: 80000000 },
+    { source: 'working-capital', target: 'aa', value: 100000000 },
+    { source: 'working-capital', target: 'a', value: 120000000 },
+    { source: 'working-capital', target: 'bbb', value: 90000000 },
+    { source: 'working-capital', target: 'bb', value: 60000000 },
+    { source: 'working-capital', target: 'b-below', value: 30000000 },
+
+    // Trade Finance flows to ratings
+    { source: 'trade-finance', target: 'aaa', value: 60000000 },
+    { source: 'trade-finance', target: 'aa', value: 80000000 },
+    { source: 'trade-finance', target: 'a', value: 70000000 },
+    { source: 'trade-finance', target: 'bbb', value: 50000000 },
+    { source: 'trade-finance', target: 'bb', value: 30000000 },
+    { source: 'trade-finance', target: 'b-below', value: 10000000 },
+
+    // Structured Finance flows to ratings
+    { source: 'structured-finance', target: 'aaa', value: 40000000 },
+    { source: 'structured-finance', target: 'aa', value: 70000000 },
+    { source: 'structured-finance', target: 'a', value: 50000000 },
+    { source: 'structured-finance', target: 'bbb', value: 35000000 },
+    { source: 'structured-finance', target: 'bb', value: 25000000 },
+    { source: 'structured-finance', target: 'b-below', value: 15000000 },
+
+    // AAA flows to regions
+    { source: 'aaa', target: 'north', value: 90000000 },
+    { source: 'aaa', target: 'south', value: 80000000 },
+    { source: 'aaa', target: 'east', value: 60000000 },
+    { source: 'aaa', target: 'west', value: 70000000 },
+
+    // AA flows to regions
+    { source: 'aa', target: 'north', value: 120000000 },
+    { source: 'aa', target: 'south', value: 100000000 },
+    { source: 'aa', target: 'east', value: 90000000 },
+    { source: 'aa', target: 'west', value: 90000000 },
+
+    // A flows to regions
+    { source: 'a', target: 'north', value: 130000000 },
+    { source: 'a', target: 'south', value: 110000000 },
+    { source: 'a', target: 'east', value: 85000000 },
+    { source: 'a', target: 'west', value: 95000000 },
+
+    // BBB flows to regions
+    { source: 'bbb', target: 'north', value: 85000000 },
+    { source: 'bbb', target: 'south', value: 75000000 },
+    { source: 'bbb', target: 'east', value: 60000000 },
+    { source: 'bbb', target: 'west', value: 55000000 },
+
+    // BB flows to regions
+    { source: 'bb', target: 'north', value: 50000000 },
+    { source: 'bb', target: 'south', value: 45000000 },
+    { source: 'bb', target: 'east', value: 35000000 },
+    { source: 'bb', target: 'west', value: 35000000 },
+
+    // B & Below flows to regions
+    { source: 'b-below', target: 'north', value: 25000000 },
+    { source: 'b-below', target: 'south', value: 20000000 },
+    { source: 'b-below', target: 'east', value: 15000000 },
+    { source: 'b-below', target: 'west', value: 20000000 },
+  ],
+  summary: {
+    totalExposure: 1725000000,
+    productBreakdown: {
+      'Term Loan': 625000000,
+      'Working Capital': 480000000,
+      'Trade Finance': 300000000,
+      'Structured Finance': 235000000,
+    },
+    ratingBreakdown: {
+      AAA: 300000000,
+      AA: 400000000,
+      A: 420000000,
+      BBB: 275000000,
+      BB: 165000000,
+      'B & Below': 80000000,
+    },
+    regionBreakdown: {
+      North: 500000000,
+      South: 430000000,
+      East: 345000000,
+      West: 365000000,
+    },
+  },
 };

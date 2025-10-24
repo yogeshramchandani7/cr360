@@ -2,6 +2,7 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { User } from 'lucide-react';
 import FilterBar from './FilterBar';
 import ChatWidget from './chat/ChatWidget';
+import AlertBell from './AlertBell';
 
 export default function DashboardLayout() {
   const location = useLocation();
@@ -21,8 +22,9 @@ export default function DashboardLayout() {
             </h1>
           </div>
 
-          {/* Right side: User Profile */}
+          {/* Right side: Alerts + User Profile */}
           <div className="flex items-center gap-3">
+            <AlertBell />
             <span className="text-sm text-gray-300">GUEST</span>
             <div className="w-8 h-8 rounded-full bg-oracle-red flex items-center justify-center text-white">
               <User className="w-5 h-5" />

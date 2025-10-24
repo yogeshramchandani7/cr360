@@ -28,6 +28,10 @@ import {
 import InsightsDrawer from '../components/InsightsDrawer';
 import InsightButton from '../components/InsightButton';
 import AdvancedKPIBar from '../components/AdvancedKPIBar';
+import DelinquencyMatrixWithSlider from '../components/DelinquencyMatrixWithSlider';
+import GroupContagionGraph from '../components/GroupContagionGraph';
+import PortfolioWaterfallChart from '../components/PortfolioWaterfallChart';
+import ExposureFlowSankey from '../components/ExposureFlowSankey';
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'];
 
@@ -218,7 +222,32 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* SECTION 2: Delinquency Matrix */}
+      {/* SECTION 2: Advanced Visualizations */}
+      <section>
+        <h2 className="text-3xl font-bold text-gray-900 mb-8">Advanced Risk Analytics</h2>
+
+        {/* Waterfall Chart */}
+        <div className="mb-6">
+          <PortfolioWaterfallChart />
+        </div>
+
+        {/* Group Contagion Graph */}
+        <div className="mb-6">
+          <GroupContagionGraph />
+        </div>
+
+        {/* Delinquency Matrix with Time Slider */}
+        <div className="mb-6">
+          <DelinquencyMatrixWithSlider />
+        </div>
+
+        {/* Exposure Flow Sankey */}
+        <div className="mb-6">
+          <ExposureFlowSankey />
+        </div>
+      </section>
+
+      {/* SECTION 3: Delinquency Matrix */}
       <section>
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Delinquency Matrix</h2>
@@ -346,7 +375,7 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* SECTION 3: Top Exposures */}
+      {/* SECTION 4: Top Exposures */}
       <section>
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Top Exposures</h2>

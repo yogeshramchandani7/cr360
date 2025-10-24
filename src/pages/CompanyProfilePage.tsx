@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Network } from 'lucide-react';
+import { ArrowLeft, Network, Download, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { mockPortfolioCompanies, type PortfolioCompany } from '../lib/mockData';
 import SectionHeader from '../components/SectionHeader';
 import GroupHierarchyModal from '../components/GroupHierarchyModal';
+import { generateCompanyProfilePDF } from '../lib/pdfExport';
 
 interface CompanyProfileData {
   company: PortfolioCompany;
@@ -184,7 +185,53 @@ export default function CompanyProfilePage() {
   const navigate = useNavigate();
   const [isHierarchyModalOpen, setIsHierarchyModalOpen] = useState(false);
 
+  // PDF Download states
+  type PDFStatus = 'idle' | 'generating' | 'success' | 'error';
+  const [pdfStatus, setPdfStatus] = useState<PDFStatus>('idle');
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const [pdfMessage, setPdfMessage] = useState('');
+
   const profileData = companyId ? getCompanyProfileData(companyId) : null;
+
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    if (!profileData || pdfStatus === 'generating') return;
+
+    try {
+      setPdfStatus('generating');
+      setPdfProgress(0);
+      setPdfMessage('Starting PDF generation...');
+
+      await generateCompanyProfilePDF(
+        profileData.company,
+        (progress, message) => {
+          setPdfProgress(progress);
+          setPdfMessage(message);
+        }
+      );
+
+      setPdfStatus('success');
+      setPdfMessage('PDF downloaded successfully!');
+
+      // Reset to idle after 3 seconds
+      setTimeout(() => {
+        setPdfStatus('idle');
+        setPdfProgress(0);
+        setPdfMessage('');
+      }, 3000);
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      setPdfStatus('error');
+      setPdfMessage('Failed to generate PDF. Please try again.');
+
+      // Reset to idle after 5 seconds
+      setTimeout(() => {
+        setPdfStatus('idle');
+        setPdfProgress(0);
+        setPdfMessage('');
+      }, 5000);
+    }
+  };
 
   // Handle navigation to related company profiles
   const handleCompanyClick = (relatedCompanyId: string) => {
@@ -247,23 +294,85 @@ export default function CompanyProfilePage() {
 
       {/* Main Content */}
       <div className="flex-1 space-y-6">
-        {/* Header with Back Button */}
+        {/* Header with Back Button and Download Report */}
         <div className="bg-white border border-oracle-border rounded-lg p-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </button>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{company.customerName}</h2>
-            <p className="text-sm text-gray-600 mt-1">{company.group}</p>
-            <div className="flex items-center gap-4 mt-2">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                {company.assetClass}
-              </span>
-              <span className="text-xs text-gray-500">Member ID: LCB{company.custId}</span>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+              >
+                <ArrowLeft size={16} />
+                Back
+              </button>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{company.customerName}</h2>
+                <p className="text-sm text-gray-600 mt-1">{company.group}</p>
+                <div className="flex items-center gap-4 mt-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                    {company.assetClass}
+                  </span>
+                  <span className="text-xs text-gray-500">Member ID: LCB{company.custId}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Download Report Button */}
+            <div className="flex flex-col items-end gap-2">
+              <button
+                onClick={handleDownloadPDF}
+                disabled={pdfStatus === 'generating'}
+                className={`
+                  inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all
+                  ${pdfStatus === 'generating'
+                    ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                    : pdfStatus === 'success'
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : pdfStatus === 'error'
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-oracle-primary text-white hover:bg-red-700'
+                  }
+                  disabled:opacity-50
+                `}
+              >
+                {pdfStatus === 'generating' ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Generating... {pdfProgress}%
+                  </>
+                ) : pdfStatus === 'success' ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    Downloaded
+                  </>
+                ) : pdfStatus === 'error' ? (
+                  <>
+                    <XCircle className="w-4 h-4" />
+                    Failed
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Download Report
+                  </>
+                )}
+              </button>
+
+              {/* Progress message */}
+              {pdfMessage && pdfStatus === 'generating' && (
+                <p className="text-xs text-gray-600 italic max-w-xs text-right">
+                  {pdfMessage}
+                </p>
+              )}
+
+              {/* Success/Error message */}
+              {pdfMessage && (pdfStatus === 'success' || pdfStatus === 'error') && (
+                <p className={`text-xs italic max-w-xs text-right ${
+                  pdfStatus === 'success' ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {pdfMessage}
+                </p>
+              )}
             </div>
           </div>
         </div>

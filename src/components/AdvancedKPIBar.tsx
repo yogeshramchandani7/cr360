@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { TrendingUp, TrendingDown, AlertTriangle, Info } from 'lucide-react';
 import type { AdvancedKPI } from '../types';
 import { calculateCCOKPIs } from '../lib/mockCCOData';
-import KPIDrilldownModal from './KPIDrilldownModal';
 
 interface TooltipProps {
   kpi: AdvancedKPI;
@@ -175,10 +174,6 @@ const AdvancedKPICard = ({ kpi, onClick }: AdvancedKPICardProps) => {
 const AdvancedKPIBar = () => {
   const ccoKPIs = calculateCCOKPIs();
 
-  // Modal state
-  const [selectedKPI, setSelectedKPI] = useState<AdvancedKPI | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   // Convert to array and maintain order
   const kpiArray = [
     ccoKPIs.quick_mortality,
@@ -194,8 +189,8 @@ const AdvancedKPIBar = () => {
   ];
 
   const handleKPIClick = (kpi: AdvancedKPI) => {
-    setSelectedKPI(kpi);
-    setIsModalOpen(true);
+    // Open KPI drilldown page in new tab
+    window.open(`/kpi/${kpi.id}`, '_blank');
   };
 
   return (
@@ -221,17 +216,10 @@ const AdvancedKPIBar = () => {
             </span>
           </div>
           <p className="text-sm text-amber-700 mt-1">
-            Click on individual KPIs for detailed drilldown analysis
+            Click on individual KPIs for detailed drilldown analysis (opens in new tab)
           </p>
         </div>
       )}
-
-      {/* KPI Drilldown Modal */}
-      <KPIDrilldownModal
-        kpi={selectedKPI}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </div>
   );
 };
