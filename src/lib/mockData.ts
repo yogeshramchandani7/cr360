@@ -530,7 +530,8 @@ const orgStructures = ['Bangalore LCB', 'Chennai MCB', 'Mumbai LCB', 'Delhi LCB'
 const lineOfBusiness = ['LCB', 'MCB', 'SCB'];
 const industries = [
   'Logistics', 'Infrastructure', 'Oil & Gas', 'Steel', 'Ports', 'IT Services',
-  'Banking', 'Telecom', 'Automotive', 'FMCG', 'Cement', 'Pharma', 'Power'
+  'Banking', 'Telecom', 'Automotive', 'FMCG', 'Cement', 'Pharma', 'Power',
+  'Real Estate', 'NBFC'
 ];
 const partyTypes = ['Corporate', 'SME', 'Large Corporate'];
 // const creditStatuses = ['Standard', 'Delinquent', 'Watchlist'];
@@ -538,6 +539,7 @@ const partyTypes = ['Corporate', 'SME', 'Large Corporate'];
 const externalRatings = ['AAA', 'AA', 'A', 'BBB', 'BB', 'CRISIL A1+', 'CRISIL A2+', 'ICRA A1'];
 const internalRatings = ['YLC3', 'YLC5', 'YMR1', 'YMR2', 'YHR1', 'YHR2'];
 const securityStatuses = ['Secured', 'Clean', 'Part Secured'];
+const usStates = ['California', 'Texas', 'New York', 'Florida', 'Illinois'];
 
 export interface PortfolioCompany {
   id: string;
@@ -552,6 +554,7 @@ export interface PortfolioCompany {
   productType: string;
   region: string;
   segment: string;
+  state: string;
   creditLimit: number;
   grossCreditExposure: number;
   creditExposure: number;
@@ -700,6 +703,7 @@ export const mockPortfolioCompanies: PortfolioCompany[] = portfolioCompanies.map
     productType: selectedProduct, // Ensure matches Dashboard chart
     region: regionDistribution[i % 4], // Ensure even distribution
     segment: segmentDistribution[i % 3], // Ensure even distribution
+    state: usStates[i % 5], // Ensure even distribution across 5 states
     creditLimit,
     grossCreditExposure: grossExposure,
     creditExposure,

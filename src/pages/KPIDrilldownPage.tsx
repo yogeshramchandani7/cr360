@@ -1,13 +1,34 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import type { AdvancedKPI } from '../types';
-import { getChartsForKPI } from '../lib/kpiDrilldownData';
+import type { AdvancedKPI, PageFilter, SectorComparisonData, MigrationMatrixData } from '../types';
+import { getChartsForKPI, getIndicatorsForKPI, generateCMICharts } from '../lib/kpiDrilldownData';
 import { calculateCCOKPIs } from '../lib/mockCCOData';
+import { mockPortfolioCompanies } from '../lib/mockData';
+import { applyPageFilters, calculateTopExposuresWithMigration, calculateFilteredTopExposures } from '../lib/filterUtils';
+import { useFilterStore } from '../stores/filterStore';
 import ClickableChartCard from '../components/ClickableChartCard';
+import KPIMetricCard from '../components/KPIMetricCard';
+import PageFilterChips from '../components/PageFilterChips';
+import InsightSection from '../components/InsightSection';
+import SectorComparisonTable from '../components/charts/SectorComparisonTable';
+import DeteriorationHeatmap from '../components/charts/DeteriorationHeatmap';
+import MigrationMatrix from '../components/charts/MigrationMatrix';
+import TopExposuresTable, { type TopExposureRow } from '../components/TopExposuresTable';
+
+// Stable empty array to prevent unnecessary re-renders
+const EMPTY_PAGE_FILTERS: PageFilter[] = [];
 
 export default function KPIDrilldownPage() {
   const { kpiId } = useParams<{ kpiId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get ALL page filters object (subscribe to entire object to ensure re-renders on any change)
+  const allPageFilters = useFilterStore((state) => state.pageFilters);
+
+  // Extract page-specific filters inside component (not in selector)
+  const pageFilters = allPageFilters[location.pathname] ?? EMPTY_PAGE_FILTERS;
 
   // Get all KPIs
   const ccoKPIs = calculateCCOKPIs();
@@ -35,46 +56,41 @@ export default function KPIDrilldownPage() {
     );
   }
 
-  // Get charts for this KPI
-  const charts = getChartsForKPI(kpi.id);
+  // Filter companies based on page filters (just like Dashboard does)
+  const filteredCompanies = useMemo(() => {
+    return applyPageFilters(mockPortfolioCompanies, pageFilters);
+  }, [pageFilters]);
 
-  // Format KPI value based on type
-  const formatValue = () => {
-    const value = kpi.value;
+  // Check if this KPI uses indicators instead of charts (CMI & Net Deterioration)
+  const indicators = useMemo(() => {
+    return getIndicatorsForKPI(kpi.id);
+  }, [kpi.id]);
 
-    // Percentage values
-    if (kpi.id.includes('mortality') || kpi.id.includes('forecast') ||
-        kpi.id.includes('reversion') || kpi.id.includes('vdi')) {
-      return `${value.toFixed(2)}%`;
+  // Check if this is a CMI/Net Det page (indicator-based with additional charts)
+  const isCMIPage = kpi.id === 'qm_12m_mortality' || kpi.id === 'qm_credit_score';
+
+  // Generate charts dynamically from filtered companies
+  const charts = useMemo(() => {
+    // For CMI/Net Det pages, show simplified CMI charts (standard types only)
+    if (isCMIPage) {
+      const cmiCharts = generateCMICharts();
+      // Filter to only standard chart types (line, bar, pie, area)
+      const standardCharts = cmiCharts.filter(c =>
+        c.type === 'line' || c.type === 'bar' || c.type === 'pie' || c.type === 'area'
+      );
+      return standardCharts;
     }
+    // For other KPIs, show standard dynamic charts
+    return getChartsForKPI(kpi.id, filteredCompanies);
+  }, [kpi.id, filteredCompanies, isCMIPage]);
 
-    // Currency values (billions)
-    if (kpi.id.includes('concentration')) {
-      return `$${(value / 1e9).toFixed(1)}B`;
+  // Calculate Top 20 Originations data (only for quick_mortality KPI)
+  const topOriginationsData: TopExposureRow[] = useMemo(() => {
+    if (kpi.id === 'quick_mortality') {
+      return calculateFilteredTopExposures(filteredCompanies, 20);
     }
-
-    // Currency values (millions)
-    if (kpi.id.includes('ecl')) {
-      return `$${(value / 1e6).toFixed(1)}M`;
-    }
-
-    // Index values (PBI, PPHS)
-    if (kpi.id.includes('pbi') || kpi.id.includes('pphs')) {
-      return value.toFixed(1);
-    }
-
-    // Migration basis points
-    if (kpi.id.includes('migration')) {
-      return `${value.toFixed(0)} bps`;
-    }
-
-    // Utilization percentage
-    if (kpi.id.includes('utilization')) {
-      return `${value.toFixed(1)}%`;
-    }
-
-    return value.toFixed(2);
-  };
+    return [];
+  }, [kpi.id, filteredCompanies]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -90,63 +106,80 @@ export default function KPIDrilldownPage() {
             <span className="text-sm font-medium">Back to Dashboard</span>
           </button>
 
-          {/* KPI Title and Details */}
+          {/* KPI Title */}
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{kpi.label}</h1>
-            <div className="flex items-center gap-6 mt-3 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-600">Current Value:</span>
-                <span className="font-bold text-gray-900 text-lg">{formatValue()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-600">Change:</span>
-                <span className={`font-bold text-lg ${kpi.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {kpi.changePercent > 0 ? '+' : ''}{kpi.changePercent.toFixed(2)}%
-                </span>
-              </div>
-              {kpi.alertSeverity && kpi.alertSeverity !== 'none' && (
-                <div className="flex items-center gap-2">
-                  <span className={`
-                    px-3 py-1 rounded-full text-xs font-medium uppercase
-                    ${kpi.alertSeverity === 'critical' ? 'bg-red-100 text-red-700' :
-                      kpi.alertSeverity === 'warning' ? 'bg-amber-100 text-amber-700' :
-                      'bg-blue-100 text-blue-700'}
-                  `}>
-                    {kpi.alertSeverity}
-                  </span>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Chart Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {charts.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <p className="text-gray-500 text-lg">No drilldown charts available for this KPI yet.</p>
-            <p className="text-gray-400 text-sm mt-2">Charts will be added soon.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {charts.map((chart) => (
-              <ClickableChartCard
-                key={chart.id}
-                chart={chart}
-                kpiId={kpi.id}
+      {/* Insights Section - Above Everything */}
+      <InsightSection kpiId={kpi.id} />
+
+      {/* Metrics Grid - Show 4 indicators for CMI/Net Det, or all 10 KPIs for others */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className={`grid ${indicators ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5'} gap-4`}>
+          {indicators ? (
+            // Show 4 deterioration indicators for CMI and Net Deterioration
+            indicators.map((indicator) => (
+              <KPIMetricCard key={indicator.id} kpi={indicator} />
+            ))
+          ) : (
+            // Show all 10 KPIs for other pages
+            Object.values(ccoKPIs).map((kpiItem) => (
+              <KPIMetricCard
+                key={kpiItem.id}
+                kpi={kpiItem}
+                isSelected={kpiItem.id === kpi.id}
+                onClick={() => navigate(`/kpi/${kpiItem.id}`)}
               />
-            ))}
-          </div>
-        )}
-
-        {/* Footer Note */}
-        <div className="mt-8 p-4 bg-white rounded-lg shadow-sm border border-oracle-border">
-          <p className="text-sm text-gray-600 text-center">
-            Click on any chart element to view filtered companies in Portfolio View
-          </p>
+            ))
+          )}
         </div>
       </div>
+
+      {/* Page Filter Chips */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PageFilterChips page={location.pathname} />
+      </div>
+
+      {/* Chart Grid - Show for all KPIs */}
+      {charts.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 gap-6">
+            {charts.map((chart) => {
+              // Only render standard chart types (line, bar, pie, area)
+              return (
+                <div key={chart.id} className={chart.type === 'line' ? 'lg:col-span-2' : ''}>
+                  <ClickableChartCard
+                    chart={chart}
+                    kpiId={kpi.id}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Footer Note */}
+          <div className="mt-8 p-4 bg-white rounded-lg shadow-sm border border-oracle-border">
+            <p className="text-sm text-gray-600 text-center">
+              Click on chart elements to view filtered companies in Portfolio View or apply filters
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Top 20 Originations Table - Only show for quick_mortality KPI */}
+      {kpi.id === 'quick_mortality' && topOriginationsData.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <TopExposuresTable
+            data={topOriginationsData}
+            title="Top 20 Originations"
+            defaultLimit={20}
+            showMigrationColumns={false}
+          />
+        </div>
+      )}
     </div>
   );
 }

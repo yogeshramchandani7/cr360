@@ -15,34 +15,57 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { mockLoans, mockPortfolioCompanies, getInsightCountByChartId } from '../lib/mockData';
+import { mockPortfolioCompanies, getInsightCountByChartId } from '../lib/mockData';
 import { formatCurrency, formatPercent, cn } from '../lib/utils';
 import { useFilterStore } from '../stores/filterStore';
 import {
   applyGlobalFilters,
+  applyPageFilters,
   calculateFilteredBreakdowns,
   calculateFilteredDelinquencyMatrix,
   calculateFilteredTopExposures,
+  calculateFilteredTopNPA,
+  calculateFilteredTopDelinquent,
   calculateFilteredTrends
 } from '../lib/filterUtils';
 import InsightsDrawer from '../components/InsightsDrawer';
 import InsightButton from '../components/InsightButton';
 import AdvancedKPIBar from '../components/AdvancedKPIBar';
-import DelinquencyMatrixWithSlider from '../components/DelinquencyMatrixWithSlider';
-import GroupContagionGraph from '../components/GroupContagionGraph';
-import PortfolioWaterfallChart from '../components/PortfolioWaterfallChart';
-import ExposureFlowSankey from '../components/ExposureFlowSankey';
+import ChartActionDropdown from '../components/ChartActionDropdown';
+import PageFilterChips from '../components/PageFilterChips';
+import MasterSlicerChart from '../components/MasterSlicerChart';
+import type { PageFilter } from '../types';
 
 const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b'];
+
+// Stable empty array to prevent unnecessary re-renders
+const EMPTY_PAGE_FILTERS: PageFilter[] = [];
+
+interface DropdownState {
+  visible: boolean;
+  x: number;
+  y: number;
+  filterData: {
+    field: string;
+    value: string;
+    label: string;
+    source: string;
+  } | null;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const setDrillDownFilter = useFilterStore((state) => state.setDrillDownFilter);
+  const addPageFilter = useFilterStore((state) => state.addPageFilter);
   const setSelectedInsightChartId = useFilterStore((state) => state.setSelectedInsightChartId);
-  const [selectedCell, setSelectedCell] = useState<{
-    region: string;
-    bucket: string;
-  } | null>(null);
+  const [dropdownState, setDropdownState] = useState<DropdownState>({
+    visible: false,
+    x: 0,
+    y: 0,
+    filterData: null,
+  });
+  const [exposureLimit, setExposureLimit] = useState<number>(20);
+  const [exposureType, setExposureType] = useState<'exposures' | 'npa' | 'delinquent'>('exposures');
 
   // Read global filters from store - use individual selectors to prevent infinite loop
   const lob = useFilterStore((state) => state.lob);
@@ -50,59 +73,69 @@ export default function Dashboard() {
   const rating = useFilterStore((state) => state.rating);
   const assetClassification = useFilterStore((state) => state.assetClassification);
 
-  // Calculate filtered data based on global filters
+  // Get ALL page filters object (subscribe to entire object to ensure re-renders on any change)
+  const allPageFilters = useFilterStore((state) => state.pageFilters);
+
+  // Extract page-specific filters inside component (not in selector)
+  const pageFilters = allPageFilters['/'] ?? EMPTY_PAGE_FILTERS;
+
+  // Calculate filtered data based on global filters AND page filters
   const filteredData = useMemo(() => {
     const globalFilters = { lob, partyType, rating, assetClassification };
-    const companies = applyGlobalFilters(mockPortfolioCompanies, globalFilters);
+
+    // Step 1: Apply global filters
+    let companies = applyGlobalFilters(mockPortfolioCompanies, globalFilters);
+
+    // Step 2: Apply page filters (with AND logic)
+    companies = applyPageFilters(companies, pageFilters);
+
+    // Conditionally calculate top exposures based on type
+    console.log('[Dashboard] Calculating topExposures:', { exposureType, exposureLimit, totalCompanies: companies.length });
+
+    let topExposures;
+    if (exposureType === 'npa') {
+      topExposures = calculateFilteredTopNPA(companies, exposureLimit);
+      console.log('[Dashboard] NPA results:', topExposures.length);
+    } else if (exposureType === 'delinquent') {
+      topExposures = calculateFilteredTopDelinquent(companies, exposureLimit);
+      console.log('[Dashboard] Delinquent results:', topExposures.length);
+    } else {
+      topExposures = calculateFilteredTopExposures(companies, exposureLimit);
+      console.log('[Dashboard] Exposures results:', topExposures.length);
+    }
+
     return {
       companies,
       trends: calculateFilteredTrends(companies),
       breakdowns: calculateFilteredBreakdowns(companies),
       delinquencyMatrix: calculateFilteredDelinquencyMatrix(companies),
-      topExposures: calculateFilteredTopExposures(companies),
+      topExposures,
     };
-  }, [lob, partyType, rating, assetClassification]);
+  }, [lob, partyType, rating, assetClassification, pageFilters, exposureLimit, exposureType]);
 
-  const getHeatColor = (exposure: number) => {
-    if (exposure > 15000000) return 'bg-red-100 text-red-900';
-    if (exposure > 10000000) return 'bg-orange-100 text-orange-900';
-    if (exposure > 5000000) return 'bg-yellow-100 text-yellow-900';
-    return 'bg-green-50 text-green-900';
+  const handleDropdownSelect = (optionId: string) => {
+    if (!dropdownState.filterData) return;
+
+    if (optionId === 'counterparties') {
+      // Navigate to portfolio with drilldown filter (current behavior)
+      setDrillDownFilter(dropdownState.filterData);
+      navigate('/portfolio');
+    } else if (optionId === 'apply-filter') {
+      // Apply filter to current page
+      addPageFilter('/', {
+        field: dropdownState.filterData.field,
+        value: dropdownState.filterData.value,
+        label: dropdownState.filterData.label,
+        source: dropdownState.filterData.source,
+      });
+    }
+
+    // Close dropdown
+    setDropdownState({ visible: false, x: 0, y: 0, filterData: null });
   };
 
-  const filteredLoans = selectedCell
-    ? mockLoans.filter(
-        (loan) =>
-          loan.region === selectedCell.region && loan.bucket === selectedCell.bucket
-      )
-    : [];
-
-  const handleRegionClick = (data: any) => {
-    // Don't navigate if clicking on "No Data" placeholder
-    if (!data || !data.label || data.label === 'No Data' || data.value === 0) {
-      return;
-    }
-    setDrillDownFilter({
-      field: 'region',
-      value: data.label,
-      label: `${data.label} Region`,
-      source: 'Dashboard - Region Pie Chart',
-    });
-    navigate('/portfolio');
-  };
-
-  const handleProductClick = (data: any) => {
-    // Don't navigate if clicking on "No Data" placeholder
-    if (!data || !data.label || data.label === 'No Data' || data.value === 0) {
-      return;
-    }
-    setDrillDownFilter({
-      field: 'productType',
-      value: data.label,
-      label: `${data.label}`,
-      source: 'Dashboard - Product Bar Chart',
-    });
-    navigate('/portfolio');
+  const handleDropdownClose = () => {
+    setDropdownState({ visible: false, x: 0, y: 0, filterData: null });
   };
 
   const handleCompanyClick = (borrowerName: string) => {
@@ -120,6 +153,18 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-12">
+      {/* Page Filter Chips */}
+      <PageFilterChips page="/" />
+
+      {/* Chart Action Dropdown */}
+      {dropdownState.visible && (
+        <ChartActionDropdown
+          position={{ x: dropdownState.x, y: dropdownState.y }}
+          onSelect={handleDropdownSelect}
+          onClose={handleDropdownClose}
+        />
+      )}
+
       {/* SECTION 1: Portfolio Health */}
       <section>
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Portfolio Health</h2>
@@ -159,256 +204,131 @@ export default function Dashboard() {
             </LineChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Breakdown Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Region Breakdown */}
-          <div className="bg-white rounded-lg p-6 border border-oracle-border">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Exposure by Region
-              </h3>
-              <InsightButton
-                chartId="regional-breakdown"
-                insightCount={getInsightCountByChartId('regional-breakdown')}
-                onClick={() => setSelectedInsightChartId('regional-breakdown')}
-              />
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={filteredData.breakdowns.region}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ label, percentage }) => `${label} (${percentage}%)`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  onClick={handleRegionClick}
-                  cursor="pointer"
-                >
-                  {filteredData.breakdowns.region.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => value ? `$${(value / 1000000).toFixed(0)}M` : '$0M'} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Product Breakdown */}
-          <div className="bg-white rounded-lg p-6 border border-oracle-border">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Exposure by Product
-              </h3>
-              <InsightButton
-                chartId="product-mix"
-                insightCount={getInsightCountByChartId('product-mix')}
-                onClick={() => setSelectedInsightChartId('product-mix')}
-              />
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={filteredData.breakdowns.product}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="label" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip formatter={(value: number) => value ? `$${(value / 1000000).toFixed(0)}M` : '$0M'} />
-                <Bar dataKey="value" fill="#3b82f6" onClick={handleProductClick} cursor="pointer" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
       </section>
 
-      {/* SECTION 2: Advanced Visualizations */}
-      <section>
-        <h2 className="text-3xl font-bold text-gray-900 mb-8">Advanced Risk Analytics</h2>
-
-        {/* Waterfall Chart */}
-        <div className="mb-6">
-          <PortfolioWaterfallChart />
-        </div>
-
-        {/* Group Contagion Graph */}
-        <div className="mb-6">
-          <GroupContagionGraph />
-        </div>
-
-        {/* Delinquency Matrix with Time Slider */}
-        <div className="mb-6">
-          <DelinquencyMatrixWithSlider />
-        </div>
-
-        {/* Exposure Flow Sankey */}
-        <div className="mb-6">
-          <ExposureFlowSankey />
-        </div>
-      </section>
-
-      {/* SECTION 3: Delinquency Matrix */}
-      <section>
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Delinquency Matrix</h2>
-          <InsightButton
-            chartId="delinquency-matrix"
-            insightCount={getInsightCountByChartId('delinquency-matrix')}
-            onClick={() => setSelectedInsightChartId('delinquency-matrix')}
+      {/* SECTION 2: Master Slicer Charts - Exposure, NPA, and Delinquency */}
+      <section className="space-y-8 mb-8">
+        {/* Chart 1: Exposure by Dimension */}
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">Exposure by Dimension</h2>
+          <MasterSlicerChart
+            data={filteredData.companies}
+            metricType="exposure"
+            defaultDimension="segment"
+            defaultChartType="pie"
+            source="Dashboard - Exposure Analysis"
           />
         </div>
 
-        {/* Matrix */}
-        <div className="bg-white rounded-lg p-6 border border-oracle-border overflow-x-auto mb-6">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-oracle-border">
-                <th className="text-left p-3 text-sm font-semibold text-gray-900">
-                  Region
-                </th>
-                {filteredData.delinquencyMatrix.buckets.map((bucket) => (
-                  <th
-                    key={bucket}
-                    className="text-center p-3 text-sm font-semibold text-gray-900"
-                  >
-                    {bucket}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.delinquencyMatrix.data.map((row) => (
-                <tr key={row.region} className="border-b border-gray-100">
-                  <td className="p-3 font-medium text-gray-900">{row.region}</td>
-                  {filteredData.delinquencyMatrix.buckets.map((bucket) => {
-                    const cellData =
-                      row[bucket as keyof typeof row] as { count: number; exposure: number };
-                    const isSelected =
-                      selectedCell?.region === row.region &&
-                      selectedCell?.bucket === bucket;
-
-                    return (
-                      <td
-                        key={bucket}
-                        className={cn(
-                          'p-3 text-center cursor-pointer transition-all',
-                          getHeatColor(cellData.exposure),
-                          isSelected && 'ring-2 ring-primary'
-                        )}
-                        onClick={() => setSelectedCell({ region: row.region, bucket })}
-                      >
-                        <div className="text-sm font-semibold">{cellData.count}</div>
-                        <div className="text-xs">
-                          {formatCurrency(cellData.exposure)}
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Chart 2: NPA by Dimension */}
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">NPA by Dimension</h2>
+          <MasterSlicerChart
+            data={filteredData.companies}
+            metricType="npa"
+            defaultDimension="segment"
+            defaultChartType="pie"
+            source="Dashboard - NPA Analysis"
+          />
         </div>
 
-        {/* Drilldown */}
-        {selectedCell && (
-          <div className="bg-white rounded-lg p-6 border border-oracle-border">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {selectedCell.region} - {selectedCell.bucket} Days
-              </h3>
-              <button
-                onClick={() => setSelectedCell(null)}
-                className="text-sm text-gray-600 hover:text-gray-900"
+        {/* Chart 3: Delinquency by Dimension */}
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">Delinquency by Dimension</h2>
+          <MasterSlicerChart
+            data={filteredData.companies}
+            metricType="delinquency"
+            defaultDimension="segment"
+            defaultChartType="pie"
+            source="Dashboard - Delinquency Analysis"
+          />
+        </div>
+      </section>
+
+      {/* SECTION 3: Top Exposures */}
+      <section>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">
+            Top {exposureType === 'exposures' ? 'Exposures' : exposureType === 'npa' ? 'NPA' : 'Delinquent'}
+          </h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="exposure-type" className="text-sm font-medium text-gray-700">
+                Type:
+              </label>
+              <select
+                id="exposure-type"
+                value={exposureType}
+                onChange={(e) => setExposureType(e.target.value as 'exposures' | 'npa' | 'delinquent')}
+                className="px-3 py-2 border border-oracle-border rounded-lg text-sm font-medium text-gray-900 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-oracle-primary focus:border-oracle-primary transition-colors"
               >
-                Close
-              </button>
+                <option value="exposures">Exposures</option>
+                <option value="npa">NPA</option>
+                <option value="delinquent">Delinquent</option>
+              </select>
             </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-oracle-bgAlt border-b border-oracle-border">
-                    <th className="text-left p-3 text-sm font-semibold text-gray-900">
-                      Account
-                    </th>
-                    <th className="text-left p-3 text-sm font-semibold text-gray-900">
-                      Borrower
-                    </th>
-                    <th className="text-right p-3 text-sm font-semibold text-gray-900">
-                      Exposure
-                    </th>
-                    <th className="text-center p-3 text-sm font-semibold text-gray-900">
-                      DPD
-                    </th>
-                    <th className="text-left p-3 text-sm font-semibold text-gray-900">
-                      Product
-                    </th>
-                    <th className="text-center p-3 text-sm font-semibold text-gray-900">
-                      Risk Grade
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLoans.slice(0, 10).map((loan) => (
-                    <tr key={loan.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="p-3 text-sm text-gray-900">{loan.accountNumber}</td>
-                      <td className="p-3 text-sm text-gray-900">{loan.borrowerName}</td>
-                      <td className="p-3 text-sm text-right text-gray-900">
-                        {formatCurrency(loan.exposureAmount)}
-                      </td>
-                      <td className="p-3 text-sm text-center text-gray-900">
-                        {loan.delinquentDays}
-                      </td>
-                      <td className="p-3 text-sm text-gray-900">{loan.productType}</td>
-                      <td className="p-3 text-sm text-center">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {loan.riskGrade}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="flex items-center gap-2">
+              <label htmlFor="exposure-limit" className="text-sm font-medium text-gray-700">
+                Show top:
+              </label>
+              <select
+                id="exposure-limit"
+                value={exposureLimit}
+                onChange={(e) => setExposureLimit(Number(e.target.value))}
+                className="px-3 py-2 border border-oracle-border rounded-lg text-sm font-medium text-gray-900 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-oracle-primary focus:border-oracle-primary transition-colors"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
             </div>
+            <InsightButton
+              chartId="top-exposures"
+              insightCount={getInsightCountByChartId('top-exposures')}
+              onClick={() => setSelectedInsightChartId('top-exposures')}
+            />
           </div>
-        )}
-      </section>
-
-      {/* SECTION 4: Top Exposures */}
-      <section>
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">Top Exposures</h2>
-          <InsightButton
-            chartId="top-exposures"
-            insightCount={getInsightCountByChartId('top-exposures')}
-            onClick={() => setSelectedInsightChartId('top-exposures')}
-          />
         </div>
 
         {/* Concentration Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-lg p-6 border border-oracle-border">
             <p className="text-sm text-gray-600 mb-2">Single Largest Exposure</p>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(50000000)}</p>
-            <p className="text-sm text-success mt-1">4.0% of Portfolio</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {filteredData.topExposures[0] ? formatCurrency(filteredData.topExposures[0].exposureAmount) : '$0'}
+            </p>
+            <p className="text-sm text-success mt-1">
+              {filteredData.topExposures[0] ? `${filteredData.topExposures[0].percentOfPortfolio.toFixed(1)}% of Portfolio` : '0% of Portfolio'}
+            </p>
           </div>
           <div className="bg-white rounded-lg p-6 border border-oracle-border">
             <p className="text-sm text-gray-600 mb-2">Top 10 Concentration</p>
-            <p className="text-2xl font-bold text-gray-900">30.4%</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {filteredData.topExposures.length >= 10
+                ? `${filteredData.topExposures.slice(0, 10).reduce((sum, exp) => sum + exp.percentOfPortfolio, 0).toFixed(1)}%`
+                : filteredData.topExposures.length > 0
+                ? `${filteredData.topExposures.reduce((sum, exp) => sum + exp.percentOfPortfolio, 0).toFixed(1)}%`
+                : '0%'}
+            </p>
             <p className="text-sm text-success mt-1">Within Limits</p>
           </div>
           <div className="bg-white rounded-lg p-6 border border-oracle-border">
             <p className="text-sm text-gray-600 mb-2">Top 20 Concentration</p>
-            <p className="text-2xl font-bold text-gray-900">50.0%</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {filteredData.topExposures.length >= 20
+                ? `${filteredData.topExposures.slice(0, 20).reduce((sum, exp) => sum + exp.percentOfPortfolio, 0).toFixed(1)}%`
+                : filteredData.topExposures.length > 0
+                ? `${filteredData.topExposures.reduce((sum, exp) => sum + exp.percentOfPortfolio, 0).toFixed(1)}%`
+                : '0%'}
+            </p>
             <p className="text-sm text-success mt-1">Within Limits</p>
           </div>
         </div>
 
-        {/* Top 20 Table */}
+        {/* Top N Table */}
         <div className="bg-white rounded-lg p-6 border border-oracle-border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Top 20 Exposures by Account
+            Top {exposureLimit} {exposureType === 'exposures' ? 'Exposures' : exposureType === 'npa' ? 'NPA' : 'Delinquent'} by Account
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -426,6 +346,16 @@ export default function Dashboard() {
                   <th className="text-right p-3 text-sm font-semibold text-gray-900">
                     Exposure
                   </th>
+                  {exposureType === 'npa' && (
+                    <th className="text-right p-3 text-sm font-semibold text-gray-900">
+                      NPA Amount
+                    </th>
+                  )}
+                  {exposureType === 'delinquent' && (
+                    <th className="text-right p-3 text-sm font-semibold text-gray-900">
+                      Delinquent Amount
+                    </th>
+                  )}
                   <th className="text-right p-3 text-sm font-semibold text-gray-900">
                     % of Portfolio
                   </th>
@@ -444,7 +374,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {filteredData.topExposures.map((exposure) => (
+                {filteredData.topExposures.map((exposure: any) => (
                   <tr key={exposure.rank} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="p-3 text-sm font-medium text-gray-900">
                       {exposure.rank}
@@ -461,6 +391,16 @@ export default function Dashboard() {
                     <td className="p-3 text-sm text-right font-medium text-gray-900">
                       {formatCurrency(exposure.exposureAmount)}
                     </td>
+                    {exposureType === 'npa' && (
+                      <td className="p-3 text-sm text-right font-medium text-red-600">
+                        {formatCurrency(exposure.npaAmount)}
+                      </td>
+                    )}
+                    {exposureType === 'delinquent' && (
+                      <td className="p-3 text-sm text-right font-medium text-orange-600">
+                        {formatCurrency(exposure.delinquentAmount)}
+                      </td>
+                    )}
                     <td className="p-3 text-sm text-right text-gray-900">
                       {formatPercent(exposure.percentOfPortfolio)}
                     </td>

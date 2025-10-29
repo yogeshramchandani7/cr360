@@ -3,6 +3,8 @@ export interface KPI {
   unit: 'percent' | 'currency';
   trend: 'up' | 'down' | 'stable';
   changePercent: number;
+  displayValue?: string;        // Optional custom display format (e.g., "$5,250 Mn", "1.42%")
+  changeLabel?: string;         // Optional custom change label (e.g., "bps", "MoM")
   threshold?: {
     green: number;
     amber: number;
@@ -520,6 +522,184 @@ export interface QuickMortalityData {
   geography: string;         // North, South, East, West
 }
 
+// ============================================================================
+// Quick Mortality Sub-KPI Data Models
+// ============================================================================
+
+/**
+ * Quick Mortality Sub-KPI #1: 30-Day Delinquency Rate by Vintage
+ * % of accounts from each recent monthly vintage hitting 30 DPD
+ */
+export interface VintageDelinquencyData {
+  vintage: string;                 // e.g., "2024-10"
+  originationMonth: string;        // e.g., "Oct 2024"
+  totalAccounts: number;
+  delinquent30DPDAccounts: number;
+  delinquency30DPDRate: number;    // Percentage
+  channel: string;                 // Branch, Digital, DSA
+  product: string;                 // Personal Loan, Auto Loan, etc.
+  geography: string;               // North, South, East, West
+  baselineRate: number;            // Historical baseline for comparison
+  deltaFromBaseline: number;       // Basis points change
+}
+
+/**
+ * Quick Mortality Sub-KPI #2: 12-Month Quick Mortality (Cohort)
+ * Cumulative % charged-off or NPA within 12 months by origination month
+ */
+export interface VintageMortalityData {
+  vintage: string;                 // e.g., "2024-04"
+  originationMonth: string;        // e.g., "Apr 2024"
+  ageInMonths: number;             // Age of vintage (0-12 months)
+  totalAccounts: number;
+  chargedOffAccounts: number;
+  npaAccounts: number;
+  cumulativeMortalityRate: number; // Percentage
+  modeledExpectation: number;      // Expected mortality rate
+  deltaFromExpectation: number;    // Percentage points difference
+  channel: string;
+  product: string;
+}
+
+/**
+ * Quick Mortality Sub-KPI #3: Weighted-Average Credit Score / PD
+ * WA FICO / internal score or expected PD for each vintage and channel
+ */
+export interface OriginationQualityData {
+  vintage: string;                 // e.g., "2024-10"
+  originationMonth: string;        // e.g., "Oct 2024"
+  weightedAvgCreditScore: number;  // WA FICO or internal score
+  weightedAvgPD: number;           // Expected probability of default (%)
+  totalAccounts: number;
+  totalFundedAmount: number;
+  channel: string;
+  product: string;
+  geography: string;
+  baselineScore: number;           // Historical baseline score
+  scoreDelta: number;              // Change from baseline
+}
+
+/**
+ * Quick Mortality Sub-KPI #4: Population Stability Index (PSI)
+ * Distribution drift vs model training population
+ */
+export interface ModelDriftData {
+  feature: string;                 // Score, Income, LTV, etc.
+  psiValue: number;                // Population Stability Index
+  drift: 'no_drift' | 'slight_drift' | 'moderate_drift' | 'severe_drift';
+  expectedDistribution: number[];  // Historical distribution
+  actualDistribution: number[];    // Current distribution
+  measurementPeriod: string;       // e.g., "Oct 2024"
+  channel: string;
+  threshold: number;               // PSI threshold (typically 0.15-0.25)
+}
+
+/**
+ * Quick Mortality Sub-KPI #5: Model Discrimination (AUC / KS)
+ * AUC/KS measured on most recent approvals
+ */
+export interface ModelPerformanceData {
+  measurementPeriod: string;       // e.g., "Oct 2024"
+  aucScore: number;                // Area Under Curve (0-1)
+  ksStatistic: number;             // Kolmogorov-Smirnov statistic (0-100)
+  giniCoefficient: number;         // Gini coefficient
+  baselineAUC: number;             // Expected AUC from validation
+  aucDelta: number;                // Change from baseline
+  sampleSize: number;
+  channel: string;
+  product: string;
+}
+
+/**
+ * Quick Mortality Sub-KPI #6: Promotional/Incentivized Campaign Originations
+ * Share of funded accounts from promo/discount channels
+ */
+export interface CampaignOriginationData {
+  campaignId: string;
+  campaignName: string;
+  campaignType: 'promotional' | 'discount' | 'standard' | 'partner';
+  originationMonth: string;
+  accountCount: number;
+  fundedAmount: number;
+  shareOfTotalOriginations: number; // Percentage
+  earlyDelinquencyRate: number;     // 30 DPD rate for this campaign
+  channel: string;
+  product: string;
+}
+
+/**
+ * Quick Mortality Sub-KPI #7: Verification Failure / KYC Exception Rate
+ * % of apps failing income/employment/KYC verification
+ */
+export interface VerificationData {
+  verificationType: 'income' | 'employment' | 'kyc' | 'identity';
+  measurementPeriod: string;       // e.g., "Oct 2024"
+  totalApplications: number;
+  failedVerifications: number;
+  failureRate: number;             // Percentage
+  exceptionRate: number;           // % requiring manual exceptions
+  subsequentDefaultRate: number;   // Default rate of failed verifications
+  channel: string;
+  product: string;
+}
+
+/**
+ * Quick Mortality Sub-KPI #8: Fraud Hit Rate and Loss
+ * Detected fraud % and $ loss on fraud incidents per 1,000 apps
+ */
+export interface FraudData {
+  measurementPeriod: string;       // e.g., "Oct 2024"
+  totalApplications: number;
+  detectedFraudCount: number;
+  fraudHitRate: number;            // Percentage
+  fraudLossAmount: number;         // Dollar amount
+  fraudLossPer1000Apps: number;    // Loss per 1,000 applications
+  fraudType: 'identity' | 'synthetic' | 'misrepresentation' | 'first_party';
+  channel: string;
+  product: string;
+}
+
+/**
+ * Quick Mortality Sub-KPI #9: Manual Review / Policy Exception Rate
+ * % approved through manual review or with policy exceptions
+ */
+export interface ExceptionData {
+  measurementPeriod: string;       // e.g., "Oct 2024"
+  totalApprovals: number;
+  manualReviewApprovals: number;
+  policyExceptionApprovals: number;
+  manualReviewRate: number;        // Percentage
+  exceptionRate: number;           // Percentage
+  exceptionPerformance30DPD: number; // 30 DPD rate for exceptions
+  exceptionPerformance90DPD: number; // 90 DPD rate for exceptions
+  exceptionType: string;           // Type of exception
+  underwriter: string;
+  channel: string;
+}
+
+/**
+ * Quick Mortality Sub-KPI #10: Channel/Partner-Specific Quick Mortality
+ * Quick mortality rate by acquisition channel/partner
+ */
+export interface ChannelPerformanceData {
+  channel: string;                 // Branch, Digital, DSA, Partner name
+  channelType: 'direct' | 'partner' | 'broker';
+  partnerId?: string;
+  partnerName?: string;
+  measurementPeriod: string;       // e.g., "Oct 2024"
+  totalOriginations: number;
+  fundedAmount: number;
+  shareOfTotalOriginations: number; // Percentage (concentration)
+  quickMortalityRate: number;      // 12-month mortality %
+  delinquency30DPDRate: number;    // 30 DPD rate
+  geography: string;
+  product: string;
+}
+
+// ============================================================================
+// Original CCO KPI Data Models
+// ============================================================================
+
 /**
  * Forward Delinquency Forecast - KPI #3
  * ML-predicted delinquencies in next 90 days
@@ -672,7 +852,7 @@ export interface KPIChart {
   id: string;                    // unique chart identifier
   title: string;                 // chart title
   description?: string;          // optional chart description
-  type: 'pie' | 'bar' | 'line' | 'area'; // chart type
+  type: 'pie' | 'bar' | 'line' | 'area' | 'sector-table' | 'heatmap' | 'migration-matrix'; // chart type
   data: any[];                   // chart data array
   dataKeys: KPIChartDataKey[];   // keys to render
   xAxisKey?: string;             // for bar/line charts
@@ -687,4 +867,129 @@ export interface KPIChart {
 export interface KPIDrilldownConfig {
   kpiId: string;
   charts: KPIChart[];
+}
+
+// ============================================================================
+// Chart Action Dropdown & Page Filters
+// ============================================================================
+
+/**
+ * Page-specific filter applied when user clicks "Apply Filter" on a chart
+ */
+export interface PageFilter {
+  id: string;                 // Unique filter ID (timestamp-based)
+  field: string;              // Field to filter on (e.g., 'region', 'productType')
+  value: string;              // Filter value (e.g., 'North', 'Business Loan')
+  label: string;              // Display label for filter chip
+  source: string;             // Source chart/component (e.g., 'Dashboard - Region Pie Chart')
+  timestamp: number;          // Creation timestamp for ordering
+}
+
+/**
+ * Dropdown option configuration for chart action menu
+ */
+export interface DropdownOption {
+  id: 'counterparties' | 'apply-filter' | string; // Action identifier
+  label: string;                                   // Display text
+  icon?: React.ReactNode;                          // Optional icon
+  description?: string;                            // Optional tooltip/description
+}
+
+// ============================================================================
+// KPI Insights
+// ============================================================================
+
+/**
+ * KPI Insight interface for actionable insights displayed on drill-down pages
+ */
+// ============================================================================
+// Insight Filter Data Structure
+// ============================================================================
+
+/**
+ * Filter specification for insights
+ * Used to apply filters to drill-down charts when insight is clicked
+ */
+export interface InsightFilter {
+  field: string;                    // Filter field name (e.g., 'industry', 'region', 'creditStatus')
+  value: string;                    // Filter value (e.g., 'Real Estate', 'North', 'Delinquent')
+  label: string;                    // Display label for filter chip (e.g., 'Industry: Real Estate')
+  source: string;                   // Source of filter (e.g., insight theme or 'insight')
+}
+
+export interface KPIInsight {
+  id: string;                       // Unique insight identifier
+  kpiId: string;                    // Associated KPI ID
+  theme: string;                    // Insight title/theme
+  keyInsights: string[];            // Array of key insight bullet points
+  implication: string;              // Business implication paragraph
+  croActions: string[];             // Array of CRO action items
+  severity: 'info' | 'warning' | 'critical';
+  timestamp: string;                // ISO timestamp
+  filters?: InsightFilter[];        // Optional: Filters to apply when insight is clicked
+}
+
+// ============================================================================
+// CMI Custom Chart Data Structures
+// ============================================================================
+
+/**
+ * CMI Trend Data - Line chart comparing Bank CMI vs CRISIL Migration Index
+ */
+export interface CMITrendData {
+  month: string;                    // e.g., "Oct 2024"
+  bankCMI: number;                  // Bank's CMI value
+  crisilIndex: number;              // CRISIL Migration Index value
+}
+
+/**
+ * Sector Comparison Data - Interactive table showing sector-wise CMI analysis
+ */
+export interface SectorComparisonData {
+  sector: string;                   // e.g., "Real Estate"
+  bankCMI: number;                  // Bank's sector CMI
+  crisilIndex: number;              // CRISIL/ICRA Sector Index
+  gap: number;                      // Difference (bankCMI - crisilIndex)
+  concentration: number;            // % of portfolio exposure
+  sentiment: 'positive' | 'neutral' | 'negative'; // Sentiment indicator
+  sentimentIcon: string;            // Emoji: 🟢 🟡 🔴
+  outlook: string;                  // Brief outlook text
+  commentary: string;               // Detailed commentary
+}
+
+/**
+ * Heatmap Cell Data - Deterioration by Sector + Region + Product
+ */
+export interface HeatmapCellData {
+  sector: string;                   // e.g., "Real Estate"
+  region: string;                   // e.g., "North"
+  product: string;                  // e.g., "Term Loan"
+  deteriorationRate: number;        // Deterioration % (0-100)
+  exposure: number;                 // Exposure amount in $M
+  accountCount: number;             // Number of accounts
+  color: string;                    // Color intensity (hex)
+}
+
+/**
+ * Migration Matrix Data - Downgrade ladder by attributes
+ */
+export interface MigrationMatrixData {
+  attribute: string;                // e.g., "Segment: Corporate"
+  attributeType: 'segment' | 'industry' | 'rating' | 'region';
+  totalExposure: number;            // Total exposure in $M
+  downgrade1Notch: {
+    count: number;                  // Number of accounts
+    exposure: number;               // Exposure in $M
+    percentage: number;             // % of total
+  };
+  downgrade2Notch: {
+    count: number;
+    exposure: number;
+    percentage: number;
+  };
+  downgrade3Notch: {
+    count: number;
+    exposure: number;
+    percentage: number;
+  };
 }

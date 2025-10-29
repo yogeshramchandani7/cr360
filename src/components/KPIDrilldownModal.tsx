@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { AdvancedKPI } from '../types';
 import { getChartsForKPI } from '../lib/kpiDrilldownData';
+import { mockPortfolioCompanies } from '../lib/mockData';
 import ClickableChartCard from './ClickableChartCard';
 
 interface KPIDrilldownModalProps {
@@ -37,7 +38,7 @@ export default function KPIDrilldownModal({ kpi, isOpen, onClose }: KPIDrilldown
   }
 
   // Get charts for this KPI
-  const charts = getChartsForKPI(kpi.id);
+  const charts = getChartsForKPI(kpi.id, mockPortfolioCompanies);
 
   // Format KPI value based on type
   const formatValue = () => {

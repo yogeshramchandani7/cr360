@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Network, Download, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { mockPortfolioCompanies, type PortfolioCompany } from '../lib/mockData';
 import SectionHeader from '../components/SectionHeader';
 import GroupHierarchyModal from '../components/GroupHierarchyModal';
@@ -180,10 +181,91 @@ const getCompanyProfileData = (companyId: string): CompanyProfileData | null => 
   };
 };
 
+// Mock function to get group-level consolidated data
+const getGroupData = (groupName: string) => {
+  const groupCompanies = mockPortfolioCompanies.filter((c) => c.group === groupName);
+
+  if (groupCompanies.length === 0) return null;
+
+  // Generate exposure trends data (8 months)
+  const months = ['Mar 23', 'Jun 23', 'Sep 23', 'Dec 23', 'Mar 24', 'Jun 24', 'Sep 24', 'Oct 24'];
+  const exposureTrends = months.map((month, idx) => ({
+    month,
+    drawingLimit: 2000 + idx * 200 + Math.random() * 100,
+    drawingExter: 1500 + idx * 250 + Math.random() * 100,
+    creditExposure: 2500 + idx * 300 + Math.random() * 150,
+    overDrawings: 500 - idx * 30 + Math.random() * 50,
+    undrawn: 800 - idx * 20 + Math.random() * 30,
+  }));
+
+  // Aggregate group metrics
+  const totalCreditLimit = groupCompanies.reduce((sum, c) => sum + c.creditLimit, 0);
+  const totalExposure = groupCompanies.reduce((sum, c) => sum + c.grossCreditExposure, 0);
+  const totalOverdues = groupCompanies.reduce((sum, c) => sum + c.overdues * 15000, 0);
+  const totalUndrawn = groupCompanies.reduce((sum, c) => sum + c.undrawnExposure, 0);
+
+  // Entity-level detailed data
+  const entityDetails = groupCompanies.map((company) => ({
+    entityName: company.customerName,
+    entityId: company.custId,
+    industry: company.industry,
+    externalRating: company.borrowerExternalRating,
+    baselRating: company.borrowerInternalRating,
+    creditLimit: company.creditLimit,
+    drawingLimit: Math.floor(company.creditLimit * 0.8),
+    creditExposure: company.creditExposure,
+    undrawnExposure: company.undrawnExposure,
+    grossCreditExposure: company.grossCreditExposure,
+    overdues: company.overdues * 15000,
+    dpd: company.overdues,
+    creditStatus: company.creditStatus,
+    assetClassification: company.assetClass,
+    ecl: Math.floor(company.creditExposure * 0.02),
+    securityValue: Math.floor(company.creditLimit * 1.2),
+    riskWeight: 75,
+    rwa: Math.floor(company.grossCreditExposure * 0.75),
+  }));
+
+  // Group profitability metrics
+  const groupProfitability = {
+    bankingProfile: {
+      assetsTotalEOP: totalExposure * 1.5,
+      avgTenorAssets: 4.2,
+      liabilitiesTotalEOP: totalExposure * 1.2,
+      avgTenorLiabilities: 3.8,
+    },
+    metrics: {
+      totalIncome: totalExposure * 0.08,
+      totalExpenditure: totalExposure * 0.05,
+      netFeeIncome: totalExposure * 0.015,
+      netIncome: totalExposure * 0.03,
+      netInterestMargin: 3.2,
+      returnOnAssets: 1.8,
+      returnOnEquity: 14.5,
+      riskAdjustedReturn: 16.8,
+    },
+  };
+
+  return {
+    groupName,
+    totalCreditLimit,
+    totalExposure,
+    totalOverdues,
+    totalUndrawn,
+    exposureTrends,
+    entityDetails,
+    groupProfitability,
+  };
+};
+
 export default function CompanyProfilePage() {
   const { companyId } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
   const [isHierarchyModalOpen, setIsHierarchyModalOpen] = useState(false);
+
+  // Tab state
+  type TabView = 'company' | 'group';
+  const [activeTab, setActiveTab] = useState<TabView>('company');
 
   // PDF Download states
   type PDFStatus = 'idle' | 'generating' | 'success' | 'error';
@@ -192,6 +274,10 @@ export default function CompanyProfilePage() {
   const [pdfMessage, setPdfMessage] = useState('');
 
   const profileData = companyId ? getCompanyProfileData(companyId) : null;
+
+  // Group View state
+  const [selectedMeasure, setSelectedMeasure] = useState('creditExposure');
+  const groupData = profileData ? getGroupData(profileData.company.group) : null;
 
   // Handle PDF download
   const handleDownloadPDF = async () => {
@@ -377,360 +463,643 @@ export default function CompanyProfilePage() {
           </div>
         </div>
 
-        {/* Profile Summary */}
-        <section className="bg-white border border-oracle-border rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Summary</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Relationship Group</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.relationshipGroup}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Member ID</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.memberId}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Group Company</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.groupCompany}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Constitution/Gender</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.constitutionGender}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Code 1 (PAN)</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.code1}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Code 2 (AADHM)</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.code2}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Onboarding Date</p>
-              <p className="text-sm font-medium text-gray-900">01/01/2020</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Banking Arrangement</p>
-              <p className="text-sm font-medium text-gray-900">{company.orgStructure}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Line of Business</p>
-              <p className="text-sm font-medium text-gray-900">{company.lineOfBusiness}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Industry</p>
-              <p className="text-sm font-medium text-gray-900">{company.industry}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Party Type</p>
-              <p className="text-sm font-medium text-gray-900">{company.partyType}</p>
+        {/* Tab Navigation */}
+        <div className="bg-white border border-oracle-border rounded-lg">
+          <div className="border-b border-oracle-border">
+            <div className="flex gap-1 px-2 pt-2">
+              <button
+                onClick={() => setActiveTab('company')}
+                className={`
+                  px-6 py-3 text-sm font-medium rounded-t-lg transition-all
+                  ${activeTab === 'company'
+                    ? 'bg-white text-oracle-primary border-t border-l border-r border-oracle-border -mb-px'
+                    : 'bg-gray-50 text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }
+                `}
+              >
+                Company View
+              </button>
+              <button
+                onClick={() => setActiveTab('group')}
+                className={`
+                  px-6 py-3 text-sm font-medium rounded-t-lg transition-all
+                  ${activeTab === 'group'
+                    ? 'bg-white text-oracle-primary border-t border-l border-r border-oracle-border -mb-px'
+                    : 'bg-gray-50 text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }
+                `}
+              >
+                Group View
+              </button>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Risk Summary */}
-        <section className="bg-white border border-oracle-border rounded-lg p-4">
-          <SectionHeader
-            title="Risk Summary"
-            detailsRoute="/company/:id/risk-details"
-            companyId={companyId}
-          />
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">External Rating</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.externalRating}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Internal Rating</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.internalRating}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Credit Score</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.creditScore}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Credit Outlook</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.creditOutlook}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Asset Classification</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.assetClassification}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Stage Classification</p>
-              <p className="text-sm font-medium text-gray-900">Stage {profileData.riskSummary.stageClassification}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Delinquent Flag</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.delinquentFlag}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Watchlist</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.watchlist}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Risk Weight</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.riskWeight}%</p>
-            </div>
-          </div>
-        </section>
+        {/* Company View Content */}
+        {activeTab === 'company' && (
+          <>
+            {/* Profile Summary */}
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Summary</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Relationship Group</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.relationshipGroup}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Member ID</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.memberId}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Group Company</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.groupCompany}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Constitution/Gender</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.constitutionGender}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Code 1 (PAN)</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.code1}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Code 2 (AADHM)</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.profileSummary.code2}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Onboarding Date</p>
+                  <p className="text-sm font-medium text-gray-900">01/01/2020</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Banking Arrangement</p>
+                  <p className="text-sm font-medium text-gray-900">{company.orgStructure}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Line of Business</p>
+                  <p className="text-sm font-medium text-gray-900">{company.lineOfBusiness}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Industry</p>
+                  <p className="text-sm font-medium text-gray-900">{company.industry}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Party Type</p>
+                  <p className="text-sm font-medium text-gray-900">{company.partyType}</p>
+                </div>
+              </div>
+            </section>
 
-        {/* Exposure Summary */}
-        <section className="bg-white border border-oracle-border rounded-lg p-4">
-          <SectionHeader
-            title="Exposure Summary"
-            detailsRoute="/company/:id/exposure-details"
-            companyId={companyId}
-          />
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Credit Limit</p>
-              <p className="text-sm font-medium text-gray-900">
-                ₹{(profileData.exposureSummary.creditLimit * 1000000).toLocaleString('en-IN')}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Gross Credit Exposure</p>
-              <p className="text-sm font-medium text-gray-900">
-                ₹{(profileData.exposureSummary.totalExposure * 1000000).toLocaleString('en-IN')}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Credit Outstanding</p>
-              <p className="text-sm font-medium text-gray-900">
-                ₹{(profileData.exposureSummary.totalCreditOutstanding * 1000000).toLocaleString('en-IN')}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Fund Based Limit</p>
-              <p className="text-sm font-medium text-gray-900">
-                ₹{(profileData.exposureSummary.fundBasedLimit * 1000000).toLocaleString('en-IN')}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Non-Fund Based Limit</p>
-              <p className="text-sm font-medium text-gray-900">
-                ₹{(profileData.exposureSummary.nonFundBasedLimit * 1000000).toLocaleString('en-IN')}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Undrawn Exposure</p>
-              <p className="text-sm font-medium text-gray-900">
-                ₹{(profileData.exposureSummary.undrawnExposure * 1000000).toLocaleString('en-IN')}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Max Overdues (Days)</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.exposureSummary.maxOverdues}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Overdues</p>
-              <p className="text-sm font-medium text-gray-900">
-                ₹{profileData.exposureSummary.totalOverdues.toLocaleString('en-IN')}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">% of Total Portfolio</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.exposureSummary.proportionOfTotalExposure.toFixed(2)}%</p>
-            </div>
-          </div>
-        </section>
+            {/* Risk Summary */}
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
+              <SectionHeader
+                title="Risk Summary"
+                detailsRoute="/company/:id/risk-details"
+                companyId={companyId}
+              />
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">External Rating</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.externalRating}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Internal Rating</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.internalRating}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Credit Score</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.creditScore}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Credit Outlook</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.creditOutlook}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Asset Classification</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.assetClassification}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Stage Classification</p>
+                  <p className="text-sm font-medium text-gray-900">Stage {profileData.riskSummary.stageClassification}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Delinquent Flag</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.delinquentFlag}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Watchlist</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.watchlist}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Risk Weight</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.riskSummary.riskWeight}%</p>
+                </div>
+              </div>
+            </section>
 
-        {/* Group/Related Party Exposures */}
-        <section className="bg-white border border-oracle-border rounded-lg p-4">
-          <SectionHeader
-            title="Group/Related Party Exposures"
-            detailsRoute="/company/:id/group-exposures"
-            companyId={companyId}
-          />
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-oracle-bgAlt">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Group</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No of Obligors</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Credit Limit</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Gross</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Credit</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Overdues</th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Max Days</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {profileData.groupExposures.map((exposure, idx) => (
-                  <tr key={idx}>
-                    <td className="px-4 py-2 text-sm text-gray-900">{exposure.group}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">{exposure.noOfObligors}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">₹{(exposure.creditLimit * 1000000).toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">₹{(exposure.totalGrossCreditExposure * 1000000).toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">₹{(exposure.totalCreditExposure * 1000000).toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">₹{exposure.totalOverdues.toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-2 text-sm text-gray-900">{exposure.maxDaysInDefault}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+            {/* Exposure Summary */}
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
+              <SectionHeader
+                title="Exposure Summary"
+                detailsRoute="/company/:id/exposure-details"
+                companyId={companyId}
+              />
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Credit Limit</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    ₹{(profileData.exposureSummary.creditLimit * 1000000).toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Gross Credit Exposure</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    ₹{(profileData.exposureSummary.totalExposure * 1000000).toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Credit Outstanding</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    ₹{(profileData.exposureSummary.totalCreditOutstanding * 1000000).toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Fund Based Limit</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    ₹{(profileData.exposureSummary.fundBasedLimit * 1000000).toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Non-Fund Based Limit</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    ₹{(profileData.exposureSummary.nonFundBasedLimit * 1000000).toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Undrawn Exposure</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    ₹{(profileData.exposureSummary.undrawnExposure * 1000000).toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Max Overdues (Days)</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.exposureSummary.maxOverdues}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Overdues</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    ₹{profileData.exposureSummary.totalOverdues.toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">% of Total Portfolio</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.exposureSummary.proportionOfTotalExposure.toFixed(2)}%</p>
+                </div>
+              </div>
+            </section>
 
-        {/* Covenants Summary */}
-        <section className="bg-white border border-oracle-border rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Covenants Summary</h3>
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Financial Covenants</h4>
-              <ul className="space-y-1">
-                {profileData.covenants.financial.map((covenant, idx) => (
-                  <li key={idx} className="text-sm text-gray-900 flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>{covenant}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Non-Financial Covenants</h4>
-              <ul className="space-y-1">
-                {profileData.covenants.nonFinancial.map((covenant, idx) => (
-                  <li key={idx} className="text-sm text-gray-900 flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>{covenant}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
+            {/* Group/Related Party Exposures */}
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
+              <SectionHeader
+                title="Group/Related Party Exposures"
+                detailsRoute="/company/:id/group-exposures"
+                companyId={companyId}
+              />
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-oracle-bgAlt">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Group</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">No of Obligors</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Credit Limit</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Gross</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Credit</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Overdues</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Max Days</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {profileData.groupExposures.map((exposure, idx) => (
+                      <tr key={idx}>
+                        <td className="px-4 py-2 text-sm text-gray-900">{exposure.group}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">{exposure.noOfObligors}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">₹{(exposure.creditLimit * 1000000).toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">₹{(exposure.totalGrossCreditExposure * 1000000).toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">₹{(exposure.totalCreditExposure * 1000000).toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">₹{exposure.totalOverdues.toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">{exposure.maxDaysInDefault}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
-        {/* Customer Profitability Summary */}
-        <section className="bg-white border border-oracle-border rounded-lg p-4">
-          <SectionHeader
-            title="Customer Profitability Summary"
-            detailsRoute="/company/:id/profitability"
-            companyId={companyId}
-          />
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Net Interest Margin</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.profitability.netInterestMargin}%</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Return on Assets</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.profitability.returnOnAssets}%</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Return on Capital</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.profitability.returnOnCapital}%</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Risk Adjusted Return</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.profitability.riskAdjustedReturn}%</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Customer Lifetime Value</p>
-              <p className="text-sm font-medium text-gray-900">₹{profileData.profitability.customerLifetimeValue.toLocaleString('en-IN')}</p>
-            </div>
-          </div>
-        </section>
+            {/* Covenants Summary */}
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Covenants Summary</h3>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Financial Covenants</h4>
+                  <ul className="space-y-1">
+                    {profileData.covenants.financial.map((covenant, idx) => (
+                      <li key={idx} className="text-sm text-gray-900 flex items-start">
+                        <span className="mr-2">•</span>
+                        <span>{covenant}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Non-Financial Covenants</h4>
+                  <ul className="space-y-1">
+                    {profileData.covenants.nonFinancial.map((covenant, idx) => (
+                      <li key={idx} className="text-sm text-gray-900 flex items-start">
+                        <span className="mr-2">•</span>
+                        <span>{covenant}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </section>
 
-        {/* KYC & Compliance Summary */}
-        <section className="bg-white border border-oracle-border rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">KYC & ALM Risk & Compliance Summary</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Profile Risk</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.compliance.profileRisk}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Risk Score</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.compliance.riskScore}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Behavioural Risk</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.compliance.behaviouralRisk}</p>
-            </div>
-            <div className="col-span-2">
-              <p className="text-sm text-gray-600 mb-1">Top 3 Risk Factors</p>
-              <ul className="space-y-1">
-                {profileData.compliance.top3RiskFactors.map((factor, idx) => (
-                  <li key={idx} className="text-sm text-gray-900 flex items-start">
-                    <span className="mr-2">{idx + 1}.</span>
-                    <span>{factor}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
+            {/* Customer Profitability Summary */}
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
+              <SectionHeader
+                title="Customer Profitability Summary"
+                detailsRoute="/company/:id/profitability"
+                companyId={companyId}
+              />
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Net Interest Margin</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.profitability.netInterestMargin}%</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Return on Assets</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.profitability.returnOnAssets}%</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Return on Capital</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.profitability.returnOnCapital}%</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Risk Adjusted Return</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.profitability.riskAdjustedReturn}%</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Customer Lifetime Value</p>
+                  <p className="text-sm font-medium text-gray-900">₹{profileData.profitability.customerLifetimeValue.toLocaleString('en-IN')}</p>
+                </div>
+              </div>
+            </section>
 
-        {/* Climate Risk Summary */}
-        <section className="bg-white border border-oracle-border rounded-lg p-4">
-          <SectionHeader
-            title="Climate Risk Summary"
-            detailsRoute="/company/:id/climate-risk"
-            companyId={companyId}
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Unique ID</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.climateRisk.uniqueId}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Emission Numbers</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.climateRisk.emissionNumbers}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Climate Sector Financed Emission</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.climateRisk.climateSectorFinancedEmission}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Intensity Numbers</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.climateRisk.intensityNumbers}</p>
-            </div>
-          </div>
-        </section>
+            {/* KYC & Compliance Summary */}
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">KYC & ALM Risk & Compliance Summary</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Profile Risk</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.compliance.profileRisk}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Risk Score</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.compliance.riskScore}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Behavioural Risk</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.compliance.behaviouralRisk}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm text-gray-600 mb-1">Top 3 Risk Factors</p>
+                  <ul className="space-y-1">
+                    {profileData.compliance.top3RiskFactors.map((factor, idx) => (
+                      <li key={idx} className="text-sm text-gray-900 flex items-start">
+                        <span className="mr-2">{idx + 1}.</span>
+                        <span>{factor}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </section>
 
-        {/* Approvals History */}
-        <section className="bg-white border border-oracle-border rounded-lg p-4">
-          <SectionHeader
-            title="Approvals History"
-            detailsRoute="/company/:id/approvals"
-            companyId={companyId}
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Last Approval Activity</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.approvalsHistory.lastApprovalActivity}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Last Approval Date</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.approvalsHistory.lastApprovalDate}</p>
-            </div>
-          </div>
-        </section>
+            {/* Climate Risk Summary */}
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
+              <SectionHeader
+                title="Climate Risk Summary"
+                detailsRoute="/company/:id/climate-risk"
+                companyId={companyId}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Unique ID</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.climateRisk.uniqueId}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Emission Numbers</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.climateRisk.emissionNumbers}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Climate Sector Financed Emission</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.climateRisk.climateSectorFinancedEmission}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Intensity Numbers</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.climateRisk.intensityNumbers}</p>
+                </div>
+              </div>
+            </section>
 
-        {/* Account Summary */}
-        <section className="bg-white border border-oracle-border rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Summary</h3>
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Total Accounts</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.accountSummary.totalAccounts}</p>
+            {/* Approvals History */}
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
+              <SectionHeader
+                title="Approvals History"
+                detailsRoute="/company/:id/approvals"
+                companyId={companyId}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Last Approval Activity</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.approvalsHistory.lastApprovalActivity}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Last Approval Date</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.approvalsHistory.lastApprovalDate}</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Account Summary */}
+            <section className="bg-white border border-oracle-border rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Summary</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Total Accounts</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.accountSummary.totalAccounts}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Accounts with Outstanding Dues</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.accountSummary.accountsWithOutstandingDues}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Accounts with Overdraft</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.accountSummary.accountsWithOverdraft}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Accounts at Delinquent</p>
+                  <p className="text-sm font-medium text-gray-900">{profileData.accountSummary.accountsAtDeliquent}</p>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* Group View Content */}
+        {activeTab === 'group' && groupData && (
+          <>
+            {/* Group Exposure Summary Header */}
+            <div className="bg-white border border-oracle-border rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Group Exposure Summary View</h2>
+
+              {/* Summary Metrics Bar */}
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Credit Limit</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    ₹{(groupData.totalCreditLimit * 1000000).toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Gross Credit Exposure</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    ₹{(groupData.totalExposure * 1000000).toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Overdues</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    ₹{groupData.totalOverdues.toLocaleString('en-IN')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Undrawn Exposure</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    ₹{(groupData.totalUndrawn * 1000000).toLocaleString('en-IN')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Total Exposure Label */}
+              <div className="border-t border-gray-200 pt-4">
+                <p className="text-sm font-medium text-gray-700">Total Exposure</p>
+                <p className="text-xs text-gray-500">Proportion of total Banks Exposure</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-600">Accounts with Outstanding Dues</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.accountSummary.accountsWithOutstandingDues}</p>
+
+            {/* Exposure Trends Chart */}
+            <div className="bg-white border border-oracle-border rounded-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Exposure Trends</h3>
+                <select
+                  value={selectedMeasure}
+                  onChange={(e) => setSelectedMeasure(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-oracle-primary"
+                >
+                  <option value="creditExposure">Credit Exposure</option>
+                  <option value="drawingLimit">Drawing Limit</option>
+                  <option value="drawingExter">Drawing Exter</option>
+                  <option value="overDrawings">Over Drawings</option>
+                  <option value="undrawn">Undrawn</option>
+                </select>
+              </div>
+
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={groupData.exposureTrends}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="drawingLimit" stroke="#ff7f0e" name="Drawing Limit" strokeWidth={2} />
+                  <Line type="monotone" dataKey="drawingExter" stroke="#ffd700" name="Drawing Exter" strokeWidth={2} />
+                  <Line type="monotone" dataKey="creditExposure" stroke="#d62728" name="Credit Exposure" strokeWidth={2} />
+                  <Line type="monotone" dataKey="overDrawings" stroke="#1f77b4" name="Over Drawings" strokeWidth={2} />
+                  <Line type="monotone" dataKey="undrawn" stroke="#2ca02c" name="Undrawn" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-            <div>
-              <p className="text-sm text-gray-600">Accounts with Overdraft</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.accountSummary.accountsWithOverdraft}</p>
+
+            {/* Exposure Detailed Summary Table */}
+            <div className="bg-white border border-oracle-border rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Exposure Detailed Summary</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-oracle-bgAlt">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Entity Name</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Entity ID</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Industry</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">External Rating</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Basel Rating</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Credit Limit</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Drawing Limit</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Credit Exposure</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Undrawn</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Gross Credit</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Overdues</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">DPD</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Credit Status</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Asset Class</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">ECL</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Security Value</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">RWA</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {groupData.entityDetails.map((entity, idx) => (
+                      <tr key={idx} className={entity.entityName === company.customerName ? 'bg-blue-50' : ''}>
+                        <td className="px-3 py-2 text-sm text-gray-900 font-medium">{entity.entityName}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900">{entity.entityId}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900">{entity.industry}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900">{entity.externalRating}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900">{entity.baselRating}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900 text-right">₹{(entity.creditLimit * 1000000).toLocaleString('en-IN')}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900 text-right">₹{(entity.drawingLimit * 1000000).toLocaleString('en-IN')}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900 text-right">₹{(entity.creditExposure * 1000000).toLocaleString('en-IN')}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900 text-right">₹{(entity.undrawnExposure * 1000000).toLocaleString('en-IN')}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900 text-right">₹{(entity.grossCreditExposure * 1000000).toLocaleString('en-IN')}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900 text-right">₹{entity.overdues.toLocaleString('en-IN')}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900 text-right">{entity.dpd}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900">{entity.creditStatus}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900">{entity.assetClassification}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900 text-right">₹{(entity.ecl * 1000000).toLocaleString('en-IN')}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900 text-right">₹{(entity.securityValue * 1000000).toLocaleString('en-IN')}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900 text-right">₹{(entity.rwa * 1000000).toLocaleString('en-IN')}</td>
+                      </tr>
+                    ))}
+                    {/* Total Row */}
+                    <tr className="bg-gray-100 font-semibold">
+                      <td className="px-3 py-2 text-sm text-gray-900">Total</td>
+                      <td colSpan={5} className="px-3 py-2"></td>
+                      <td className="px-3 py-2 text-sm text-gray-900 text-right">
+                        ₹{(groupData.entityDetails.reduce((sum, e) => sum + e.creditLimit, 0) * 1000000).toLocaleString('en-IN')}
+                      </td>
+                      <td className="px-3 py-2 text-sm text-gray-900 text-right">
+                        ₹{(groupData.entityDetails.reduce((sum, e) => sum + e.drawingLimit, 0) * 1000000).toLocaleString('en-IN')}
+                      </td>
+                      <td className="px-3 py-2 text-sm text-gray-900 text-right">
+                        ₹{(groupData.entityDetails.reduce((sum, e) => sum + e.creditExposure, 0) * 1000000).toLocaleString('en-IN')}
+                      </td>
+                      <td className="px-3 py-2 text-sm text-gray-900 text-right">
+                        ₹{(groupData.entityDetails.reduce((sum, e) => sum + e.undrawnExposure, 0) * 1000000).toLocaleString('en-IN')}
+                      </td>
+                      <td className="px-3 py-2 text-sm text-gray-900 text-right">
+                        ₹{(groupData.entityDetails.reduce((sum, e) => sum + e.grossCreditExposure, 0) * 1000000).toLocaleString('en-IN')}
+                      </td>
+                      <td className="px-3 py-2 text-sm text-gray-900 text-right">
+                        ₹{groupData.entityDetails.reduce((sum, e) => sum + e.overdues, 0).toLocaleString('en-IN')}
+                      </td>
+                      <td colSpan={5} className="px-3 py-2"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-600">Accounts at Delinquent</p>
-              <p className="text-sm font-medium text-gray-900">{profileData.accountSummary.accountsAtDeliquent}</p>
+
+            {/* Group Profitability */}
+            <div className="bg-white border border-oracle-border rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Group Profitability</h3>
+              <p className="text-sm text-gray-600 mb-6">Profitability Summary for {groupData.groupName}</p>
+
+              {/* Banking Profile */}
+              <div className="mb-8">
+                <h4 className="text-md font-semibold text-gray-800 mb-4">Banking Profile</h4>
+                <div className="grid grid-cols-4 gap-6">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Assets Total EOP Balance</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      ₹{(groupData.groupProfitability.bankingProfile.assetsTotalEOP * 1000000).toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Average Tenor of Assets</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {groupData.groupProfitability.bankingProfile.avgTenorAssets} years
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Liabilities Total EOP Balance</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      ₹{(groupData.groupProfitability.bankingProfile.liabilitiesTotalEOP * 1000000).toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Average Tenor of Liabilities</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {groupData.groupProfitability.bankingProfile.avgTenorLiabilities} years
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Profitability Metrics */}
+              <div>
+                <h4 className="text-md font-semibold text-gray-800 mb-4">Profitability Metrics</h4>
+                <div className="grid grid-cols-4 gap-6">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Total Income</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      ₹{(groupData.groupProfitability.metrics.totalIncome * 1000000).toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Total Expenditure</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      ₹{(groupData.groupProfitability.metrics.totalExpenditure * 1000000).toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Net Fee Income</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      ₹{(groupData.groupProfitability.metrics.netFeeIncome * 1000000).toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Net Income</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      ₹{(groupData.groupProfitability.metrics.netIncome * 1000000).toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Net Interest Margin</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {groupData.groupProfitability.metrics.netInterestMargin}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Return on Total Assets</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {groupData.groupProfitability.metrics.returnOnAssets}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Return on Equity</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {groupData.groupProfitability.metrics.returnOnEquity}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Risk Adjusted Return on Capital</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {groupData.groupProfitability.metrics.riskAdjustedReturn}%
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </section>
+          </>
+        )}
       </div>
 
       {/* Group Hierarchy Modal */}

@@ -270,6 +270,64 @@ export function calculateFilteredTopExposures(companies: PortfolioCompany[], lim
 }
 
 /**
+ * Calculate top NPA companies by NPA amount
+ */
+export function calculateFilteredTopNPA(companies: PortfolioCompany[], limit: number = 20) {
+  const totalExposure = companies.reduce((sum, c) => sum + c.creditExposure * 1000000, 0);
+
+  // Filter companies with NPA status (creditStatus === 'Delinquent')
+  const npaCompanies = companies.filter((c) => c.creditStatus === 'Delinquent');
+
+  // Sort by NPA amount (credit exposure) descending
+  const sorted = [...npaCompanies].sort((a, b) => b.creditExposure - a.creditExposure);
+
+  // Take top N
+  const top = sorted.slice(0, limit);
+
+  return top.map((company, index) => ({
+    rank: index + 1,
+    borrowerName: company.customerName,
+    accountNumber: `LA${String(1000 + index).padStart(6, '0')}`,
+    exposureAmount: company.creditExposure * 1000000,
+    npaAmount: company.creditExposure * 1000000,
+    percentOfPortfolio: totalExposure > 0 ? (company.creditExposure * 1000000 / totalExposure) * 100 : 0,
+    productType: company.productType,
+    region: company.region,
+    riskGrade: company.borrowerExternalRating,
+    utilization: company.creditLimit > 0 ? (company.creditExposure / company.creditLimit) * 100 : 0,
+  }));
+}
+
+/**
+ * Calculate top delinquent companies by delinquent amount
+ */
+export function calculateFilteredTopDelinquent(companies: PortfolioCompany[], limit: number = 20) {
+  const totalExposure = companies.reduce((sum, c) => sum + c.creditExposure * 1000000, 0);
+
+  // Filter companies with overdues
+  const delinquentCompanies = companies.filter((c) => c.overdues > 0);
+
+  // Sort by delinquent amount (overdues) descending
+  const sorted = [...delinquentCompanies].sort((a, b) => b.overdues - a.overdues);
+
+  // Take top N
+  const top = sorted.slice(0, limit);
+
+  return top.map((company, index) => ({
+    rank: index + 1,
+    borrowerName: company.customerName,
+    accountNumber: `LA${String(1000 + index).padStart(6, '0')}`,
+    exposureAmount: company.creditExposure * 1000000,
+    delinquentAmount: company.overdues,
+    percentOfPortfolio: totalExposure > 0 ? (company.creditExposure * 1000000 / totalExposure) * 100 : 0,
+    productType: company.productType,
+    region: company.region,
+    riskGrade: company.borrowerExternalRating,
+    utilization: company.creditLimit > 0 ? (company.creditExposure / company.creditLimit) * 100 : 0,
+  }));
+}
+
+/**
  * Calculate trend data from filtered companies (12-month mock)
  */
 export function calculateFilteredTrends(companies: PortfolioCompany[]) {
@@ -299,4 +357,194 @@ export function getUniqueFilterValues(companies: PortfolioCompany[]) {
     rating: Array.from(new Set(companies.map((c) => c.borrowerExternalRating))).sort(),
     assetClassification: Array.from(new Set(companies.map((c) => c.assetClass))).sort(),
   };
+}
+
+/**
+ * Apply page filters to companies with hybrid logic:
+ * - OR logic within same field (e.g., Industry: Real Estate OR NBFC)
+ * - AND logic between different fields (e.g., Industry AND Region)
+ *
+ * This allows filtering for multiple values in the same field while still
+ * requiring all different filter types to match.
+ */
+export function applyPageFilters(
+  companies: PortfolioCompany[],
+  pageFilters: import('../types').PageFilter[]
+): PortfolioCompany[] {
+  if (!pageFilters || pageFilters.length === 0) {
+    return companies;
+  }
+
+  // Group filters by field to support OR logic within same field
+  const filtersByField = pageFilters.reduce((acc, filter) => {
+    if (!acc[filter.field]) {
+      acc[filter.field] = [];
+    }
+    acc[filter.field].push(filter.value.toLowerCase());
+    return acc;
+  }, {} as Record<string, string[]>);
+
+  return companies.filter((company) => {
+    // Check if company matches ALL field groups (AND between fields)
+    return Object.entries(filtersByField).every(([field, values]) => {
+      const fieldValue = company[field as keyof PortfolioCompany];
+
+      // Handle undefined/null values
+      if (fieldValue === undefined || fieldValue === null) {
+        return false;
+      }
+
+      // Check if company matches ANY value for this field (OR within field)
+      return values.some(value =>
+        fieldValue.toString().toLowerCase() === value
+      );
+    });
+  });
+}
+
+/**
+ * Calculate top exposures with rating migration data
+ * Shows companies that have experienced rating changes (upgrades or downgrades)
+ */
+export function calculateTopExposuresWithMigration(
+  companies: PortfolioCompany[],
+  limit: number = 20
+): Array<{
+  rank: number;
+  borrowerName: string;
+  accountNumber: string;
+  exposureAmount: number;
+  percentOfPortfolio: number;
+  productType: string;
+  region: string;
+  riskGrade: string;
+  utilization: number;
+  previousRating?: string;
+  currentRating?: string;
+  notchesChanged?: number;
+  migrationDate?: string;
+  migrationDirection?: 'upgrade' | 'downgrade' | 'stable';
+}> {
+  const totalExposure = companies.reduce((sum, c) => sum + c.creditExposure * 1000000, 0);
+
+  // Rating scale for calculating notches
+  const ratingScale = ['AAA', 'AA', 'A', 'BBB', 'BB', 'B', 'CCC', 'CC', 'C', 'D'];
+
+  // Helper function to calculate notches changed
+  const calculateNotches = (previous: string, current: string): number => {
+    const prevIdx = ratingScale.indexOf(previous);
+    const currIdx = ratingScale.indexOf(current);
+    if (prevIdx === -1 || currIdx === -1) return 0;
+    return prevIdx - currIdx; // Negative = downgrade, Positive = upgrade
+  };
+
+  // Helper function to simulate previous rating (mock data)
+  // In reality, this would come from rating history
+  const getPreviousRating = (company: PortfolioCompany): string | null => {
+    const currentRating = company.borrowerExternalRating;
+    const currentIdx = ratingScale.indexOf(currentRating);
+
+    if (currentIdx === -1) return null;
+
+    // Simulate rating changes:
+    // - Delinquent/Watchlist companies: likely downgraded
+    // - High utilization: likely downgraded
+    // - Low credit score: likely downgraded
+    // - Performing with good metrics: might be upgraded
+
+    if (company.creditStatus === 'Delinquent' && currentIdx < ratingScale.length - 2) {
+      // Downgraded by 2-3 notches
+      return ratingScale[currentIdx - 2] || ratingScale[currentIdx - 1];
+    }
+
+    if (company.creditStatus === 'Watchlist' && currentIdx < ratingScale.length - 1) {
+      // Downgraded by 1 notch
+      return ratingScale[currentIdx - 1];
+    }
+
+    const utilization = company.creditLimit > 0 ? (company.creditExposure / company.creditLimit) * 100 : 0;
+
+    if (utilization > 90 && currentIdx < ratingScale.length - 1) {
+      // High utilization, likely downgraded
+      return ratingScale[currentIdx - 1];
+    }
+
+    if (company.creditStatus === 'Performing' && company.borrowerCreditScore > 750 && currentIdx > 0) {
+      // Good performance, possibly upgraded
+      if (Math.random() > 0.7) {
+        return ratingScale[currentIdx + 1];
+      }
+    }
+
+    // Some random changes for variety (30% of remaining companies)
+    if (Math.random() > 0.7) {
+      const change = Math.random() > 0.6 ? -1 : 1; // 60% downgrade, 40% upgrade
+      const newIdx = currentIdx - change;
+      if (newIdx >= 0 && newIdx < ratingScale.length) {
+        return ratingScale[newIdx];
+      }
+    }
+
+    return null; // No change
+  };
+
+  // Generate migration dates (last 6 months)
+  const getMigrationDate = (): string => {
+    const today = new Date();
+    const daysAgo = Math.floor(Math.random() * 180); // 0-180 days ago
+    const date = new Date(today);
+    date.setDate(date.getDate() - daysAgo);
+    return date.toISOString();
+  };
+
+  // Filter companies with rating changes
+  const companiesWithMigration = companies
+    .map(company => {
+      const previousRating = getPreviousRating(company);
+      const currentRating = company.borrowerExternalRating;
+
+      if (!previousRating || previousRating === currentRating) {
+        return null; // No change
+      }
+
+      const notchesChanged = calculateNotches(previousRating, currentRating);
+      const migrationDirection = notchesChanged < 0 ? 'downgrade' as const :
+                                 notchesChanged > 0 ? 'upgrade' as const :
+                                 'stable' as const;
+
+      return {
+        company,
+        previousRating,
+        currentRating,
+        notchesChanged,
+        migrationDate: getMigrationDate(),
+        migrationDirection,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  // Sort by exposure (largest first)
+  const sorted = [...companiesWithMigration].sort((a, b) =>
+    b.company.creditExposure - a.company.creditExposure
+  );
+
+  // Take top N
+  const top = sorted.slice(0, limit);
+
+  return top.map((item, index) => ({
+    rank: index + 1,
+    borrowerName: item.company.customerName,
+    accountNumber: `LA${String(1000 + index).padStart(6, '0')}`,
+    exposureAmount: item.company.creditExposure * 1000000,
+    percentOfPortfolio: totalExposure > 0 ? (item.company.creditExposure * 1000000 / totalExposure) * 100 : 0,
+    productType: item.company.productType,
+    region: item.company.region,
+    riskGrade: item.company.borrowerExternalRating,
+    utilization: item.company.creditLimit > 0 ? (item.company.creditExposure / item.company.creditLimit) * 100 : 0,
+    previousRating: item.previousRating,
+    currentRating: item.currentRating,
+    notchesChanged: item.notchesChanged,
+    migrationDate: item.migrationDate,
+    migrationDirection: item.migrationDirection,
+  }));
 }

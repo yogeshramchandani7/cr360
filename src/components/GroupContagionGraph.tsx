@@ -1,4 +1,5 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ReactFlow, {
   Controls,
   Background,
@@ -11,6 +12,8 @@ import type { Node, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { mockGroupContagionNetwork } from '../lib/mockData';
 import { formatCurrency } from '../lib/utils';
+import { useFilterStore } from '../stores/filterStore';
+import ChartActionDropdown from './ChartActionDropdown';
 
 // Custom node component for better styling
 const CustomNode = ({ data }: { data: any }) => {
@@ -52,7 +55,30 @@ const nodeTypes = {
   custom: CustomNode,
 };
 
+interface DropdownState {
+  visible: boolean;
+  x: number;
+  y: number;
+  filterData: {
+    field: string;
+    value: string;
+    label: string;
+    source: string;
+  } | null;
+}
+
 export default function GroupContagionGraph() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const setDrillDownFilter = useFilterStore((state) => state.setDrillDownFilter);
+  const addPageFilter = useFilterStore((state) => state.addPageFilter);
+  const [dropdownState, setDropdownState] = useState<DropdownState>({
+    visible: false,
+    x: 0,
+    y: 0,
+    filterData: null,
+  });
+
   // Convert mock data to ReactFlow format
   const initialNodes: Node[] = useMemo(() => {
     // Create a hierarchical layout
@@ -168,10 +194,45 @@ export default function GroupContagionGraph() {
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
-  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
-    console.log('Node clicked:', node.data.label);
-    // TODO: Navigate to company profile or show details modal
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    // Show dropdown at mouse position
+    setDropdownState({
+      visible: true,
+      x: event.clientX || 0,
+      y: event.clientY || 0,
+      filterData: {
+        field: 'customerName',
+        value: node.data.label,
+        label: `${node.data.label}`,
+        source: 'Group Contagion Network',
+      },
+    });
   }, []);
+
+  const handleDropdownSelect = (optionId: string) => {
+    if (!dropdownState.filterData) return;
+
+    if (optionId === 'counterparties') {
+      // Navigate to portfolio with drilldown filter
+      setDrillDownFilter(dropdownState.filterData);
+      navigate('/portfolio');
+    } else if (optionId === 'apply-filter') {
+      // Apply filter to current page
+      addPageFilter(location.pathname, {
+        field: dropdownState.filterData.field,
+        value: dropdownState.filterData.value,
+        label: dropdownState.filterData.label,
+        source: dropdownState.filterData.source,
+      });
+    }
+
+    // Close dropdown
+    setDropdownState({ visible: false, x: 0, y: 0, filterData: null });
+  };
+
+  const handleDropdownClose = () => {
+    setDropdownState({ visible: false, x: 0, y: 0, filterData: null });
+  };
 
   // Calculate portfolio-level metrics
   const totalExposure = mockGroupContagionNetwork.nodes.reduce((sum, node) => sum + node.exposure, 0);
@@ -185,6 +246,15 @@ export default function GroupContagionGraph() {
 
   return (
     <div className="bg-white rounded-lg p-6 border border-oracle-border">
+      {/* Chart Action Dropdown */}
+      {dropdownState.visible && (
+        <ChartActionDropdown
+          position={{ x: dropdownState.x, y: dropdownState.y }}
+          onSelect={handleDropdownSelect}
+          onClose={handleDropdownClose}
+        />
+      )}
+
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
           Group Contagion Risk Network

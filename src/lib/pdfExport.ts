@@ -393,7 +393,7 @@ const generateProfileSummary = (ctx: PDFContext, company: PortfolioCompany): voi
   addSectionHeading(ctx, '1.3 Exposure Overview', 2);
   addKeyValue(ctx, 'Total Exposure', formatCurrencyInMillions(company.creditExposure));
   addKeyValue(ctx, 'Credit Limit', formatCurrencyInMillions(company.creditLimit));
-  addKeyValue(ctx, 'Utilization', `${((company.creditExposure / company.creditLimit) * 100).toFixed(1)}%`);
+  addKeyValue(ctx, 'Utilization', `${((company.creditExposure / company.creditLimit) * 100).toFixed(2)}%`);
   addKeyValue(ctx, 'Overdue Days', company.overdues.toString());
 };
 
@@ -646,13 +646,13 @@ const generateClimateRisk = (ctx: PDFContext, companyId: string): void => {
 
   // Climate Risk Summary
   addSectionHeading(ctx, '6.1 Emissions Summary', 2);
-  addKeyValue(ctx, 'Total Emissions', climateDetails.emissionsSummary.totalEmissions.toFixed(0) + ' tCO2e');
-  addKeyValue(ctx, 'Scope 1 Emissions', climateDetails.emissionsSummary.scope1.toFixed(0) + ' tCO2e');
-  addKeyValue(ctx, 'Scope 2 Emissions', climateDetails.emissionsSummary.scope2.toFixed(0) + ' tCO2e');
-  addKeyValue(ctx, 'Scope 3 Emissions', climateDetails.emissionsSummary.scope3.toFixed(0) + ' tCO2e');
-  addKeyValue(ctx, 'Financed Emissions', climateDetails.emissionsSummary.financedEmissions.toFixed(0) + ' tCO2e');
+  addKeyValue(ctx, 'Total Emissions', climateDetails.emissionsSummary.totalEmissions.toFixed(2) + ' tCO2e');
+  addKeyValue(ctx, 'Scope 1 Emissions', climateDetails.emissionsSummary.scope1.toFixed(2) + ' tCO2e');
+  addKeyValue(ctx, 'Scope 2 Emissions', climateDetails.emissionsSummary.scope2.toFixed(2) + ' tCO2e');
+  addKeyValue(ctx, 'Scope 3 Emissions', climateDetails.emissionsSummary.scope3.toFixed(2) + ' tCO2e');
+  addKeyValue(ctx, 'Financed Emissions', climateDetails.emissionsSummary.financedEmissions.toFixed(2) + ' tCO2e');
   addKeyValue(ctx, 'WACI', climateDetails.emissionsSummary.waci.toFixed(2) + ' tCO2e/₹M');
-  addKeyValue(ctx, 'Climate Risk Score', climateDetails.climateRiskScore.climateRiskScore.toFixed(1) + '/5');
+  addKeyValue(ctx, 'Climate Risk Score', climateDetails.climateRiskScore.climateRiskScore.toFixed(2) + '/5');
   addKeyValue(ctx, 'Climate Risk Rating', climateDetails.climateRiskScore.climateRating);
 
   ctx.yPosition += 5;
@@ -678,7 +678,7 @@ const generateKYCCompliance = (ctx: PDFContext, companyId: string): void => {
   addKeyValue(ctx, 'Risk Details', kycDetails.riskSummary.details);
   const latestRiskScore = kycDetails.riskScoreHistory[0];
   if (latestRiskScore) {
-    addKeyValue(ctx, 'Latest Risk Score', latestRiskScore.score.toFixed(1));
+    addKeyValue(ctx, 'Latest Risk Score', latestRiskScore.score.toFixed(2));
     addKeyValue(ctx, 'Risk Level', latestRiskScore.risk);
     addKeyValue(ctx, 'Last Scored', formatDate(latestRiskScore.dateScored));
   }

@@ -1,17 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import {
-  getQuickMortalityCharts,
-  getForwardDelinquencyCharts,
-  getPBICharts,
-  getVDICharts,
-  getPDMigrationCharts,
-  getConcentrationCharts,
-  getUtilizationStressCharts,
-  getReversionRateCharts,
-  getECLSensitivityCharts,
-  getPPHSCharts,
+  generateQuickMortalityCharts,
+  generateForwardDelinquencyCharts,
+  generatePBICharts,
+  generateVDICharts,
+  generatePDMigrationCharts,
+  generateConcentrationCharts,
+  generateUtilizationStressCharts,
+  generateReversionRateCharts,
+  generateECLSensitivityCharts,
+  generatePPHSCharts,
   getChartsForKPI,
 } from './kpiDrilldownData';
+import { mockPortfolioCompanies } from './mockData';
 import type { KPIChart } from '../types';
 
 // Valid filter fields from PortfolioCompany interface
@@ -74,8 +75,8 @@ const validateDataKeys = (chart: KPIChart) => {
 };
 
 describe('kpiDrilldownData', () => {
-  describe('getQuickMortalityCharts', () => {
-    const charts = getQuickMortalityCharts();
+  describe('generateQuickMortalityCharts', () => {
+    const charts = generateQuickMortalityCharts(mockPortfolioCompanies);
 
     it('returns 3 charts', () => {
       expect(charts).toHaveLength(3);
@@ -115,8 +116,8 @@ describe('kpiDrilldownData', () => {
     });
   });
 
-  describe('getForwardDelinquencyCharts', () => {
-    const charts = getForwardDelinquencyCharts();
+  describe('generateForwardDelinquencyCharts', () => {
+    const charts = generateForwardDelinquencyCharts(mockPortfolioCompanies);
 
     it('returns 3 charts', () => {
       expect(charts).toHaveLength(3);
@@ -151,8 +152,8 @@ describe('kpiDrilldownData', () => {
     });
   });
 
-  describe('getPBICharts', () => {
-    const charts = getPBICharts();
+  describe('generatePBICharts', () => {
+    const charts = generatePBICharts(mockPortfolioCompanies);
 
     it('returns 3 charts', () => {
       expect(charts).toHaveLength(3);
@@ -186,8 +187,8 @@ describe('kpiDrilldownData', () => {
     });
   });
 
-  describe('getVDICharts', () => {
-    const charts = getVDICharts();
+  describe('generateVDICharts', () => {
+    const charts = generateVDICharts(mockPortfolioCompanies);
 
     it('returns 3 charts', () => {
       expect(charts).toHaveLength(3);
@@ -222,8 +223,8 @@ describe('kpiDrilldownData', () => {
     });
   });
 
-  describe('getPDMigrationCharts', () => {
-    const charts = getPDMigrationCharts();
+  describe('generatePDMigrationCharts', () => {
+    const charts = generatePDMigrationCharts(mockPortfolioCompanies);
 
     it('returns 3 charts', () => {
       expect(charts).toHaveLength(3);
@@ -259,8 +260,8 @@ describe('kpiDrilldownData', () => {
     });
   });
 
-  describe('getConcentrationCharts', () => {
-    const charts = getConcentrationCharts();
+  describe('generateConcentrationCharts', () => {
+    const charts = generateConcentrationCharts(mockPortfolioCompanies);
 
     it('returns 3 charts', () => {
       expect(charts).toHaveLength(3);
@@ -294,8 +295,8 @@ describe('kpiDrilldownData', () => {
     });
   });
 
-  describe('getUtilizationStressCharts', () => {
-    const charts = getUtilizationStressCharts();
+  describe('generateUtilizationStressCharts', () => {
+    const charts = generateUtilizationStressCharts(mockPortfolioCompanies);
 
     it('returns 3 charts', () => {
       expect(charts).toHaveLength(3);
@@ -330,8 +331,8 @@ describe('kpiDrilldownData', () => {
     });
   });
 
-  describe('getReversionRateCharts', () => {
-    const charts = getReversionRateCharts();
+  describe('generateReversionRateCharts', () => {
+    const charts = generateReversionRateCharts(mockPortfolioCompanies);
 
     it('returns 3 charts', () => {
       expect(charts).toHaveLength(3);
@@ -366,8 +367,8 @@ describe('kpiDrilldownData', () => {
     });
   });
 
-  describe('getECLSensitivityCharts', () => {
-    const charts = getECLSensitivityCharts();
+  describe('generateECLSensitivityCharts', () => {
+    const charts = generateECLSensitivityCharts(mockPortfolioCompanies);
 
     it('returns 3 charts', () => {
       expect(charts).toHaveLength(3);
@@ -401,8 +402,8 @@ describe('kpiDrilldownData', () => {
     });
   });
 
-  describe('getPPHSCharts', () => {
-    const charts = getPPHSCharts();
+  describe('generatePPHSCharts', () => {
+    const charts = generatePPHSCharts(mockPortfolioCompanies);
 
     it('returns 3 charts', () => {
       expect(charts).toHaveLength(3);
@@ -440,72 +441,77 @@ describe('kpiDrilldownData', () => {
 
   describe('getChartsForKPI - mapper function', () => {
     it('returns charts for quick_mortality KPI', () => {
-      const charts = getChartsForKPI('quick_mortality');
+      const charts = getChartsForKPI('quick_mortality', mockPortfolioCompanies);
       expect(charts).toHaveLength(3);
       expect(charts[0].id).toBe('mortality-by-segment');
     });
 
     it('returns charts for forward_delinquency KPI', () => {
-      const charts = getChartsForKPI('forward_delinquency');
+      const charts = getChartsForKPI('forward_delinquency', mockPortfolioCompanies);
       expect(charts).toHaveLength(3);
       expect(charts[0].id).toBe('forecast-by-segment');
     });
 
     it('returns charts for pbi KPI', () => {
-      const charts = getChartsForKPI('pbi');
+      const charts = getChartsForKPI('pbi', mockPortfolioCompanies);
       expect(charts).toHaveLength(3);
       expect(charts[0].id).toBe('pbi-credit-status');
     });
 
     it('returns charts for vdi KPI', () => {
-      const charts = getChartsForKPI('vdi');
+      const charts = getChartsForKPI('vdi', mockPortfolioCompanies);
       expect(charts).toHaveLength(3);
       expect(charts[0].id).toBe('vdi-by-segment');
     });
 
     it('returns charts for net_pd_migration KPI', () => {
-      const charts = getChartsForKPI('net_pd_migration');
+      const charts = getChartsForKPI('net_pd_migration', mockPortfolioCompanies);
       expect(charts).toHaveLength(3);
       expect(charts[0].id).toBe('migration-by-rating');
     });
 
     it('returns charts for concentration_contagion KPI', () => {
-      const charts = getChartsForKPI('concentration_contagion');
+      const charts = getChartsForKPI('concentration_contagion', mockPortfolioCompanies);
       expect(charts).toHaveLength(3);
       expect(charts[0].id).toBe('concentration-by-industry');
     });
 
     it('returns charts for utilization_stress KPI', () => {
-      const charts = getChartsForKPI('utilization_stress');
+      const charts = getChartsForKPI('utilization_stress', mockPortfolioCompanies);
       expect(charts).toHaveLength(3);
       expect(charts[0].id).toBe('utilization-by-lob');
     });
 
     it('returns charts for reversion_rate KPI', () => {
-      const charts = getChartsForKPI('reversion_rate');
+      const charts = getChartsForKPI('reversion_rate', mockPortfolioCompanies);
       expect(charts).toHaveLength(3);
       expect(charts[0].id).toBe('reversion-by-asset-class');
     });
 
     it('returns charts for ecl_sensitivity KPI', () => {
-      const charts = getChartsForKPI('ecl_sensitivity');
+      const charts = getChartsForKPI('ecl_sensitivity', mockPortfolioCompanies);
       expect(charts).toHaveLength(3);
       expect(charts[0].id).toBe('ecl-by-segment');
     });
 
     it('returns charts for pphs KPI', () => {
-      const charts = getChartsForKPI('pphs');
+      const charts = getChartsForKPI('pphs', mockPortfolioCompanies);
       expect(charts).toHaveLength(3);
       expect(charts[0].id).toBe('pphs-by-segment');
     });
 
     it('returns empty array for unknown KPI ID', () => {
-      const charts = getChartsForKPI('unknown_kpi');
+      const charts = getChartsForKPI('unknown_kpi', mockPortfolioCompanies);
       expect(charts).toEqual([]);
     });
 
     it('returns empty array for invalid KPI ID', () => {
-      const charts = getChartsForKPI('');
+      const charts = getChartsForKPI('', mockPortfolioCompanies);
+      expect(charts).toEqual([]);
+    });
+
+    it('returns empty array when no companies provided', () => {
+      const charts = getChartsForKPI('quick_mortality', []);
       expect(charts).toEqual([]);
     });
 
@@ -524,7 +530,7 @@ describe('kpiDrilldownData', () => {
       ];
 
       kpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         expect(charts.length).toBeGreaterThan(0);
         expect(charts.length).toBeLessThanOrEqual(4);
       });
@@ -547,7 +553,7 @@ describe('kpiDrilldownData', () => {
 
     it('all charts have unique IDs within their KPI', () => {
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         const chartIds = charts.map((c) => c.id);
         const uniqueIds = new Set(chartIds);
         expect(uniqueIds.size).toBe(chartIds.length);
@@ -556,7 +562,7 @@ describe('kpiDrilldownData', () => {
 
     it('all charts have non-empty titles and descriptions', () => {
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           expect(chart.title.length).toBeGreaterThan(0);
           if (chart.description) {
@@ -568,7 +574,7 @@ describe('kpiDrilldownData', () => {
 
     it('all pie charts have percentage values', () => {
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           if (chart.type === 'pie') {
             chart.data.forEach((dataPoint: any) => {
@@ -584,7 +590,7 @@ describe('kpiDrilldownData', () => {
 
     it('all bar charts with xAxisKey have correct structure', () => {
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           if (chart.type === 'bar' && chart.xAxisKey) {
             chart.data.forEach((dataPoint: any) => {
@@ -597,7 +603,7 @@ describe('kpiDrilldownData', () => {
 
     it('all charts have labels in data points', () => {
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           chart.data.forEach((dataPoint: any) => {
             expect(dataPoint).toHaveProperty('label');
@@ -610,7 +616,7 @@ describe('kpiDrilldownData', () => {
 
     it('all dataKeys reference existing keys in data', () => {
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           chart.dataKeys.forEach((dataKey) => {
             // At least one data point should have this key
@@ -625,7 +631,7 @@ describe('kpiDrilldownData', () => {
 
     it('filter labels have correct format', () => {
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           expect(chart.filterLabel).toMatch(/\{value\}/);
         });
@@ -634,7 +640,7 @@ describe('kpiDrilldownData', () => {
 
     it('all numeric values in data are valid numbers', () => {
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           chart.data.forEach((dataPoint: any) => {
             Object.values(dataPoint).forEach((value) => {
@@ -665,7 +671,7 @@ describe('kpiDrilldownData', () => {
 
     it('all filter fields are valid PortfolioCompany fields', () => {
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           expect(VALID_FILTER_FIELDS).toContain(chart.filterField);
         });
@@ -675,7 +681,7 @@ describe('kpiDrilldownData', () => {
     it('segment filter values match expected enum', () => {
       const validSegments = ['RETAIL', 'SME', 'CORPORATE'];
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           if (chart.filterField === 'segment') {
             chart.data.forEach((dataPoint: any) => {
@@ -691,7 +697,7 @@ describe('kpiDrilldownData', () => {
     it('region filter values match expected enum', () => {
       const validRegions = ['NORTH', 'SOUTH', 'EAST', 'WEST'];
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           if (chart.filterField === 'region') {
             chart.data.forEach((dataPoint: any) => {
@@ -707,7 +713,7 @@ describe('kpiDrilldownData', () => {
     it('lineOfBusiness filter values match expected enum', () => {
       const validLOBs = ['LCB', 'MCB', 'SCB'];
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           if (chart.filterField === 'lineOfBusiness') {
             chart.data.forEach((dataPoint: any) => {
@@ -721,7 +727,7 @@ describe('kpiDrilldownData', () => {
     it('creditStatus filter values match expected values', () => {
       const validStatuses = ['Standard', 'Watchlist', 'Delinquent'];
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           if (chart.filterField === 'creditStatus') {
             chart.data.forEach((dataPoint: any) => {
@@ -735,7 +741,7 @@ describe('kpiDrilldownData', () => {
     it('assetClass filter values match expected values', () => {
       const validAssetClasses = ['Standard', 'Delinquent'];
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         charts.forEach((chart) => {
           if (chart.filterField === 'assetClass') {
             chart.data.forEach((dataPoint: any) => {
@@ -763,7 +769,7 @@ describe('kpiDrilldownData', () => {
       ];
 
       const totalCharts = allKpiIds.reduce((sum, kpiId) => {
-        return sum + getChartsForKPI(kpiId).length;
+        return sum + getChartsForKPI(kpiId, mockPortfolioCompanies).length;
       }, 0);
 
       expect(totalCharts).toBe(30);
@@ -784,7 +790,7 @@ describe('kpiDrilldownData', () => {
       ];
 
       allKpiIds.forEach((kpiId) => {
-        const charts = getChartsForKPI(kpiId);
+        const charts = getChartsForKPI(kpiId, mockPortfolioCompanies);
         expect(charts).toHaveLength(3);
       });
     });

@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   PieChart,
   Pie,
@@ -18,6 +19,7 @@ import {
 } from 'recharts';
 import type { KPIChart } from '../types';
 import { useFilterStore } from '../stores/filterStore';
+import ChartActionDropdown from './ChartActionDropdown';
 
 const CHART_COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'];
 
@@ -26,12 +28,32 @@ interface ClickableChartCardProps {
   kpiId: string;
 }
 
+interface DropdownState {
+  visible: boolean;
+  x: number;
+  y: number;
+  filterData: {
+    field: string;
+    value: string;
+    label: string;
+    source: string;
+  } | null;
+}
+
 export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const setDrillDownFilter = useFilterStore((state) => state.setDrillDownFilter);
+  const addPageFilter = useFilterStore((state) => state.addPageFilter);
+  const [dropdownState, setDropdownState] = useState<DropdownState>({
+    visible: false,
+    x: 0,
+    y: 0,
+    filterData: null,
+  });
 
-  const handleChartClick = (data: any) => {
-    // Don't navigate if clicking on "No Data" placeholder or empty data
+  const handleChartClick = (data: any, event: any) => {
+    // Don't show dropdown if clicking on "No Data" placeholder or empty data
     if (!data || !data.label || data.label === 'No Data' || data.value === 0) {
       return;
     }
@@ -39,16 +61,43 @@ export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardP
     // Create filter label by replacing {value} placeholder with actual value
     const filterLabel = chart.filterLabel.replace('{value}', data.label);
 
-    // Set the drilldown filter
-    setDrillDownFilter({
-      field: chart.filterField,
-      value: data.label,
-      label: filterLabel,
-      source: `KPI Drilldown - ${kpiId} - ${chart.title}`,
+    // Show dropdown at mouse position
+    setDropdownState({
+      visible: true,
+      x: event.clientX || 0,
+      y: event.clientY || 0,
+      filterData: {
+        field: chart.filterField,
+        value: data.label,
+        label: filterLabel,
+        source: `KPI Drilldown - ${kpiId} - ${chart.title}`,
+      },
     });
+  };
 
-    // Navigate to portfolio view
-    navigate('/portfolio');
+  const handleDropdownSelect = (optionId: string) => {
+    if (!dropdownState.filterData) return;
+
+    if (optionId === 'counterparties') {
+      // Navigate to portfolio with drilldown filter (current behavior)
+      setDrillDownFilter(dropdownState.filterData);
+      navigate('/portfolio');
+    } else if (optionId === 'apply-filter') {
+      // Apply filter to current page
+      addPageFilter(location.pathname, {
+        field: dropdownState.filterData.field,
+        value: dropdownState.filterData.value,
+        label: dropdownState.filterData.label,
+        source: dropdownState.filterData.source,
+      });
+    }
+
+    // Close dropdown
+    setDropdownState({ visible: false, x: 0, y: 0, filterData: null });
+  };
+
+  const handleDropdownClose = () => {
+    setDropdownState({ visible: false, x: 0, y: 0, filterData: null });
   };
 
   const renderChart = () => {
@@ -65,14 +114,14 @@ export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardP
               outerRadius={100}
               fill="#8884d8"
               dataKey={chart.dataKeys[0].key}
-              onClick={handleChartClick}
+              onClick={(data, _index, event) => handleChartClick(data, event)}
               cursor="pointer"
             >
               {chart.data.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value: number) => value ? `$${(value / 1000000).toFixed(1)}M` : '0'} />
+            <Tooltip formatter={(value: number) => value ? `$${(value / 1000000).toFixed(2)}M` : '0'} />
           </PieChart>
         );
 
@@ -82,7 +131,7 @@ export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardP
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis dataKey={chart.xAxisKey || 'label'} stroke="#6b7280" />
             <YAxis stroke="#6b7280" />
-            <Tooltip />
+            <Tooltip formatter={(value: number) => typeof value === 'number' ? value.toFixed(2) : value} />
             <Legend />
             {chart.dataKeys.map((dataKey, index) => (
               <Bar
@@ -90,7 +139,7 @@ export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardP
                 dataKey={dataKey.key}
                 name={dataKey.name}
                 fill={dataKey.color || CHART_COLORS[index % CHART_COLORS.length]}
-                onClick={handleChartClick}
+                onClick={(data, _index, event) => handleChartClick(data, event)}
                 cursor="pointer"
               />
             ))}
@@ -103,7 +152,7 @@ export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardP
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis dataKey={chart.xAxisKey || 'label'} stroke="#6b7280" />
             <YAxis stroke="#6b7280" />
-            <Tooltip />
+            <Tooltip formatter={(value: number) => typeof value === 'number' ? value.toFixed(2) : value} />
             <Legend />
             {chart.dataKeys.map((dataKey, index) => (
               <Line
@@ -113,7 +162,7 @@ export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardP
                 name={dataKey.name}
                 stroke={dataKey.color || CHART_COLORS[index % CHART_COLORS.length]}
                 strokeWidth={2}
-                onClick={handleChartClick}
+                onClick={((data: any, _index: number, event: React.MouseEvent) => handleChartClick(data, event)) as any}
                 cursor="pointer"
               />
             ))}
@@ -126,7 +175,7 @@ export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardP
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
             <XAxis dataKey={chart.xAxisKey || 'label'} stroke="#6b7280" />
             <YAxis stroke="#6b7280" />
-            <Tooltip />
+            <Tooltip formatter={(value: number) => typeof value === 'number' ? value.toFixed(2) : value} />
             <Legend />
             {chart.dataKeys.map((dataKey, index) => (
               <Area
@@ -137,7 +186,7 @@ export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardP
                 stroke={dataKey.color || CHART_COLORS[index % CHART_COLORS.length]}
                 fill={dataKey.color || CHART_COLORS[index % CHART_COLORS.length]}
                 fillOpacity={0.6}
-                onClick={handleChartClick}
+                onClick={((data: any, _index: number, event: React.MouseEvent) => handleChartClick(data, event)) as any}
                 cursor="pointer"
               />
             ))}
@@ -150,24 +199,35 @@ export default function ClickableChartCard({ chart, kpiId }: ClickableChartCardP
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 border border-oracle-border hover:shadow-lg transition-shadow">
-      {/* Chart Header */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{chart.title}</h3>
-        {chart.description && (
-          <p className="text-sm text-gray-600 mt-1">{chart.description}</p>
-        )}
+    <>
+      {/* Chart Action Dropdown */}
+      {dropdownState.visible && (
+        <ChartActionDropdown
+          position={{ x: dropdownState.x, y: dropdownState.y }}
+          onSelect={handleDropdownSelect}
+          onClose={handleDropdownClose}
+        />
+      )}
+
+      <div className="bg-white rounded-lg p-6 border border-oracle-border hover:shadow-lg transition-shadow">
+        {/* Chart Header */}
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">{chart.title}</h3>
+          {chart.description && (
+            <p className="text-sm text-gray-600 mt-1">{chart.description}</p>
+          )}
+        </div>
+
+        {/* Chart Container */}
+        <ResponsiveContainer width="100%" height={300}>
+          {renderChart()}
+        </ResponsiveContainer>
+
+        {/* Clickable Indicator */}
+        <p className="text-xs text-gray-500 mt-3 text-center italic">
+          💡 Click on chart elements for more options
+        </p>
       </div>
-
-      {/* Chart Container */}
-      <ResponsiveContainer width="100%" height={300}>
-        {renderChart()}
-      </ResponsiveContainer>
-
-      {/* Clickable Indicator */}
-      <p className="text-xs text-gray-500 mt-3 text-center italic">
-        💡 Click on chart elements to view companies in Portfolio
-      </p>
-    </div>
+    </>
   );
 }

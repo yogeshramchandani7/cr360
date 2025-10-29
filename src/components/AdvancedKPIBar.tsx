@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, AlertTriangle, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, Info, Lightbulb } from 'lucide-react';
 import type { AdvancedKPI } from '../types';
 import { calculateCCOKPIs } from '../lib/mockCCOData';
+import { getInsightCountForKPI } from '../lib/kpiInsights';
 
 interface TooltipProps {
   kpi: AdvancedKPI;
@@ -32,8 +33,8 @@ const KPITooltip = ({ kpi, isVisible }: TooltipProps) => {
             <div className="space-y-1">
               {kpi.components.map((component, idx) => (
                 <div key={idx} className="flex justify-between text-sm text-gray-700">
-                  <span>{component.name} ({(component.weight * 100).toFixed(0)}%)</span>
-                  <span className="font-medium">{component.value.toFixed(1)}</span>
+                  <span>{component.name} ({(component.weight * 100).toFixed(2)}%)</span>
+                  <span className="font-medium">{component.value.toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -49,9 +50,10 @@ const KPITooltip = ({ kpi, isVisible }: TooltipProps) => {
 interface AdvancedKPICardProps {
   kpi: AdvancedKPI;
   onClick?: () => void;
+  insightCount?: number;
 }
 
-const AdvancedKPICard = ({ kpi, onClick }: AdvancedKPICardProps) => {
+const AdvancedKPICard = ({ kpi, onClick, insightCount = 0 }: AdvancedKPICardProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Determine border color based on alert severity
@@ -84,6 +86,11 @@ const AdvancedKPICard = ({ kpi, onClick }: AdvancedKPICardProps) => {
 
   // Format value based on KPI type
   const formatValue = () => {
+    // Use displayValue if available (highest priority)
+    if (kpi.displayValue) {
+      return kpi.displayValue;
+    }
+
     const value = kpi.value;
 
     // Percentage values
@@ -94,27 +101,27 @@ const AdvancedKPICard = ({ kpi, onClick }: AdvancedKPICardProps) => {
 
     // Currency values (billions)
     if (kpi.id.includes('concentration')) {
-      return `$${(value / 1e9).toFixed(1)}B`;
+      return `$${(value / 1e9).toFixed(2)}B`;
     }
 
     // Currency values (millions)
     if (kpi.id.includes('ecl')) {
-      return `$${(value / 1e6).toFixed(1)}M`;
+      return `$${(value / 1e6).toFixed(2)}M`;
     }
 
     // Index values (PBI, PPHS)
     if (kpi.id.includes('pbi') || kpi.id.includes('pphs')) {
-      return value.toFixed(1);
+      return value.toFixed(2);
     }
 
     // Migration basis points
     if (kpi.id.includes('migration')) {
-      return `${value.toFixed(0)} bps`;
+      return `${value.toFixed(2)} bps`;
     }
 
     // Utilization percentage
     if (kpi.id.includes('utilization')) {
-      return `${value.toFixed(1)}%`;
+      return `${value.toFixed(2)}%`;
     }
 
     return value.toFixed(2);
@@ -128,13 +135,17 @@ const AdvancedKPICard = ({ kpi, onClick }: AdvancedKPICardProps) => {
       className={`relative bg-white rounded-lg shadow-sm p-4 ${getBorderColor()} ${onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
       onClick={onClick}
     >
-      {/* Alert Badge */}
-      {kpi.alertSeverity && kpi.alertSeverity !== 'none' && (
-        <div className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getAlertBadgeStyle()}`}>
-          {kpi.alertSeverity === 'critical' && <AlertTriangle className="w-3 h-3" />}
-          {kpi.alertSeverity === 'warning' && <AlertTriangle className="w-3 h-3" />}
-          {kpi.alertSeverity === 'info' && <Info className="w-3 h-3" />}
-          <span className="uppercase">{kpi.alertSeverity}</span>
+      {/* Insight Count Badge */}
+      {insightCount > 0 && (
+        <div
+          className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 cursor-pointer hover:bg-blue-200 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick?.();
+          }}
+        >
+          <Lightbulb className="w-3 h-3" />
+          <span>{insightCount}</span>
         </div>
       )}
 
@@ -161,7 +172,7 @@ const AdvancedKPICard = ({ kpi, onClick }: AdvancedKPICardProps) => {
       <div className={`flex items-center gap-1 text-sm ${isPositiveTrend ? 'text-green-600' : 'text-red-600'}`}>
         <TrendIcon className="w-4 h-4" />
         <span className="font-medium">
-          {isPositiveTrend ? '+' : ''}{kpi.changePercent.toFixed(2)}%
+          {isPositiveTrend ? '+' : ''}{kpi.changePercent.toFixed(2)}{kpi.changeLabel || '%'}
         </span>
       </div>
 
@@ -174,35 +185,40 @@ const AdvancedKPICard = ({ kpi, onClick }: AdvancedKPICardProps) => {
 const AdvancedKPIBar = () => {
   const ccoKPIs = calculateCCOKPIs();
 
-  // Convert to array and maintain order
+  // Convert to array and maintain order - Quick Mortality diagnostic KPIs
   const kpiArray = [
     ccoKPIs.quick_mortality,
-    ccoKPIs.forward_delinquency,
-    ccoKPIs.pbi,
-    ccoKPIs.vdi,
-    ccoKPIs.net_pd_migration,
-    ccoKPIs.concentration_contagion,
-    ccoKPIs.utilization_stress,
-    ccoKPIs.reversion_rate,
-    ccoKPIs.ecl_sensitivity,
-    ccoKPIs.pphs,
+    ccoKPIs.qm_new_origination,
+    ccoKPIs.qm_weighted_pd,
+    ccoKPIs.qm_portfolio_raroc,
+    ccoKPIs.qm_rated_below_bbb,
+    ccoKPIs.qm_rwa_intensity,
+    ccoKPIs.qm_weighted_tds_gds,
+    ccoKPIs.qm_weighted_credit_score,
+    ccoKPIs.qm_deviation_rate,
+    ccoKPIs.qm_source_mix,
+    ccoKPIs.qm_mortality_12m,
   ];
 
   const handleKPIClick = (kpi: AdvancedKPI) => {
-    // Open KPI drilldown page in new tab
-    window.open(`/kpi/${kpi.id}`, '_blank');
+    // Open KPI drilldown page in new tab with full URL
+    window.open(`${window.location.origin}/kpi/${kpi.id}`, '_blank');
   };
 
   return (
     <div className="mb-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {kpiArray.map((kpi) => (
-          <AdvancedKPICard
-            key={kpi.id}
-            kpi={kpi}
-            onClick={() => handleKPIClick(kpi)}
-          />
-        ))}
+        {kpiArray.map((kpi) => {
+          const insightCount = getInsightCountForKPI(kpi.id);
+          return (
+            <AdvancedKPICard
+              key={kpi.id}
+              kpi={kpi}
+              onClick={() => handleKPIClick(kpi)}
+              insightCount={insightCount}
+            />
+          );
+        })}
       </div>
 
       {/* Alert Summary */}
