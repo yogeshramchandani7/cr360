@@ -136,7 +136,7 @@ export default function MasterSlicerChart({
     if (optionId === 'counterparties') {
       // Navigate to portfolio view with drilldown filter
       setDrillDownFilter(dropdownState.filterData);
-      navigate('/portfolio');
+      navigate('/customer');
     } else if (optionId === 'apply-filter') {
       // Apply filter to current page
       addPageFilter(location.pathname, {

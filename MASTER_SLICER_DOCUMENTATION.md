@@ -169,7 +169,7 @@ All 200+ portfolio companies now have state assignments.
 />
 ```
 
-### Example 4: Portfolio View (Suggested)
+### Example 4: Customer View (Suggested)
 ```tsx
 <MasterSlicerChart
   data={portfolioCompanies}
@@ -178,7 +178,7 @@ All 200+ portfolio companies now have state assignments.
   metricType="exposure"
   defaultDimension="productType"
   defaultChartType="bar"
-  source="Portfolio View"
+  source="Customer View"
 />
 ```
 
@@ -261,8 +261,8 @@ Uses existing Oracle theme colors:
    - Chart data auto-updates via parent component
 4. If "View Counterparties" clicked:
    - Set drill-down filter
-   - Navigate to /portfolio
-   - PortfolioView shows filtered companies
+   - Navigate to /customer
+   - CustomerView shows filtered companies
 ```
 
 ---
@@ -292,7 +292,7 @@ Uses existing Oracle theme colors:
 - [ ] Click on a bar/pie segment
 - [ ] Verify ChartActionDropdown appears at cursor
 - [ ] Click "Apply Filter" - verify filter chip appears
-- [ ] Click "View Counterparties" - verify navigation to /portfolio
+- [ ] Click "View Counterparties" - verify navigation to /customer
 - [ ] Verify filtered data shows correctly
 
 **Responsive Design:**

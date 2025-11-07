@@ -852,7 +852,7 @@ export interface KPIChart {
   id: string;                    // unique chart identifier
   title: string;                 // chart title
   description?: string;          // optional chart description
-  type: 'pie' | 'bar' | 'line' | 'area' | 'sector-table' | 'heatmap' | 'migration-matrix'; // chart type
+  type: 'pie' | 'bar' | 'line' | 'area' | 'sector-table' | 'heatmap' | 'migration-matrix' | 'benchmark-table' | 'sector-benchmark-table' | 'migration-table'; // chart type
   data: any[];                   // chart data array
   dataKeys: KPIChartDataKey[];   // keys to render
   xAxisKey?: string;             // for bar/line charts
@@ -992,4 +992,110 @@ export interface MigrationMatrixData {
     exposure: number;
     percentage: number;
   };
+}
+
+// Rating Migration Heatmap Data
+export interface RatingMigrationCell {
+  fromRating: string;               // Previous rating (e.g., 'AAA', 'YLC3')
+  toRating: string;                 // Current rating (e.g., 'AA', 'YLC5')
+  count: number;                    // Number of companies that migrated
+  exposure: number;                 // Total exposure in $M
+  percentage: number;               // % of total companies
+  notchChange: number;              // Number of notches changed (negative = downgrade, positive = upgrade, 0 = no change)
+}
+
+export interface RatingMigrationMatrix {
+  ratingType: 'external' | 'internal';
+  ratings: string[];                // All unique ratings in the order they should appear
+  cells: RatingMigrationCell[];     // All migration cells
+  totalCompanies: number;           // Total number of companies
+  totalExposure: number;            // Total exposure in $M
+  upgraded: {
+    count: number;
+    exposure: number;
+    percentage: number;
+  };
+  downgraded: {
+    count: number;
+    exposure: number;
+    percentage: number;
+  };
+  unchanged: {
+    count: number;
+    exposure: number;
+    percentage: number;
+  };
+}
+
+// Benchmark Comparison Table Data
+export interface BenchmarkComparisonRow {
+  metric: string;
+  bankValue: number | string;
+  crisilValue: number | string;
+  gap: number | string;
+  gapType: 'positive' | 'negative' | 'neutral';
+  unit?: string; // e.g., '%', 'notches', ''
+}
+
+// Sector Benchmarking Table Data
+export interface SectorBenchmarkRow {
+  sector: string;
+  bankCMI: number;
+  crisilIndex: number;
+  gap: number;
+  concentration: number; // % of portfolio exposure
+  sentiment: 'negative' | 'neutral' | 'positive';
+  sentimentText: string; // e.g., "Negative (Liquidity stress; project delays)"
+  outlookDescription: string; // Full outlook text
+}
+
+// ============================================================================
+// Market Pulse Types
+// ============================================================================
+
+/**
+ * Macroeconomic Indicator with threshold tracking
+ */
+export interface MacroIndicator {
+  id: string;                          // e.g., 'fed_funds_rate'
+  name: string;                        // Display name (e.g., 'Federal Funds Rate')
+  currentValue: number;                // Current value
+  threshold: number;                   // Threshold value to monitor
+  unit: string;                        // '%', 'bps', 'index points', etc.
+  direction: 'up' | 'down' | 'stable'; // Trend direction
+  distanceFromThreshold: number;       // Absolute distance from threshold
+  distanceInBps?: number;              // Distance in basis points (for rates)
+  severity: 'critical' | 'warning' | 'info'; // Alert severity based on distance
+  lastUpdated: Date;                   // Last update timestamp
+  description?: string;                // Optional description
+}
+
+/**
+ * Macro Insight generated from indicator analysis
+ */
+export interface MacroInsight {
+  id: string;                          // Unique insight identifier
+  indicatorIds: string[];              // Related indicator IDs
+  theme: string;                       // Insight title/theme
+  keyInsights: string[];               // Array of key insight bullet points
+  implication: string;                 // Business implication
+  affectedSectors?: string[];          // Sectors potentially impacted
+  severity: 'info' | 'warning' | 'critical';
+  timestamp: Date;                     // Creation timestamp
+}
+
+/**
+ * News Item for Market Pulse feed
+ */
+export interface NewsItem {
+  id: string;                          // Unique news item identifier
+  title: string;                       // News headline
+  summary: string;                     // Brief summary (1-2 sentences)
+  source: string;                      // News source
+  timestamp: Date;                     // Publication timestamp
+  category: 'top-exposure' | 'macro' | 'sector' | 'insight-related';
+  relatedCompanies?: string[];         // Company names from portfolio
+  relatedIndicators?: string[];        // Macro indicator IDs
+  severity?: 'critical' | 'warning' | 'info';
+  url?: string;                        // External link (optional)
 }

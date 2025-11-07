@@ -87,7 +87,7 @@ export default function DeteriorationHeatmap({
 
     if (optionId === 'counterparties') {
       setDrillDownFilter(dropdownState.filterData);
-      navigate('/portfolio');
+      navigate('/customer');
     } else if (optionId === 'apply-filter') {
       addPageFilter(location.pathname, {
         field: dropdownState.filterData.field,

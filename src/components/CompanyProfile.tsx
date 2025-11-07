@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
-import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, Download, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { useFilterStore } from '../stores/filterStore';
 import { mockPortfolioCompanies, type PortfolioCompany } from '../lib/mockData';
+import { generateCompanyProfilePDF } from '../lib/pdfExport';
 
 interface CompanyProfileData {
   company: PortfolioCompany;
@@ -183,6 +184,46 @@ export default function CompanyProfile() {
 
   const profileData = selectedCompanyId ? getCompanyProfileData(selectedCompanyId) : null;
 
+  // PDF download state
+  type PDFStatus = 'idle' | 'generating' | 'success' | 'error';
+  const [pdfStatus, setPdfStatus] = useState<PDFStatus>('idle');
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const [pdfMessage, setPdfMessage] = useState('');
+
+  // PDF download handler
+  const handleDownloadPDF = async () => {
+    if (!profileData) return;
+
+    setPdfStatus('generating');
+    setPdfProgress(0);
+    setPdfMessage('Preparing PDF...');
+
+    try {
+      await generateCompanyProfilePDF(
+        profileData.company,
+        (progress, message) => {
+          setPdfProgress(progress);
+          setPdfMessage(message);
+        }
+      );
+      setPdfStatus('success');
+      setTimeout(() => {
+        setPdfStatus('idle');
+        setPdfProgress(0);
+        setPdfMessage('');
+      }, 3000);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setPdfStatus('error');
+      setPdfMessage('Failed to generate PDF');
+      setTimeout(() => {
+        setPdfStatus('idle');
+        setPdfProgress(0);
+        setPdfMessage('');
+      }, 3000);
+    }
+  };
+
   // Close on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -241,12 +282,65 @@ export default function CompanyProfile() {
                 <span className="text-xs text-gray-500">Member ID: LCB{company.custId}</span>
               </div>
             </div>
-            <button
-              onClick={clearSelectedCompanyId}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X size={24} className="text-gray-500" />
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Download PDF Button */}
+              <div className="flex flex-col items-end gap-2">
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={pdfStatus === 'generating'}
+                  className={`
+                    inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all
+                    ${pdfStatus === 'generating'
+                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                      : pdfStatus === 'success'
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : pdfStatus === 'error'
+                      ? 'bg-red-600 text-white hover:bg-red-700'
+                      : 'bg-oracle-red text-white hover:bg-red-700'
+                    }
+                    disabled:opacity-50
+                  `}
+                >
+                  {pdfStatus === 'generating' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Generating... {pdfProgress}%
+                    </>
+                  ) : pdfStatus === 'success' ? (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Downloaded
+                    </>
+                  ) : pdfStatus === 'error' ? (
+                    <>
+                      <XCircle className="w-4 h-4" />
+                      Failed
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      Download Report
+                    </>
+                  )}
+                </button>
+                {pdfStatus === 'generating' && pdfMessage && (
+                  <p className="text-xs text-gray-600">{pdfMessage}</p>
+                )}
+                {pdfStatus === 'success' && (
+                  <p className="text-xs text-green-600">PDF downloaded successfully</p>
+                )}
+                {pdfStatus === 'error' && (
+                  <p className="text-xs text-red-600">{pdfMessage}</p>
+                )}
+              </div>
+              {/* Close Button */}
+              <button
+                onClick={clearSelectedCompanyId}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={24} className="text-gray-500" />
+              </button>
+            </div>
           </div>
 
           {/* Scrollable Content */}

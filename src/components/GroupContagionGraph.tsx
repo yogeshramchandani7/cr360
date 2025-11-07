@@ -215,7 +215,7 @@ export default function GroupContagionGraph() {
     if (optionId === 'counterparties') {
       // Navigate to portfolio with drilldown filter
       setDrillDownFilter(dropdownState.filterData);
-      navigate('/portfolio');
+      navigate('/customer');
     } else if (optionId === 'apply-filter') {
       // Apply filter to current page
       addPageFilter(location.pathname, {

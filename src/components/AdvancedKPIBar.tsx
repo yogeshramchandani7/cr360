@@ -50,10 +50,11 @@ const KPITooltip = ({ kpi, isVisible }: TooltipProps) => {
 interface AdvancedKPICardProps {
   kpi: AdvancedKPI;
   onClick?: () => void;
+  onInsightsClick?: () => void;
   insightCount?: number;
 }
 
-const AdvancedKPICard = ({ kpi, onClick, insightCount = 0 }: AdvancedKPICardProps) => {
+const AdvancedKPICard = ({ kpi, onClick, onInsightsClick, insightCount = 0 }: AdvancedKPICardProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Determine border color based on alert severity
@@ -141,8 +142,9 @@ const AdvancedKPICard = ({ kpi, onClick, insightCount = 0 }: AdvancedKPICardProp
           className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 cursor-pointer hover:bg-blue-200 transition-colors"
           onClick={(e) => {
             e.stopPropagation();
-            onClick?.();
+            onInsightsClick?.();
           }}
+          title="View insights for this KPI"
         >
           <Lightbulb className="w-3 h-3" />
           <span>{insightCount}</span>
@@ -188,21 +190,25 @@ const AdvancedKPIBar = () => {
   // Convert to array and maintain order - Quick Mortality diagnostic KPIs
   const kpiArray = [
     ccoKPIs.quick_mortality,
-    ccoKPIs.qm_new_origination,
     ccoKPIs.qm_weighted_pd,
     ccoKPIs.qm_portfolio_raroc,
     ccoKPIs.qm_rated_below_bbb,
     ccoKPIs.qm_rwa_intensity,
-    ccoKPIs.qm_weighted_tds_gds,
-    ccoKPIs.qm_weighted_credit_score,
-    ccoKPIs.qm_deviation_rate,
-    ccoKPIs.qm_source_mix,
+    ccoKPIs.qm_npl_ratio,
+    ccoKPIs.qm_approval_rate,
+    ccoKPIs.qm_provision_expense,
+    ccoKPIs.qm_ead_concentration,
     ccoKPIs.qm_mortality_12m,
   ];
 
   const handleKPIClick = (kpi: AdvancedKPI) => {
-    // Open KPI drilldown page in new tab with full URL
+    // Open KPI drilldown page in new tab with full URL (insights closed)
     window.open(`${window.location.origin}/kpi/${kpi.id}`, '_blank');
+  };
+
+  const handleInsightsClick = (kpi: AdvancedKPI) => {
+    // Open KPI drilldown page with insights section expanded
+    window.open(`${window.location.origin}/kpi/${kpi.id}?insights=open`, '_blank');
   };
 
   return (
@@ -215,6 +221,7 @@ const AdvancedKPIBar = () => {
               key={kpi.id}
               kpi={kpi}
               onClick={() => handleKPIClick(kpi)}
+              onInsightsClick={() => handleInsightsClick(kpi)}
               insightCount={insightCount}
             />
           );

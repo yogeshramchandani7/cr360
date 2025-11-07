@@ -148,7 +148,7 @@ export default function KPIDrilldownModal({ kpi, isOpen, onClose }: KPIDrilldown
           {/* Footer (optional - for future use) */}
           <div className="px-6 py-4 border-t border-oracle-border bg-gray-50">
             <p className="text-xs text-gray-500 text-center">
-              Click on any chart element to view filtered companies in Portfolio View
+              Click on any chart element to view filtered companies in Customer View
             </p>
           </div>
         </div>

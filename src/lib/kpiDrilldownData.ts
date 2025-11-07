@@ -11,6 +11,9 @@ import {
   generateSectorComparisonData,
   generateHeatmapData,
   generateMigrationMatrixData,
+  generateBenchmarkComparisonData,
+  generateSectorBenchmarkingData,
+  generateRatingMigrationMatrix,
 } from './mockCCOData';
 
 /**
@@ -1316,19 +1319,31 @@ export const getIndicatorsForKPI = (kpiId: string): AdvancedKPI[] | null => {
 /**
  * Generate CMI-specific charts - 4 visualizations for CMI and Net Deterioration pages
  * These pages show 4 indicator cards at top, then these 4 charts below
+ *
+ * @param companies - Optional filtered portfolio companies for dynamic chart generation
+ * @returns Array of KPIChart configurations with data
  */
-export const generateCMICharts = (): KPIChart[] => {
+export const generateCMICharts = (companies?: PortfolioCompany[]): KPIChart[] => {
   // Chart #1: Line Chart - Bank CMI vs CRISIL Migration Index
-  const trendData = generateCMITrendData();
+  const trendData = generateCMITrendData(companies);
 
-  // Chart #2: Sector Comparison Table
+  // Chart #2: Benchmark Comparison Panel (always static - external benchmarks)
+  const benchmarkData = generateBenchmarkComparisonData();
+
+  // Chart #3: Sector Benchmarking Table (always static - external outlook data)
+  const sectorBenchmarkData = generateSectorBenchmarkingData();
+
+  // Chart #4: Sector Comparison Table (old)
   const sectorData = generateSectorComparisonData();
 
-  // Chart #3: Heatmap - Deterioration by Sector + Region + Product
-  const heatmapData = generateHeatmapData();
+  // Chart #5: Heatmap - Deterioration by Sector + Region + Product
+  const heatmapData = generateHeatmapData(companies);
 
-  // Chart #4: Migration Matrix - Downgrade ladder
-  const migrationData = generateMigrationMatrixData();
+  // Chart #6: Migration Matrix - Downgrade ladder
+  const migrationData = generateMigrationMatrixData(companies);
+
+  // Chart #7: Rating Migration Heatmap - Rating-to-rating transitions
+  const ratingMigrationData = generateRatingMigrationMatrix(companies, 'external');
 
   return [
     // Chart #1: CMI Trend Line Chart
@@ -1346,13 +1361,24 @@ export const generateCMICharts = (): KPIChart[] => {
       filterField: 'originationMonth',
       filterLabel: 'Month: {value}',
     },
-    // Chart #2: Sector Comparison Table (custom component)
+    // Chart #2: Benchmark Comparison Panel (NEW)
     {
-      id: 'cmi-sector-comparison',
-      title: 'Sector-wise CMI Analysis',
-      description: 'Detailed sector performance vs market benchmarks with sentiment indicators',
-      type: 'sector-table',
-      data: sectorData,
+      id: 'cmi-benchmark-comparison',
+      title: 'Benchmark Comparison Panel',
+      description: 'Internal migration metrics vs external benchmarks (CRISIL / ICRA / Moody\'s)',
+      type: 'benchmark-table',
+      data: benchmarkData,
+      dataKeys: [], // Not used for custom component
+      filterField: 'metric',
+      filterLabel: 'Metric: {value}',
+    },
+    // Chart #3: Sectoral Benchmarking + Outlook (NEW)
+    {
+      id: 'cmi-sector-benchmarking',
+      title: 'Sectoral Benchmarking + Outlook Sentiment Integration',
+      description: 'Understand whether deterioration is sector-driven or obligor-driven, and whether outlooks confirm these patterns',
+      type: 'sector-benchmark-table',
+      data: sectorBenchmarkData,
       dataKeys: [], // Not used for custom component
       filterField: 'industry',
       filterLabel: 'Sector: {value}',
@@ -1367,6 +1393,17 @@ export const generateCMICharts = (): KPIChart[] => {
       dataKeys: [], // Not used for custom component
       filterField: 'industry',
       filterLabel: '{value}',
+    },
+    // Chart #3.5: Rating Migration Heatmap (NEW - custom component)
+    {
+      id: 'cmi-rating-migration-heatmap',
+      title: 'Rating Migration Matrix: Rating-to-Rating Transitions',
+      description: 'Heatmap showing how companies migrated between credit ratings (upgrades in green, downgrades in red)',
+      type: 'rating-migration-heatmap',
+      data: ratingMigrationData,
+      dataKeys: [], // Not used for custom component
+      filterField: 'borrowerExternalRating',
+      filterLabel: 'Rating: {value}',
     },
     // Chart #4: Migration Matrix (custom component)
     {

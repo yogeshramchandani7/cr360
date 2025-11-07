@@ -1,4 +1,4 @@
-import PortfolioWaterfallChart from './PortfolioWaterfallChart';
+import CustomerWaterfallChart from './CustomerWaterfallChart';
 import GroupContagionGraph from './GroupContagionGraph';
 import DelinquencyMatrixWithSlider from './DelinquencyMatrixWithSlider';
 import ExposureFlowSankey from './ExposureFlowSankey';
@@ -24,7 +24,7 @@ export default function AdvancedRiskAnalytics() {
 
       {/* Waterfall Chart */}
       <div className="mb-6">
-        <PortfolioWaterfallChart />
+        <CustomerWaterfallChart />
       </div>
 
       {/* Group Contagion Graph */}

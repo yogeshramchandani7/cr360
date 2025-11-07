@@ -149,7 +149,7 @@ export default function InsightsDrawer() {
     clearSelectedInsightChartId();
 
     // Navigate to portfolio view
-    navigate('/portfolio');
+    navigate('/customer');
   };
 
   // Group insights by category

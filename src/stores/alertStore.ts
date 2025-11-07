@@ -79,6 +79,45 @@ const generateAlertId = () => {
   return `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
+// Custom storage with error handling for quota exceeded
+const storageWithErrorHandling = {
+  getItem: (name: string) => {
+    try {
+      const value = localStorage.getItem(name);
+      return value;
+    } catch (error) {
+      console.error('Error reading from localStorage:', error);
+      return null;
+    }
+  },
+  setItem: (name: string, value: string) => {
+    try {
+      localStorage.setItem(name, value);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        console.warn('LocalStorage quota exceeded. Clearing old alerts...');
+        // Clear the alert store to free up space
+        localStorage.removeItem(name);
+        // Try again with empty state
+        try {
+          localStorage.setItem(name, value);
+        } catch (retryError) {
+          console.error('Failed to save alerts even after clearing:', retryError);
+        }
+      } else {
+        console.error('Error writing to localStorage:', error);
+      }
+    }
+  },
+  removeItem: (name: string) => {
+    try {
+      localStorage.removeItem(name);
+    } catch (error) {
+      console.error('Error removing from localStorage:', error);
+    }
+  },
+};
+
 export const useAlertStore = create<AlertStore>()(
   persist(
     (set, get) => ({
@@ -162,9 +201,18 @@ export const useAlertStore = create<AlertStore>()(
           createdAt: new Date(),
         };
 
-        set((state) => ({
-          alerts: [newAlert, ...state.alerts],
-        }));
+        set((state) => {
+          // Limit alerts to 500 to prevent localStorage quota issues
+          const MAX_ALERTS = 500;
+          const updatedAlerts = [newAlert, ...state.alerts];
+
+          // Keep only the most recent MAX_ALERTS
+          const limitedAlerts = updatedAlerts.slice(0, MAX_ALERTS);
+
+          return {
+            alerts: limitedAlerts,
+          };
+        });
 
         // Trigger notification if not muted
         const { notificationPreferences } = get();
@@ -306,6 +354,7 @@ export const useAlertStore = create<AlertStore>()(
     }),
     {
       name: 'alert-store',
+      storage: storageWithErrorHandling,
       // Only persist alerts and preferences, not UI state
       partialize: (state) => ({
         alerts: state.alerts,

@@ -1,12 +1,14 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { User } from 'lucide-react';
 import FilterBar from './FilterBar';
-import ChatWidget from './chat/ChatWidget';
 import AlertBell from './AlertBell';
 
 export default function DashboardLayout() {
   const location = useLocation();
   const isCompanyPage = location.pathname.startsWith('/company/');
+
+  // Show FilterBar only on Customer View and Company Profile pages (not on Dashboard)
+  const showFilterBar = location.pathname === '/customer' || isCompanyPage;
 
   return (
     <div className="min-h-screen bg-oracle-bg">
@@ -36,6 +38,18 @@ export default function DashboardLayout() {
         <div className="px-6 border-t border-oracle-darkNavy">
           <nav className="flex space-x-8">
             <NavLink
+              to="/agent"
+              className={({ isActive }) =>
+                `py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  isActive
+                    ? 'border-white text-white'
+                    : 'border-transparent text-gray-300 hover:text-white hover:border-gray-500'
+                }`
+              }
+            >
+              Agent
+            </NavLink>
+            <NavLink
               to="/"
               end
               className={({ isActive }) =>
@@ -46,10 +60,10 @@ export default function DashboardLayout() {
                 }`
               }
             >
-              Dashboard
+              Portfolio
             </NavLink>
             <NavLink
-              to="/portfolio"
+              to="/customer"
               className={({ isActive }) =>
                 `py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   isActive
@@ -58,7 +72,7 @@ export default function DashboardLayout() {
                 }`
               }
             >
-              Portfolio View
+              Customer View
             </NavLink>
             {isCompanyPage && (
               <NavLink
@@ -72,16 +86,13 @@ export default function DashboardLayout() {
         </div>
       </header>
 
-      {/* Filter Bar */}
-      <FilterBar />
+      {/* Filter Bar - Only show on Customer View and Company Profile pages */}
+      {showFilterBar && <FilterBar />}
 
       {/* Main Content */}
       <main className="p-6">
         <Outlet />
       </main>
-
-      {/* AI Chatbot Widget */}
-      <ChatWidget />
     </div>
   );
 }

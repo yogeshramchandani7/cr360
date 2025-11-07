@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
-import PortfolioView from './pages/PortfolioView';
+import AgentPage from './pages/AgentPage';
+import CustomerView from './pages/CustomerView';
 import CompanyProfilePage from './pages/CompanyProfilePage';
 import RiskDetailsPage from './pages/details/RiskDetailsPage';
 import ExposureDetailsPage from './pages/details/ExposureDetailsPage';
@@ -12,6 +13,7 @@ import ClimateRiskPage from './pages/details/ClimateRiskPage';
 import ApprovalsPage from './pages/details/ApprovalsPage';
 import AlertDashboard from './pages/AlertDashboard';
 import KPIDrilldownPage from './pages/KPIDrilldownPage';
+import ChatWidget from './components/chat/ChatWidget';
 import { initializeAlertMonitoring } from './lib/alertGenerator';
 
 function App() {
@@ -25,7 +27,8 @@ function App() {
       <Routes>
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<Dashboard />} />
-          <Route path="portfolio" element={<PortfolioView />} />
+          <Route path="agent" element={<AgentPage />} />
+          <Route path="customer" element={<CustomerView />} />
           <Route path="alerts" element={<AlertDashboard />} />
           <Route path="company/:companyId" element={<CompanyProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -40,6 +43,9 @@ function App() {
         <Route path="/company/:companyId/climate-risk" element={<ClimateRiskPage />} />
         <Route path="/company/:companyId/approvals" element={<ApprovalsPage />} />
       </Routes>
+
+      {/* AI Chatbot Widget - Available on all pages */}
+      <ChatWidget />
     </BrowserRouter>
   );
 }

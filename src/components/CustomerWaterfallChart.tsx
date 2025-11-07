@@ -88,7 +88,7 @@ const DrilldownModal = ({ isOpen, onClose, category, data }: DrilldownModalProps
   );
 };
 
-export default function PortfolioWaterfallChart() {
+export default function CustomerWaterfallChart() {
   const [drilldownModal, setDrilldownModal] = useState<{
     isOpen: boolean;
     category: string;

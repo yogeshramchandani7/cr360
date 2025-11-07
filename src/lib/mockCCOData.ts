@@ -25,7 +25,12 @@ import type {
   FraudData,
   ExceptionData,
   ChannelPerformanceData,
+  BenchmarkComparisonRow,
+  SectorBenchmarkRow,
+  RatingMigrationMatrix,
+  RatingMigrationCell,
 } from '../types';
+import { mockPortfolioCompanies, type PortfolioCompany } from './mockData';
 
 // ============================================================================
 // KPI TOOLTIP DEFINITIONS (Per PRD Requirements)
@@ -109,25 +114,25 @@ export const KPI_TOOLTIPS: Record<string, KPITooltip> = {
     formula: 'Total RWA / (Total Exposure / 10,000,000)',
     businessImplication: 'Capital efficiency',
   },
-  qm_weighted_tds_gds: {
-    definition: 'Income coverage & affordability',
-    formula: 'Σ((TDS + GDS) × Exposure) / (2 × Σ Exposure)',
-    businessImplication: 'Borrower health',
+  qm_npl_ratio: {
+    definition: 'Non-Performing Loans as percentage of total portfolio',
+    formula: '(Non-Performing Loans / Total Portfolio) × 100',
+    businessImplication: 'Asset quality and credit risk exposure',
   },
-  qm_weighted_credit_score: {
-    definition: 'Average score of new borrowers',
-    formula: 'Σ(Credit Score × Sanctioned Amount) / Σ(Sanctioned Amount)',
-    businessImplication: 'Counterparty strength',
+  qm_approval_rate: {
+    definition: 'Percentage of applications approved',
+    formula: '(Approved Applications / Total Applications) × 100',
+    businessImplication: 'Lending appetite and underwriting standards',
   },
-  qm_deviation_rate: {
-    definition: '% proposals approved with policy deviations',
-    formula: '(Policy Deviations / Total Approvals) × 100',
-    businessImplication: 'Underwriting discipline',
+  qm_provision_expense: {
+    definition: 'Daily or rolling provision requirements for expected credit losses',
+    formula: 'Daily Provision Expense = Current Period ECL - Prior Period ECL',
+    businessImplication: 'Near-term P&L impact from credit deterioration',
   },
-  qm_source_mix: {
-    definition: '% Net New vs % Enhancements',
-    formula: '(Net New Loans / Total Originations) × 100 : (Enhancements / Total Originations) × 100',
-    businessImplication: 'Franchise growth vs deepening',
+  qm_ead_concentration: {
+    definition: 'Exposure at Default concentration among top counterparties',
+    formula: 'Σ(EAD for Top N Obligors) / Total Portfolio EAD',
+    businessImplication: 'Concentration risk and potential loss magnitude',
   },
   qm_mortality_12m: {
     definition: 'Early delinquency on recent vintages',
@@ -1451,137 +1456,144 @@ export function calculateCCOKPIs(): Record<string, AdvancedKPI> {
     topContributingSegment: 'Corporate - Large Tickets',
   };
 
-  // Sub-KPI #4: % Rated BBB & below
-  const ratedBelowBBB = 18.7; // 18.7%
-  const baselineRatedBelowBBB = 16.2; // Previous month 16.2%
+  // Sub-KPI #4: Quick Mortality Ratio
+  const quickMortalityRatio = 2.45; // 2.45%
+  const baselineQuickMortalityRatio = 2.16; // Previous month 2.16%
   const qmRatedBelowBBB: AdvancedKPI = {
     id: 'qm_rated_below_bbb',
-    label: '% Rated BBB & below',
-    value: ratedBelowBBB,
+    label: 'Quick Mortality Ratio',
+    value: quickMortalityRatio,
     unit: 'percent',
-    displayValue: `${ratedBelowBBB.toFixed(1)}%`,
+    displayValue: `${quickMortalityRatio.toFixed(2)}%`,
     trend: 'up',
-    changePercent: ((ratedBelowBBB - baselineRatedBelowBBB) / baselineRatedBelowBBB) * 100,
-    tooltip: KPI_TOOLTIPS.qm_rated_below_bbb,
-    threshold: {
-      green: 15,
-      amber: 25,
-      status: ratedBelowBBB <= 15 ? 'green' : ratedBelowBBB <= 25 ? 'amber' : 'red',
+    changePercent: ((quickMortalityRatio - baselineQuickMortalityRatio) / baselineQuickMortalityRatio) * 100,
+    tooltip: {
+      definition: '% of new loans (≤6 months vintage) entering early delinquency',
+      formula: '(New loans with 30+ DPD / Total new loans ≤6mo) × 100',
+      businessImplication: 'Measures origination quality - higher values indicate poor underwriting',
     },
-    alertSeverity: ratedBelowBBB > 25 ? 'warning' : 'none',
-    breachReason: ratedBelowBBB > 25 ? 'High concentration of weaker exposures' : undefined,
-    topContributingSegment: 'SME - Manufacturing',
+    threshold: {
+      green: 2,
+      amber: 3,
+      status: quickMortalityRatio <= 2 ? 'green' : quickMortalityRatio <= 3 ? 'amber' : 'red',
+    },
+    alertSeverity: quickMortalityRatio > 3 ? 'warning' : 'none',
+    breachReason: quickMortalityRatio > 3 ? 'High early delinquency rate on new originations' : undefined,
+    topContributingSegment: 'SME - Auto Loans',
   };
 
-  // Sub-KPI #5: RWA Intensity
-  const rwaIntensity = 0.78; // 0.78 RWA per ₹ Cr Exposure
-  const baselineRWAIntensity = 0.84; // Previous month 0.84 (improving)
+  // Sub-KPI #5: CMI (Credit Managers' Index)
+  const cmiValue = 52.3; // 52.3 index value (above 50 = expansion)
+  const baselineCMI = 50.1; // Previous month 50.1 (improving)
   const qmRWAIntensity: AdvancedKPI = {
     id: 'qm_rwa_intensity',
-    label: 'RWA Intensity',
-    value: rwaIntensity,
+    label: 'CMI',
+    value: cmiValue,
     unit: 'percent',
-    displayValue: `${rwaIntensity.toFixed(2)}`,
-    trend: 'down',
-    changePercent: ((rwaIntensity - baselineRWAIntensity) / baselineRWAIntensity) * 100,
-    tooltip: KPI_TOOLTIPS.qm_rwa_intensity,
-    threshold: {
-      green: 0.7,
-      amber: 0.85,
-      status: rwaIntensity <= 0.7 ? 'green' : rwaIntensity <= 0.85 ? 'amber' : 'red',
-    },
-    alertSeverity: rwaIntensity > 0.85 ? 'warning' : 'none',
-    breachReason: rwaIntensity > 0.85 ? 'High capital consumption per unit exposure' : undefined,
-    topContributingSegment: 'Unsecured Retail',
-  };
-
-  // Sub-KPI #6: Weighted TDS / GDS
-  const avgDebtService = 38.2; // 38.2% average debt service ratio
-  const baselineDebtService = 36.7; // Previous month 36.7% (worsening)
-  const qmWeightedTDSGDS: AdvancedKPI = {
-    id: 'qm_weighted_tds_gds',
-    label: 'Weighted TDS / GDS',
-    value: avgDebtService,
-    unit: 'percent',
-    displayValue: `${avgDebtService.toFixed(1)}%`,
+    displayValue: `${cmiValue.toFixed(1)}`,
     trend: 'up',
-    changePercent: ((avgDebtService - baselineDebtService) / baselineDebtService) * 100,
-    tooltip: KPI_TOOLTIPS.qm_weighted_tds_gds,
-    threshold: {
-      green: 35,
-      amber: 42,
-      status: avgDebtService <= 35 ? 'green' : avgDebtService <= 42 ? 'amber' : 'red',
+    changePercent: ((cmiValue - baselineCMI) / baselineCMI) * 100,
+    tooltip: {
+      definition: 'Credit Managers\' Index - Economic indicator of credit market conditions',
+      formula: 'Composite index from credit manager surveys (>50 = expansion, <50 = contraction)',
+      businessImplication: 'Values above 50 signal favorable credit conditions and economic expansion',
     },
-    alertSeverity: avgDebtService > 42 ? 'warning' : 'none',
-    breachReason: avgDebtService > 42 ? 'High debt service ratios indicate affordability stress' : undefined,
-    topContributingSegment: 'Retail - Personal Loans',
+    threshold: {
+      green: 52,
+      amber: 48,
+      status: cmiValue >= 52 ? 'green' : cmiValue >= 48 ? 'amber' : 'red',
+    },
+    alertSeverity: cmiValue < 48 ? 'warning' : 'none',
+    breachReason: cmiValue < 48 ? 'Credit conditions signaling economic contraction' : undefined,
+    topContributingSegment: 'Overall Market',
   };
 
-  // Sub-KPI #7: Weighted Credit Score
-  const weightedCreditScore = 695; // 695 average credit score
-  const baselineCreditScore = 709; // Previous month 709 (declining)
-  const qmWeightedCreditScore: AdvancedKPI = {
-    id: 'qm_weighted_credit_score',
-    label: 'Weighted Credit Score',
-    value: weightedCreditScore,
+  // Sub-KPI #6: NPL Ratio
+  const nplRatio = 2.8; // 2.8% NPL ratio
+  const baselineNPL = 2.4; // Previous month 2.4% (worsening)
+  const qmNPLRatio: AdvancedKPI = {
+    id: 'qm_npl_ratio',
+    label: 'NPL Ratio',
+    value: nplRatio,
     unit: 'percent',
-    displayValue: `${Math.round(weightedCreditScore)}`,
-    trend: 'down',
-    changePercent: ((weightedCreditScore - baselineCreditScore) / baselineCreditScore) * 100,
-    tooltip: KPI_TOOLTIPS.qm_weighted_credit_score,
-    threshold: {
-      green: 720,
-      amber: 680,
-      status: weightedCreditScore >= 720 ? 'green' : weightedCreditScore >= 680 ? 'amber' : 'red',
-    },
-    alertSeverity: weightedCreditScore < 680 ? 'warning' : 'none',
-    breachReason: weightedCreditScore < 680 ? 'Average credit quality declining' : undefined,
-    topContributingSegment: 'Retail - New Borrowers',
-  };
-
-  // Sub-KPI #8: Deviation Rate (%)
-  const avgExceptionRate = exceptionData.reduce((sum, d) => sum + d.exceptionRate, 0) / exceptionData.length;
-  const baselineExceptionRate = avgExceptionRate * 0.85; // Increasing trend
-  const qmDeviationRate: AdvancedKPI = {
-    id: 'qm_deviation_rate',
-    label: 'Deviation Rate (%)',
-    value: avgExceptionRate,
-    unit: 'percent',
-    displayValue: `${avgExceptionRate.toFixed(1)}%`,
+    displayValue: `${nplRatio.toFixed(1)}%`,
     trend: 'up',
-    changePercent: ((avgExceptionRate - baselineExceptionRate) / baselineExceptionRate) * 100,
-    tooltip: KPI_TOOLTIPS.qm_deviation_rate,
+    changePercent: ((nplRatio - baselineNPL) / baselineNPL) * 100,
+    tooltip: KPI_TOOLTIPS.qm_npl_ratio,
+    threshold: {
+      green: 2.0,
+      amber: 3.5,
+      status: nplRatio <= 2.0 ? 'green' : nplRatio <= 3.5 ? 'amber' : 'red',
+    },
+    alertSeverity: nplRatio > 3.5 ? 'warning' : 'none',
+    breachReason: nplRatio > 3.5 ? 'NPL ratio exceeds acceptable threshold' : undefined,
+    topContributingSegment: 'Retail - Unsecured Loans',
+  };
+
+  // Sub-KPI #7: Approval Rate
+  const approvalRate = 68.5; // 68.5% approval rate
+  const baselineApprovalRate = 72.3; // Previous month 72.3% (declining - more conservative)
+  const qmApprovalRate: AdvancedKPI = {
+    id: 'qm_approval_rate',
+    label: 'Approval Rate',
+    value: approvalRate,
+    unit: 'percent',
+    displayValue: `${approvalRate.toFixed(1)}%`,
+    trend: 'down',
+    changePercent: ((approvalRate - baselineApprovalRate) / baselineApprovalRate) * 100,
+    tooltip: KPI_TOOLTIPS.qm_approval_rate,
+    threshold: {
+      green: 65,
+      amber: 50,
+      status: approvalRate >= 65 ? 'green' : approvalRate >= 50 ? 'amber' : 'red',
+    },
+    alertSeverity: approvalRate < 50 ? 'warning' : 'none',
+    breachReason: approvalRate < 50 ? 'Low approval rate may impact business growth' : undefined,
+    topContributingSegment: 'All Channels - Credit Policy Tightening',
+  };
+
+  // Sub-KPI #8: Provision Expense
+  const provisionExpense = 12.4; // $12.4M daily provision expense
+  const baselineProvision = 10.8; // Previous period $10.8M (increasing)
+  const qmProvisionExpense: AdvancedKPI = {
+    id: 'qm_provision_expense',
+    label: 'Provision Expense',
+    value: provisionExpense,
+    unit: 'currency',
+    displayValue: `$${provisionExpense.toFixed(1)}M`,
+    trend: 'up',
+    changePercent: ((provisionExpense - baselineProvision) / baselineProvision) * 100,
+    tooltip: KPI_TOOLTIPS.qm_provision_expense,
     threshold: {
       green: 10,
-      amber: 18,
-      status: avgExceptionRate <= 10 ? 'green' : avgExceptionRate <= 18 ? 'amber' : 'red',
+      amber: 15,
+      status: provisionExpense <= 10 ? 'green' : provisionExpense <= 15 ? 'amber' : 'red',
     },
-    alertSeverity: avgExceptionRate > 18 ? 'warning' : 'none',
-    breachReason: avgExceptionRate > 18 ? 'High policy deviations indicate weak underwriting discipline' : undefined,
-    topContributingSegment: 'DSA Channel - Score Overrides',
+    alertSeverity: provisionExpense > 15 ? 'warning' : 'none',
+    breachReason: provisionExpense > 15 ? 'High provision expense indicates credit quality deterioration' : undefined,
+    topContributingSegment: 'Stage 2 & 3 Migrations',
   };
 
-  // Sub-KPI #9: Source Mix (% Net New vs % Enhancements)
-  const netNewPct = 62; // 62% net new customers
-  const enhancementPct = 38; // 38% enhancements
-  const baselineNetNewPct = 58; // Previous month 58%
-  const qmSourceMix: AdvancedKPI = {
-    id: 'qm_source_mix',
-    label: 'Source Mix',
-    value: netNewPct,
-    unit: 'percent',
-    displayValue: `${netNewPct.toFixed(0)}% New : ${enhancementPct.toFixed(0)}% Enh`,
+  // Sub-KPI #9: EAD Concentration
+  const eadConcentration = 4.8; // $4.8B in top 50 obligors
+  const baselineEAD = 4.3; // Previous period $4.3B (increasing)
+  const qmEADConcentration: AdvancedKPI = {
+    id: 'qm_ead_concentration',
+    label: 'EAD Concentration',
+    value: eadConcentration,
+    unit: 'currency',
+    displayValue: `$${eadConcentration.toFixed(1)}B`,
     trend: 'up',
-    changePercent: ((netNewPct - baselineNetNewPct) / baselineNetNewPct) * 100,
-    tooltip: KPI_TOOLTIPS.qm_source_mix,
+    changePercent: ((eadConcentration - baselineEAD) / baselineEAD) * 100,
+    tooltip: KPI_TOOLTIPS.qm_ead_concentration,
     threshold: {
-      green: 55,
-      amber: 70,
-      status: netNewPct >= 55 && netNewPct <= 70 ? 'green' : netNewPct < 55 || netNewPct > 70 ? 'amber' : 'red',
+      green: 4.0,
+      amber: 5.5,
+      status: eadConcentration <= 4.0 ? 'green' : eadConcentration <= 5.5 ? 'amber' : 'red',
     },
-    alertSeverity: netNewPct > 75 ? 'warning' : 'none',
-    breachReason: netNewPct > 75 ? 'High new customer concentration may indicate quality trade-off' : undefined,
-    topContributingSegment: 'Digital Channel - New Acquisitions',
+    alertSeverity: eadConcentration > 5.5 ? 'warning' : 'none',
+    breachReason: eadConcentration > 5.5 ? 'High concentration risk in top obligors' : undefined,
+    topContributingSegment: 'Top 50 Counterparties',
   };
 
   // Sub-KPI #10: Mortality (≤12M DPD)
@@ -1614,12 +1626,1030 @@ export function calculateCCOKPIs(): Record<string, AdvancedKPI> {
     qm_portfolio_raroc: qmPortfolioRAROC,
     qm_rated_below_bbb: qmRatedBelowBBB,
     qm_rwa_intensity: qmRWAIntensity,
-    qm_weighted_tds_gds: qmWeightedTDSGDS,
-    qm_weighted_credit_score: qmWeightedCreditScore,
-    qm_deviation_rate: qmDeviationRate,
-    qm_source_mix: qmSourceMix,
+    qm_npl_ratio: qmNPLRatio,
+    qm_approval_rate: qmApprovalRate,
+    qm_provision_expense: qmProvisionExpense,
+    qm_ead_concentration: qmEADConcentration,
     qm_mortality_12m: qmMortality12M,
   };
+}
+
+// ============================================================================
+// DRILLDOWN-SPECIFIC KPI GENERATOR
+// ============================================================================
+
+/**
+ * Get context-specific KPIs for each drilldown page
+ * Each drilldown has its own independent list of relevant metrics
+ */
+export function getKPIsForDrilldown(kpiId: string): AdvancedKPI[] {
+  switch (kpiId) {
+    case 'quick_mortality':
+      // MTD Originations Drilldown - 10 Original Dashboard KPIs
+      return [
+        {
+          id: 'qm_drill_new_origination',
+          label: 'New Origination (₹ Cr)',
+          value: 8245.5,
+          unit: 'currency',
+          displayValue: '₹8,245.5 Cr',
+          trend: 'up',
+          changePercent: 5.8,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Total sanctioned amount for new loan originations',
+            formula: 'Σ(Sanctioned Amount) for all new loans in the period',
+            businessImplication: 'Business growth momentum'
+          },
+          threshold: { green: 8000, amber: 7000, status: 'green' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'qm_drill_weighted_pd',
+          label: 'Weighted PD',
+          value: 1.68,
+          unit: 'percent',
+          displayValue: '1.68%',
+          trend: 'up',
+          changePercent: 8.4,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Probability of Default (weighted by exposure)',
+            formula: 'Σ(PD × Exposure) / Σ(Exposure)',
+            businessImplication: 'Lending quality'
+          },
+          threshold: { green: 1.5, amber: 2.0, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'qm_drill_portfolio_raroc',
+          label: 'Portfolio RAROC (%)',
+          value: 12.4,
+          unit: 'percent',
+          displayValue: '12.4%',
+          trend: 'down',
+          changePercent: -12.7,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Risk-Adjusted Return on Capital',
+            formula: '(Net Income - Expected Loss) / Economic Capital × 100',
+            businessImplication: 'Profitability discipline'
+          },
+          threshold: { green: 15, amber: 10, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'qm_drill_rated_below_bbb',
+          label: '% Rated BBB & below',
+          value: 2.45,
+          unit: 'percent',
+          displayValue: '2.45%',
+          trend: 'up',
+          changePercent: 13.4,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Share of weaker exposures rated BBB and below',
+            formula: '(Σ Exposure with Rating ≤ BBB / Total Exposure) × 100',
+            businessImplication: 'Portfolio quality trend'
+          },
+          threshold: { green: 2, amber: 3, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'qm_drill_rwa_intensity',
+          label: 'RWA Intensity',
+          value: 52.3,
+          unit: 'percent',
+          displayValue: '52.3',
+          trend: 'up',
+          changePercent: 4.4,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'RWA per ₹ Cr Exposure',
+            formula: 'Total RWA / (Total Exposure / 10,000,000)',
+            businessImplication: 'Capital efficiency'
+          },
+          threshold: { green: 52, amber: 48, status: 'green' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'qm_drill_weighted_tds_gds',
+          label: 'Weighted TDS / GDS',
+          value: 38.2,
+          unit: 'percent',
+          displayValue: '38.2%',
+          trend: 'up',
+          changePercent: 4.1,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Income coverage & affordability',
+            formula: 'Σ((TDS + GDS) × Exposure) / (2 × Σ Exposure)',
+            businessImplication: 'Borrower health'
+          },
+          threshold: { green: 35, amber: 42, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'qm_drill_weighted_credit_score',
+          label: 'Weighted Credit Score',
+          value: 695,
+          unit: 'percent',
+          displayValue: '695',
+          trend: 'down',
+          changePercent: -2.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Average score of new borrowers',
+            formula: 'Σ(Credit Score × Sanctioned Amount) / Σ(Sanctioned Amount)',
+            businessImplication: 'Counterparty strength'
+          },
+          threshold: { green: 720, amber: 680, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'qm_drill_deviation_rate',
+          label: 'Deviation Rate (%)',
+          value: 14.5,
+          unit: 'percent',
+          displayValue: '14.5%',
+          trend: 'up',
+          changePercent: 17.6,
+          changeLabel: '%',
+          tooltip: {
+            definition: '% proposals approved with policy deviations',
+            formula: '(Policy Deviations / Total Approvals) × 100',
+            businessImplication: 'Underwriting discipline'
+          },
+          threshold: { green: 10, amber: 18, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'qm_drill_source_mix',
+          label: 'Source Mix',
+          value: 62,
+          unit: 'percent',
+          displayValue: '62% New : 38% Enh',
+          trend: 'up',
+          changePercent: 6.9,
+          changeLabel: '%',
+          tooltip: {
+            definition: '% Net New vs % Enhancements',
+            formula: '(Net New Loans / Total Originations) × 100 : (Enhancements / Total Originations) × 100',
+            businessImplication: 'Franchise growth vs deepening'
+          },
+          threshold: { green: 55, amber: 70, status: 'green' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'qm_drill_mortality_12m',
+          label: 'Mortality (≤12M DPD)',
+          value: 3.4,
+          unit: 'percent',
+          displayValue: '3.4%',
+          trend: 'up',
+          changePercent: 13.3,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Early delinquency on recent vintages',
+            formula: '(Loans with DPD ≤ 12 months / Total Recent Originations) × 100',
+            businessImplication: 'Post-approval quality check'
+          },
+          threshold: { green: 2, amber: 4, status: 'amber' },
+          alertSeverity: 'warning'
+        }
+      ];
+
+    case 'qm_weighted_pd':
+      // Weighted PD Drilldown - 5 KPIs
+      return [
+        {
+          id: 'pd_drill_weighted_pd',
+          label: 'Weighted PD',
+          value: 2.35,
+          unit: 'percent',
+          displayValue: '2.35%',
+          trend: 'up',
+          changePercent: 8.2,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Probability of Default weighted by exposure',
+            formula: 'Σ(PD × Exposure) / Σ(Exposure)',
+            businessImplication: 'Measures expected default rate of portfolio'
+          },
+          threshold: { green: 2.0, amber: 2.5, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'pd_drill_high_risk_pct',
+          label: 'High Risk %',
+          value: 18.5,
+          unit: 'percent',
+          displayValue: '18.5%',
+          trend: 'up',
+          changePercent: 12.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of portfolio with PD > 5%',
+            formula: '(Exposure with PD > 5% / Total Exposure) × 100',
+            businessImplication: 'Concentration in high-risk obligors'
+          },
+          threshold: { green: 15, amber: 20, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'pd_drill_pd_migration',
+          label: 'PD Upgrades',
+          value: 12.8,
+          unit: 'percent',
+          displayValue: '12.8%',
+          trend: 'down',
+          changePercent: -5.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of accounts with improving PD',
+            formula: '(Accounts with PD decrease / Total Accounts) × 100',
+            businessImplication: 'Positive trend indicates improving credit quality'
+          },
+          threshold: { green: 15, amber: 10, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'pd_drill_stage2_pct',
+          label: 'Stage 2 %',
+          value: 14.2,
+          unit: 'percent',
+          displayValue: '14.2%',
+          trend: 'up',
+          changePercent: 18.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of portfolio in IFRS 9 Stage 2',
+            formula: '(Stage 2 Exposure / Total Exposure) × 100',
+            businessImplication: 'Significant credit deterioration indicator'
+          },
+          threshold: { green: 10, amber: 15, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'pd_drill_pd_volatility',
+          label: 'PD Volatility',
+          value: 0.45,
+          unit: 'percent',
+          displayValue: '0.45',
+          trend: 'up',
+          changePercent: 22.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Standard deviation of PD changes across portfolio',
+            formula: 'StdDev(ΔPD) over last 6 months',
+            businessImplication: 'High volatility indicates unstable credit quality'
+          },
+          threshold: { green: 0.3, amber: 0.5, status: 'amber' },
+          alertSeverity: 'warning'
+        }
+      ];
+
+    case 'qm_portfolio_raroc':
+      // Portfolio RAROC Drilldown - 5 KPIs
+      return [
+        {
+          id: 'raroc_drill_raroc',
+          label: 'Portfolio RAROC',
+          value: 14.5,
+          unit: 'percent',
+          displayValue: '14.5%',
+          trend: 'down',
+          changePercent: -8.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Risk-Adjusted Return on Capital',
+            formula: '(Net Income - Expected Loss) / Economic Capital × 100',
+            businessImplication: 'Profitability after accounting for risk'
+          },
+          threshold: { green: 15, amber: 12, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'raroc_drill_nim',
+          label: 'Net Interest Margin',
+          value: 3.85,
+          unit: 'percent',
+          displayValue: '3.85%',
+          trend: 'down',
+          changePercent: -5.2,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Net interest income as percentage of average earning assets',
+            formula: '(Interest Income - Interest Expense) / Avg Earning Assets × 100',
+            businessImplication: 'Core lending profitability metric'
+          },
+          threshold: { green: 4.0, amber: 3.5, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'raroc_drill_cos_income',
+          label: 'Cost to Income',
+          value: 42.5,
+          unit: 'percent',
+          displayValue: '42.5%',
+          trend: 'up',
+          changePercent: 3.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Operating expenses as percentage of income',
+            formula: '(Operating Expenses / Total Income) × 100',
+            businessImplication: 'Operational efficiency measure'
+          },
+          threshold: { green: 40, amber: 50, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'raroc_drill_roe',
+          label: 'Return on Equity',
+          value: 16.8,
+          unit: 'percent',
+          displayValue: '16.8%',
+          trend: 'down',
+          changePercent: -12.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Net income as percentage of shareholder equity',
+            formula: '(Net Income / Average Equity) × 100',
+            businessImplication: 'Overall profitability to shareholders'
+          },
+          threshold: { green: 18, amber: 15, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'raroc_drill_economic_capital',
+          label: 'Economic Capital',
+          value: 285.5,
+          unit: 'currency',
+          displayValue: '$285.5M',
+          trend: 'up',
+          changePercent: 15.2,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Capital required to cover unexpected losses at 99.9% confidence',
+            formula: 'VaR(99.9%) - Expected Loss',
+            businessImplication: 'True capital adequacy measure'
+          },
+          threshold: { green: 250, amber: 300, status: 'amber' },
+          alertSeverity: 'none'
+        }
+      ];
+
+    case 'qm_rated_below_bbb':
+      // Quick Mortality Ratio Drilldown - 5 KPIs
+      return [
+        {
+          id: 'qmr_drill_bbb_below',
+          label: 'Quick Mortality Ratio',
+          value: 28.5,
+          unit: 'percent',
+          displayValue: '28.5%',
+          trend: 'up',
+          changePercent: 15.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Share of exposures rated BBB and below',
+            formula: '(Σ Exposure with Rating ≤ BBB / Total Exposure) × 100',
+            businessImplication: 'Portfolio quality deterioration indicator'
+          },
+          threshold: { green: 25, amber: 30, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'qmr_drill_sub_inv',
+          label: 'Sub-Investment Grade',
+          value: 12.5,
+          unit: 'percent',
+          displayValue: '12.5%',
+          trend: 'up',
+          changePercent: 22.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage rated below BBB- (speculative grade)',
+            formula: '(Exposure rated < BBB- / Total Exposure) × 100',
+            businessImplication: 'High-risk exposure concentration'
+          },
+          threshold: { green: 10, amber: 15, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'qmr_drill_downgrades',
+          label: 'Rating Downgrades',
+          value: 45,
+          unit: 'percent',
+          displayValue: '45',
+          trend: 'up',
+          changePercent: 35.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Number of accounts downgraded in last month',
+            formula: 'Count of rating downgrades in period',
+            businessImplication: 'Credit quality momentum indicator'
+          },
+          threshold: { green: 30, amber: 50, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'qmr_drill_watchlist',
+          label: 'Watchlist %',
+          value: 8.5,
+          unit: 'percent',
+          displayValue: '8.5%',
+          trend: 'up',
+          changePercent: 18.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of portfolio on credit watchlist',
+            formula: '(Watchlist Exposure / Total Exposure) × 100',
+            businessImplication: 'Early warning of potential problems'
+          },
+          threshold: { green: 5, amber: 10, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'qmr_drill_avg_rating',
+          label: 'Avg Credit Rating',
+          value: 6.2,
+          unit: 'percent',
+          displayValue: 'BBB+',
+          trend: 'down',
+          changePercent: -5.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Average credit rating (numeric scale: AAA=1, D=10)',
+            formula: 'Weighted average rating score',
+            businessImplication: 'Overall portfolio quality measure'
+          },
+          threshold: { green: 5.5, amber: 7.0, status: 'amber' },
+          alertSeverity: 'none'
+        }
+      ];
+
+    case 'qm_rwa_intensity':
+      // CMI Drilldown - 4 KPIs
+      return [
+        {
+          id: 'cmi_drill_bank_cmi',
+          label: 'Bank CMI',
+          value: 58.4,
+          unit: 'percent',
+          displayValue: '58.4',
+          trend: 'up',
+          changePercent: 5.8,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Credit Managers Index - proprietary credit conditions indicator',
+            formula: 'Composite index (>50 = expansion, <50 = contraction)',
+            businessImplication: 'Overall credit market health assessment'
+          },
+          threshold: { green: 52, amber: 48, status: 'green' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'cmi_drill_crisil',
+          label: 'CRISIL Index',
+          value: 56.8,
+          unit: 'percent',
+          displayValue: '56.8',
+          trend: 'up',
+          changePercent: 4.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'CRISIL external benchmark index',
+            formula: 'External market credit conditions index',
+            businessImplication: 'Market comparison benchmark'
+          },
+          threshold: { green: 52, amber: 48, status: 'green' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'cmi_drill_gap',
+          label: 'CMI Gap',
+          value: 1.6,
+          unit: 'percent',
+          displayValue: '+1.6',
+          trend: 'up',
+          changePercent: 12.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Difference between Bank CMI and CRISIL Index',
+            formula: 'Bank CMI - CRISIL Index',
+            businessImplication: 'Relative performance vs market'
+          },
+          threshold: { green: 0, amber: -3, status: 'green' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'cmi_drill_trend',
+          label: 'CMI Momentum',
+          value: 0.8,
+          unit: 'percent',
+          displayValue: '+0.8/mo',
+          trend: 'up',
+          changePercent: 25.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Monthly change in CMI (6-month average)',
+            formula: 'Avg(ΔCMI) over last 6 months',
+            businessImplication: 'Trend direction and strength'
+          },
+          threshold: { green: 0.5, amber: -0.5, status: 'green' },
+          alertSeverity: 'none'
+        }
+      ];
+
+    case 'qm_npl_ratio':
+      // NPL Ratio Drilldown - 6 KPIs
+      return [
+        {
+          id: 'npl_drill_npl_ratio',
+          label: 'NPL Ratio',
+          value: 2.8,
+          unit: 'percent',
+          displayValue: '2.8%',
+          trend: 'up',
+          changePercent: 16.7,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Non-Performing Loans as percentage of total portfolio',
+            formula: '(NPL Amount / Total Portfolio) × 100',
+            businessImplication: 'Core asset quality metric'
+          },
+          threshold: { green: 2.0, amber: 3.5, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'npl_drill_npl_amount',
+          label: 'NPL Amount',
+          value: 142.5,
+          unit: 'currency',
+          displayValue: '$142.5M',
+          trend: 'up',
+          changePercent: 18.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Total value of non-performing loans',
+            formula: 'Σ(Exposure for accounts 90+ DPD)',
+            businessImplication: 'Absolute NPL exposure'
+          },
+          threshold: { green: 100, amber: 150, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'npl_drill_coverage',
+          label: 'NPL Coverage',
+          value: 68.5,
+          unit: 'percent',
+          displayValue: '68.5%',
+          trend: 'down',
+          changePercent: -5.2,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Provisions as percentage of NPL',
+            formula: '(Total Provisions / NPL Amount) × 100',
+            businessImplication: 'Adequacy of loss reserves'
+          },
+          threshold: { green: 70, amber: 60, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'npl_drill_inflow',
+          label: 'NPL Inflow',
+          value: 18.5,
+          unit: 'currency',
+          displayValue: '$18.5M',
+          trend: 'up',
+          changePercent: 25.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'New additions to NPL in current month',
+            formula: 'Accounts newly classified as 90+ DPD',
+            businessImplication: 'Fresh deterioration indicator'
+          },
+          threshold: { green: 12, amber: 20, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'npl_drill_recovery',
+          label: 'Recovery Rate',
+          value: 42.5,
+          unit: 'percent',
+          displayValue: '42.5%',
+          trend: 'down',
+          changePercent: -8.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of NPL recovered or upgraded',
+            formula: '(Recovered/Upgraded NPL / Opening NPL) × 100',
+            businessImplication: 'Collections effectiveness'
+          },
+          threshold: { green: 50, amber: 40, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'npl_drill_vintage',
+          label: 'NPL Vintage 2y+',
+          value: 35.8,
+          unit: 'percent',
+          displayValue: '35.8%',
+          trend: 'up',
+          changePercent: 5.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of NPL aged over 2 years',
+            formula: '(NPL aged >2yr / Total NPL) × 100',
+            businessImplication: 'Chronic problem loans indicator'
+          },
+          threshold: { green: 25, amber: 40, status: 'amber' },
+          alertSeverity: 'warning'
+        }
+      ];
+
+    case 'qm_approval_rate':
+      // Approval Rate Drilldown - 5 KPIs
+      return [
+        {
+          id: 'apr_drill_approval_rate',
+          label: 'Approval Rate',
+          value: 68.5,
+          unit: 'percent',
+          displayValue: '68.5%',
+          trend: 'down',
+          changePercent: -5.2,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of applications approved',
+            formula: '(Approved Applications / Total Applications) × 100',
+            businessImplication: 'Credit policy strictness measure'
+          },
+          threshold: { green: 65, amber: 50, status: 'green' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'apr_drill_decline_rate',
+          label: 'Decline Rate',
+          value: 22.5,
+          unit: 'percent',
+          displayValue: '22.5%',
+          trend: 'up',
+          changePercent: 8.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of applications declined',
+            formula: '(Declined Applications / Total Applications) × 100',
+            businessImplication: 'Underwriting conservatism'
+          },
+          threshold: { green: 25, amber: 35, status: 'green' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'apr_drill_withdrawal',
+          label: 'Withdrawal Rate',
+          value: 9.0,
+          unit: 'percent',
+          displayValue: '9.0%',
+          trend: 'up',
+          changePercent: 12.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of applications withdrawn by applicant',
+            formula: '(Withdrawn Applications / Total Applications) × 100',
+            businessImplication: 'Competitiveness indicator'
+          },
+          threshold: { green: 8, amber: 12, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'apr_drill_tat',
+          label: 'Avg TAT',
+          value: 3.2,
+          unit: 'percent',
+          displayValue: '3.2 days',
+          trend: 'down',
+          changePercent: -15.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Average turnaround time for application decisions',
+            formula: 'Avg(Decision Date - Application Date)',
+            businessImplication: 'Processing efficiency measure'
+          },
+          threshold: { green: 3, amber: 5, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'apr_drill_pullthrough',
+          label: 'Pull-through Rate',
+          value: 85.5,
+          unit: 'percent',
+          displayValue: '85.5%',
+          trend: 'up',
+          changePercent: 5.2,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of approvals that convert to disbursements',
+            formula: '(Disbursements / Approvals) × 100',
+            businessImplication: 'Conversion effectiveness'
+          },
+          threshold: { green: 80, amber: 70, status: 'green' },
+          alertSeverity: 'none'
+        }
+      ];
+
+    case 'qm_provision_expense':
+      // Provision Expense Drilldown - 6 KPIs
+      return [
+        {
+          id: 'prov_drill_daily_expense',
+          label: 'Provision Expense',
+          value: 12.4,
+          unit: 'currency',
+          displayValue: '$12.4M',
+          trend: 'up',
+          changePercent: 14.8,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Daily or rolling provision requirements',
+            formula: 'Current Period ECL - Prior Period ECL',
+            businessImplication: 'P&L impact from credit deterioration'
+          },
+          threshold: { green: 10, amber: 15, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'prov_drill_total_ecl',
+          label: 'Total ECL',
+          value: 285.5,
+          unit: 'currency',
+          displayValue: '$285.5M',
+          trend: 'up',
+          changePercent: 8.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Total Expected Credit Loss provisions',
+            formula: 'Σ(Stage 1 + Stage 2 + Stage 3 ECL)',
+            businessImplication: 'Total loss reserves held'
+          },
+          threshold: { green: 250, amber: 300, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'prov_drill_coverage',
+          label: 'ECL Coverage',
+          value: 5.6,
+          unit: 'percent',
+          displayValue: '5.6%',
+          trend: 'up',
+          changePercent: 6.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'ECL as percentage of total exposure',
+            formula: '(Total ECL / Total Exposure) × 100',
+            businessImplication: 'Provisioning adequacy measure'
+          },
+          threshold: { green: 5.0, amber: 6.5, status: 'amber' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'prov_drill_stage2_ecl',
+          label: 'Stage 2 ECL',
+          value: 125.5,
+          unit: 'currency',
+          displayValue: '$125.5M',
+          trend: 'up',
+          changePercent: 22.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'ECL for Stage 2 (significant deterioration) assets',
+            formula: 'Lifetime ECL for Stage 2 assets',
+            businessImplication: 'Early stage deterioration provisions'
+          },
+          threshold: { green: 100, amber: 130, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'prov_drill_writeoff',
+          label: 'Write-offs MTD',
+          value: 8.5,
+          unit: 'currency',
+          displayValue: '$8.5M',
+          trend: 'up',
+          changePercent: 18.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Total write-offs in current month',
+            formula: 'Σ(Accounts written off in period)',
+            businessImplication: 'Realized losses'
+          },
+          threshold: { green: 5, amber: 10, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'prov_drill_cos_credit',
+          label: 'Cost of Credit',
+          value: 1.85,
+          unit: 'percent',
+          displayValue: '1.85%',
+          trend: 'up',
+          changePercent: 12.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Credit costs as percentage of average loans',
+            formula: '(Provisions + Write-offs) / Avg Loans × 100',
+            businessImplication: 'Overall credit cost measure'
+          },
+          threshold: { green: 1.5, amber: 2.0, status: 'amber' },
+          alertSeverity: 'none'
+        }
+      ];
+
+    case 'qm_ead_concentration':
+      // EAD Concentration Drilldown - 5 KPIs
+      return [
+        {
+          id: 'ead_drill_concentration',
+          label: 'EAD Concentration',
+          value: 4.8,
+          unit: 'currency',
+          displayValue: '$4.8B',
+          trend: 'up',
+          changePercent: 11.6,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Exposure at Default in top counterparties',
+            formula: 'Σ(EAD for Top 50 Obligors)',
+            businessImplication: 'Concentration risk measure'
+          },
+          threshold: { green: 4.0, amber: 5.5, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'ead_drill_top10_pct',
+          label: 'Top 10 %',
+          value: 28.5,
+          unit: 'percent',
+          displayValue: '28.5%',
+          trend: 'up',
+          changePercent: 8.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Top 10 obligors as percentage of portfolio',
+            formula: '(Top 10 EAD / Total EAD) × 100',
+            businessImplication: 'Extreme concentration indicator'
+          },
+          threshold: { green: 25, amber: 30, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'ead_drill_herfindahl',
+          label: 'HHI Index',
+          value: 0.085,
+          unit: 'percent',
+          displayValue: '0.085',
+          trend: 'up',
+          changePercent: 5.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Herfindahl-Hirschman Index for concentration',
+            formula: 'Σ(Market Share²) for all obligors',
+            businessImplication: 'Portfolio diversification measure'
+          },
+          threshold: { green: 0.1, amber: 0.15, status: 'green' },
+          alertSeverity: 'none'
+        },
+        {
+          id: 'ead_drill_single_largest',
+          label: 'Largest EAD',
+          value: 485.5,
+          unit: 'currency',
+          displayValue: '$485.5M',
+          trend: 'up',
+          changePercent: 12.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Single largest obligor exposure',
+            formula: 'Max(EAD) across all counterparties',
+            businessImplication: 'Maximum single-name risk'
+          },
+          threshold: { green: 400, amber: 500, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'ead_drill_group_linkage',
+          label: 'Group Linkage',
+          value: 15.5,
+          unit: 'percent',
+          displayValue: '15.5%',
+          trend: 'up',
+          changePercent: 18.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Percentage of top exposures with group connections',
+            formula: '(Linked Group Exposure / Top 50 EAD) × 100',
+            businessImplication: 'Contagion risk from connected parties'
+          },
+          threshold: { green: 10, amber: 20, status: 'amber' },
+          alertSeverity: 'warning'
+        }
+      ];
+
+    case 'qm_mortality_12m':
+      // 12M Mortality Drilldown - 5 KPIs
+      return [
+        {
+          id: 'mort_drill_12m_rate',
+          label: '12M Mortality',
+          value: 3.4,
+          unit: 'percent',
+          displayValue: '3.4%',
+          trend: 'up',
+          changePercent: 13.3,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Cumulative default rate for loans aged ≤12 months',
+            formula: '(Defaults ≤12mo vintage / Total ≤12mo vintage) × 100',
+            businessImplication: 'Recent vintage performance indicator'
+          },
+          threshold: { green: 2.0, amber: 4.0, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'mort_drill_6m_rate',
+          label: '6M Mortality',
+          value: 1.8,
+          unit: 'percent',
+          displayValue: '1.8%',
+          trend: 'up',
+          changePercent: 20.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Default rate for very recent loans (≤6 months)',
+            formula: '(Defaults ≤6mo vintage / Total ≤6mo vintage) × 100',
+            businessImplication: 'Ultra-early delinquency warning'
+          },
+          threshold: { green: 1.0, amber: 2.0, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'mort_drill_vintage_worst',
+          label: 'Worst Vintage',
+          value: 5.2,
+          unit: 'percent',
+          displayValue: '5.2% (Jun-24)',
+          trend: 'up',
+          changePercent: 0,
+          changeLabel: '',
+          tooltip: {
+            definition: 'Highest mortality rate among recent vintages',
+            formula: 'Max(Mortality Rate) for last 12 vintages',
+            businessImplication: 'Problem vintage identification'
+          },
+          threshold: { green: 3.0, amber: 5.0, status: 'red' },
+          alertSeverity: 'critical'
+        },
+        {
+          id: 'mort_drill_channel_digital',
+          label: 'Digital Channel',
+          value: 4.8,
+          unit: 'percent',
+          displayValue: '4.8%',
+          trend: 'up',
+          changePercent: 28.5,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Mortality rate for digital channel originations',
+            formula: '(Digital Defaults / Digital Originations) × 100',
+            businessImplication: 'Digital underwriting quality check'
+          },
+          threshold: { green: 3.0, amber: 5.0, status: 'amber' },
+          alertSeverity: 'warning'
+        },
+        {
+          id: 'mort_drill_trend',
+          label: 'Mortality Trend',
+          value: 0.15,
+          unit: 'percent',
+          displayValue: '+0.15%/mo',
+          trend: 'up',
+          changePercent: 50.0,
+          changeLabel: '%',
+          tooltip: {
+            definition: 'Monthly increase in mortality rate (6-month avg)',
+            formula: 'Avg(ΔMortality) over last 6 months',
+            businessImplication: 'Deterioration velocity'
+          },
+          threshold: { green: 0, amber: 0.1, status: 'red' },
+          alertSeverity: 'critical'
+        }
+      ];
+
+    default:
+      // Fallback: Return empty array if KPI ID not recognized
+      return [];
+  }
 }
 
 // ============================================================================
@@ -1694,7 +2724,60 @@ export function generateSectorComparisonData() {
 /**
  * Generate Heatmap Data - Deterioration by Sector + Region + Product
  */
-export function generateHeatmapData() {
+export function generateHeatmapData(companies?: PortfolioCompany[]) {
+  // Calculate color intensity based on deterioration rate
+  const getColor = (rate: number) => {
+    if (rate < 5) return '#10b981'; // green
+    if (rate < 8) return '#fbbf24'; // yellow
+    if (rate < 12) return '#f59e0b'; // orange
+    return '#ef4444'; // red
+  };
+
+  // If companies provided, calculate actual deterioration from filtered data
+  if (companies && companies.length > 0) {
+    // Get unique sectors, regions, and products from filtered companies
+    const sectors = Array.from(new Set(companies.map(c => c.industry)));
+    const regions = Array.from(new Set(companies.map(c => c.region)));
+    const products = Array.from(new Set(companies.map(c => c.productType)));
+
+    const data = [];
+
+    for (const sector of sectors) {
+      for (const region of regions) {
+        for (const product of products) {
+          // Filter companies for this specific combination
+          const filtered = companies.filter(
+            c => c.industry === sector && c.region === region && c.productType === product
+          );
+
+          if (filtered.length === 0) continue; // Skip if no companies in this combination
+
+          // Calculate deterioration rate: % of Delinquent + Watchlist companies
+          const deteriorated = filtered.filter(
+            c => c.creditStatus === 'Delinquent' || c.creditStatus === 'Watchlist'
+          ).length;
+          const deteriorationRate = (deteriorated / filtered.length) * 100;
+
+          // Calculate total exposure
+          const exposure = filtered.reduce((sum, c) => sum + c.exposureAmount, 0);
+
+          data.push({
+            sector,
+            region,
+            product,
+            deteriorationRate: Number(deteriorationRate.toFixed(2)),
+            exposure: exposure,
+            accountCount: filtered.length,
+            color: getColor(deteriorationRate),
+          });
+        }
+      }
+    }
+
+    return data;
+  }
+
+  // Fallback to mock data if no companies provided (backwards compatibility)
   const sectors = ['Real Estate', 'Infra', 'NBFC', 'Retail'];
   const regions = ['North', 'South', 'East', 'West', 'Central'];
   const products = ['Term Loan', 'Working Capital', 'Trade Finance'];
@@ -1717,14 +2800,6 @@ export function generateHeatmapData() {
 
         const deteriorationRate = Math.max(0, baseDeteriorationRate + regionalVariation + productVariation);
 
-        // Calculate color intensity based on deterioration rate
-        const getColor = (rate: number) => {
-          if (rate < 5) return '#10b981'; // green
-          if (rate < 8) return '#fbbf24'; // yellow
-          if (rate < 12) return '#f59e0b'; // orange
-          return '#ef4444'; // red
-        };
-
         data.push({
           sector,
           region,
@@ -1743,8 +2818,103 @@ export function generateHeatmapData() {
 
 /**
  * Generate Migration Matrix Data - Downgrade ladder by attributes
+ * @param companies - Optional filtered portfolio companies for calculating actual migrations
  */
-export function generateMigrationMatrixData() {
+export function generateMigrationMatrixData(companies?: PortfolioCompany[]) {
+  // Helper to calculate migration statistics for a group of companies
+  const calculateMigrations = (filteredCompanies: PortfolioCompany[]) => {
+    const totalExposure = filteredCompanies.reduce((sum, c) => sum + c.exposureAmount, 0);
+
+    // Use creditStatus as proxy for downgrades (mock data doesn't have historical ratings)
+    // Delinquent = 3 notches down, Watchlist = 2 notches, Default = 1 notch
+    const delinquent = filteredCompanies.filter(c => c.creditStatus === 'Delinquent');
+    const watchlist = filteredCompanies.filter(c => c.creditStatus === 'Watchlist');
+    const defaulted = filteredCompanies.filter(c => c.creditStatus === 'Default');
+
+    const delinquentExposure = delinquent.reduce((sum, c) => sum + c.exposureAmount, 0);
+    const watchlistExposure = watchlist.reduce((sum, c) => sum + c.exposureAmount, 0);
+    const defaultExposure = defaulted.reduce((sum, c) => sum + c.exposureAmount, 0);
+
+    return {
+      totalExposure,
+      downgrade1Notch: {
+        count: defaulted.length,
+        exposure: defaultExposure,
+        percentage: totalExposure > 0 ? Number(((defaultExposure / totalExposure) * 100).toFixed(2)) : 0,
+      },
+      downgrade2Notch: {
+        count: watchlist.length,
+        exposure: watchlistExposure,
+        percentage: totalExposure > 0 ? Number(((watchlistExposure / totalExposure) * 100).toFixed(2)) : 0,
+      },
+      downgrade3Notch: {
+        count: delinquent.length,
+        exposure: delinquentExposure,
+        percentage: totalExposure > 0 ? Number(((delinquentExposure / totalExposure) * 100).toFixed(2)) : 0,
+      },
+    };
+  };
+
+  // If companies provided, calculate actual migrations from filtered data
+  if (companies && companies.length > 0) {
+    const data = [];
+
+    // Generate segment-wise migrations
+    const segments = Array.from(new Set(companies.map(c => c.segment)));
+    for (const segment of segments) {
+      const segmentCompanies = companies.filter(c => c.segment === segment);
+      if (segmentCompanies.length === 0) continue;
+
+      const migrations = calculateMigrations(segmentCompanies);
+      data.push({
+        attribute: `Segment: ${segment}`,
+        attributeType: 'segment' as const,
+        ...migrations,
+      });
+    }
+
+    // Generate industry migrations (top industries by exposure)
+    const industries = Array.from(new Set(companies.map(c => c.industry)));
+    const industryExposures = industries.map(industry => ({
+      industry,
+      exposure: companies.filter(c => c.industry === industry).reduce((sum, c) => sum + c.exposureAmount, 0),
+    })).sort((a, b) => b.exposure - a.exposure).slice(0, 3);
+
+    for (const { industry } of industryExposures) {
+      const industryCompanies = companies.filter(c => c.industry === industry);
+      if (industryCompanies.length === 0) continue;
+
+      const migrations = calculateMigrations(industryCompanies);
+      data.push({
+        attribute: `Industry: ${industry}`,
+        attributeType: 'industry' as const,
+        ...migrations,
+      });
+    }
+
+    // Generate rating-wise migrations (top ratings by count)
+    const ratings = Array.from(new Set(companies.map(c => c.borrowerExternalRating || 'NR')));
+    const ratingCounts = ratings.map(rating => ({
+      rating,
+      count: companies.filter(c => (c.borrowerExternalRating || 'NR') === rating).length,
+    })).sort((a, b) => b.count - a.count).slice(0, 3);
+
+    for (const { rating } of ratingCounts) {
+      const ratingCompanies = companies.filter(c => (c.borrowerExternalRating || 'NR') === rating);
+      if (ratingCompanies.length === 0) continue;
+
+      const migrations = calculateMigrations(ratingCompanies);
+      data.push({
+        attribute: `Rating: ${rating}`,
+        attributeType: 'rating' as const,
+        ...migrations,
+      });
+    }
+
+    return data;
+  }
+
+  // Fallback to mock data if no companies provided (backwards compatibility)
   const segments = ['CORPORATE', 'SME', 'RETAIL'];
   const industries = ['Real Estate', 'Infra', 'NBFC', 'Manufacturing', 'Services'];
   const ratings = ['AAA', 'AA', 'A', 'BBB', 'BB'];
@@ -1827,4 +2997,204 @@ export function generateMigrationMatrixData() {
   }
 
   return data;
+}
+
+// ============================================================================
+// Rating Migration Matrix Data Generator
+// ============================================================================
+
+/**
+ * Generates rating migration matrix showing transitions between credit ratings
+ * @param companies - Optional filtered portfolio companies
+ * @param ratingType - 'external' or 'internal' rating system
+ */
+export function generateRatingMigrationMatrix(
+  companies?: PortfolioCompany[],
+  ratingType: 'external' | 'internal' = 'external'
+): RatingMigrationMatrix {
+  const portfolioCompanies = companies || mockPortfolioCompanies;
+
+  // Define rating lists
+  const externalRatings = ['AAA', 'AA', 'A', 'BBB', 'BB', 'CRISIL A1+', 'CRISIL A2+', 'ICRA A1'];
+  const internalRatings = ['YLC3', 'YLC5', 'YMR1', 'YMR2', 'YHR1', 'YHR2'];
+
+  const ratings = ratingType === 'external' ? externalRatings : internalRatings;
+
+  // Get current and previous rating fields
+  const getCurrentRating = (company: PortfolioCompany) =>
+    ratingType === 'external' ? company.borrowerExternalRating : company.borrowerInternalRating;
+  const getPreviousRating = (company: PortfolioCompany) =>
+    ratingType === 'external' ? company.previousExternalRating : company.previousInternalRating;
+
+  // Calculate migrations for each from-to combination
+  const cells: RatingMigrationCell[] = [];
+  const totalCompanies = portfolioCompanies.length;
+  const totalExposure = portfolioCompanies.reduce((sum, c) => sum + c.grossCreditExposure, 0);
+
+  let upgradedCount = 0;
+  let upgradedExposure = 0;
+  let downgradedCount = 0;
+  let downgradedExposure = 0;
+  let unchangedCount = 0;
+  let unchangedExposure = 0;
+
+  for (const fromRating of ratings) {
+    for (const toRating of ratings) {
+      // Find companies that migrated from fromRating to toRating
+      const migratedCompanies = portfolioCompanies.filter(
+        (c) => getPreviousRating(c) === fromRating && getCurrentRating(c) === toRating
+      );
+
+      const count = migratedCompanies.length;
+      const exposure = migratedCompanies.reduce((sum, c) => sum + c.grossCreditExposure, 0);
+      const percentage = totalCompanies > 0 ? (count / totalCompanies) * 100 : 0;
+
+      // Calculate notch change
+      const fromIndex = ratings.indexOf(fromRating);
+      const toIndex = ratings.indexOf(toRating);
+      const notchChange = fromIndex - toIndex; // Positive = upgrade, negative = downgrade
+
+      cells.push({
+        fromRating,
+        toRating,
+        count,
+        exposure,
+        percentage,
+        notchChange,
+      });
+
+      // Accumulate statistics
+      if (notchChange > 0) {
+        upgradedCount += count;
+        upgradedExposure += exposure;
+      } else if (notchChange < 0) {
+        downgradedCount += count;
+        downgradedExposure += exposure;
+      } else {
+        unchangedCount += count;
+        unchangedExposure += exposure;
+      }
+    }
+  }
+
+  return {
+    ratingType,
+    ratings,
+    cells,
+    totalCompanies,
+    totalExposure,
+    upgraded: {
+      count: upgradedCount,
+      exposure: upgradedExposure,
+      percentage: totalCompanies > 0 ? (upgradedCount / totalCompanies) * 100 : 0,
+    },
+    downgraded: {
+      count: downgradedCount,
+      exposure: downgradedExposure,
+      percentage: totalCompanies > 0 ? (downgradedCount / totalCompanies) * 100 : 0,
+    },
+    unchanged: {
+      count: unchangedCount,
+      exposure: unchangedExposure,
+      percentage: totalCompanies > 0 ? (unchangedCount / totalCompanies) * 100 : 0,
+    },
+  };
+}
+
+// ============================================================================
+// Benchmark Comparison Data Generator
+// ============================================================================
+
+export function generateBenchmarkComparisonData(): BenchmarkComparisonRow[] {
+  return [
+    {
+      metric: 'Credit Migration Index',
+      bankValue: 57.6,
+      crisilValue: 54.2,
+      gap: '+3.4',
+      gapType: 'negative', // Higher CMI = more deterioration = bad
+      unit: ''
+    },
+    {
+      metric: '% Downgrades (Quarterly)',
+      bankValue: '7.8%',
+      crisilValue: '6.2%',
+      gap: '+1.6%',
+      gapType: 'negative', // More downgrades = bad
+      unit: '%'
+    },
+    {
+      metric: '% Upgrades',
+      bankValue: '2.1%',
+      crisilValue: '3.4%',
+      gap: '-1.3%',
+      gapType: 'negative', // Fewer upgrades = bad
+      unit: '%'
+    },
+    {
+      metric: 'Net Migration (Δ Notches)',
+      bankValue: '-0.45',
+      crisilValue: '-0.32',
+      gap: '-0.13',
+      gapType: 'negative', // More negative migration = bad
+      unit: 'notches'
+    },
+    {
+      metric: 'Median Rating Drift',
+      bankValue: '-1 notch',
+      crisilValue: '-0.8 notch',
+      gap: '—',
+      gapType: 'neutral',
+      unit: ''
+    }
+  ];
+}
+
+// ============================================================================
+// Sector Benchmarking Data Generator
+// ============================================================================
+
+export function generateSectorBenchmarkingData(): SectorBenchmarkRow[] {
+  return [
+    {
+      sector: 'Real Estate',
+      bankCMI: 61.5,
+      crisilIndex: 57.0,
+      gap: 4.5,
+      concentration: 10,
+      sentiment: 'negative',
+      sentimentText: 'Negative',
+      outlookDescription: 'Liquidity stress; project delays'
+    },
+    {
+      sector: 'Infra',
+      bankCMI: 59.2,
+      crisilIndex: 56.5,
+      gap: 2.7,
+      concentration: 8,
+      sentiment: 'neutral',
+      sentimentText: 'Neutral-to-Negative',
+      outlookDescription: 'Govt spend plateauing'
+    },
+    {
+      sector: 'NBFC',
+      bankCMI: 58.4,
+      crisilIndex: 54.8,
+      gap: 3.6,
+      concentration: 6,
+      sentiment: 'negative',
+      sentimentText: 'Negative',
+      outlookDescription: 'Tightening spreads'
+    },
+    {
+      sector: 'Retail',
+      bankCMI: 48.7,
+      crisilIndex: 50.5,
+      gap: -1.8,
+      concentration: 18,
+      sentiment: 'positive',
+      sentimentText: 'Stable',
+      outlookDescription: 'Household income steady'
+    }
+  ];
 }

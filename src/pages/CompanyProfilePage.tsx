@@ -330,10 +330,10 @@ export default function CompanyProfilePage() {
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Company Not Found</h2>
         <p className="text-gray-600 mb-6">The requested company profile could not be found.</p>
         <button
-          onClick={() => navigate('/portfolio')}
+          onClick={() => navigate('/customer')}
           className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
         >
-          Back to Portfolio
+          Back to Customer View
         </button>
       </div>
     );
@@ -416,7 +416,7 @@ export default function CompanyProfilePage() {
                     ? 'bg-green-600 text-white hover:bg-green-700'
                     : pdfStatus === 'error'
                     ? 'bg-red-600 text-white hover:bg-red-700'
-                    : 'bg-oracle-primary text-white hover:bg-red-700'
+                    : 'bg-oracle-red text-white hover:bg-red-700'
                   }
                   disabled:opacity-50
                 `}

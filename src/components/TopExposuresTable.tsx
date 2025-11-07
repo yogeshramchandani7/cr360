@@ -52,7 +52,7 @@ export default function TopExposuresTable({
 
   const handleCompanyClick = (borrowerName: string) => {
     // Navigate to company profile or search
-    navigate(`/portfolio?search=${encodeURIComponent(borrowerName)}`);
+    navigate(`/customer?search=${encodeURIComponent(borrowerName)}`);
   };
 
   const getRatingBadgeColor = (rating: string) => {

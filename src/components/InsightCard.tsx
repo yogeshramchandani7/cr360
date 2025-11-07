@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, AlertTriangle, Info, TrendingUp, AlertCircle, Filter, Check } from 'lucide-react';
+import { ChevronDown, AlertTriangle, Info, TrendingUp, AlertCircle, Filter, Check, ExternalLink } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import type { KPIInsight } from '../types';
 import { cn } from '../lib/utils';
@@ -7,9 +7,13 @@ import { useFilterStore } from '../stores/filterStore';
 
 interface InsightCardProps {
   insight: KPIInsight;
+  showKpiLabel?: boolean;
+  kpiDisplayName?: string;
+  onNavigate?: (insight: KPIInsight) => void;
+  showNavigationButton?: boolean;
 }
 
-export default function InsightCard({ insight }: InsightCardProps) {
+export default function InsightCard({ insight, showKpiLabel = false, kpiDisplayName, onNavigate, showNavigationButton = false }: InsightCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const location = useLocation();
@@ -52,15 +56,31 @@ export default function InsightCard({ insight }: InsightCardProps) {
   const filterCount = insight.filters?.length || 0;
 
   return (
-    <div className={cn(
-      "border-l-4 rounded-lg shadow-sm bg-white",
-      insight.severity === 'critical' ? 'border-l-red-500' :
-      insight.severity === 'warning' ? 'border-l-amber-500' : 'border-l-blue-500'
-    )}>
+    <div
+      data-insight-id={insight.id}
+      className={cn(
+        "border-l-4 rounded-lg shadow-sm bg-white",
+        insight.severity === 'critical' ? 'border-l-red-500' :
+        insight.severity === 'warning' ? 'border-l-amber-500' : 'border-l-blue-500'
+      )}
+    >
+      {/* KPI Label - Optional, shown when aggregating insights */}
+      {showKpiLabel && kpiDisplayName && (
+        <div className="px-4 pt-3 pb-2">
+          <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-semibold bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 border border-indigo-200 shadow-sm">
+            <span className="mr-1.5">📊</span>
+            {kpiDisplayName}
+          </span>
+        </div>
+      )}
+
       {/* Header - Always Visible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 transition-all duration-200 rounded-t-lg"
+        className={cn(
+          "w-full p-4 flex items-center justify-between transition-all duration-200 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50",
+          showKpiLabel ? "" : "rounded-t-lg"
+        )}
       >
         <div className="flex items-center gap-3">
           <span className={cn(
@@ -106,30 +126,50 @@ export default function InsightCard({ insight }: InsightCardProps) {
             <p className="text-sm text-gray-800 leading-relaxed font-medium">{insight.implication}</p>
           </div>
 
-          {/* Apply Filters Button */}
-          {hasFilters && (
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={handleApplyFilters}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm",
-                  isApplying
-                    ? "bg-green-600 text-white"
-                    : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md active:scale-95"
-                )}
-              >
-                {isApplying ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Filters Applied
-                  </>
-                ) : (
-                  <>
-                    <Filter className="w-4 h-4" />
-                    Apply Filters ({filterCount})
-                  </>
-                )}
-              </button>
+          {/* Action Buttons */}
+          {(hasFilters || showNavigationButton) && (
+            <div className="flex justify-end gap-3 pt-2">
+              {/* Apply Filters Button */}
+              {hasFilters && !showNavigationButton && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleApplyFilters();
+                  }}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm",
+                    isApplying
+                      ? "bg-green-600 text-white"
+                      : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md active:scale-95"
+                  )}
+                >
+                  {isApplying ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Filters Applied
+                    </>
+                  ) : (
+                    <>
+                      <Filter className="w-4 h-4" />
+                      Apply Filters ({filterCount})
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* Drill Down Button */}
+              {showNavigationButton && onNavigate && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onNavigate(insight);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-sm bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md active:scale-95"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Drill Down
+                </button>
+              )}
             </div>
           )}
         </div>

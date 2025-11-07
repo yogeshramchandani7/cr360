@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, Lightbulb } from 'lucide-react';
 import { getInsightsForKPI } from '../lib/kpiInsights';
 import InsightCard from './InsightCard';
@@ -6,11 +6,17 @@ import { cn } from '../lib/utils';
 
 interface InsightSectionProps {
   kpiId: string;
+  initiallyOpen?: boolean;
 }
 
-export default function InsightSection({ kpiId }: InsightSectionProps) {
-  const [isSectionExpanded, setIsSectionExpanded] = useState(false);
+export default function InsightSection({ kpiId, initiallyOpen = false }: InsightSectionProps) {
+  const [isSectionExpanded, setIsSectionExpanded] = useState(initiallyOpen);
   const insights = getInsightsForKPI(kpiId);
+
+  // Update expansion state when initiallyOpen prop changes
+  useEffect(() => {
+    setIsSectionExpanded(initiallyOpen);
+  }, [initiallyOpen]);
 
   if (insights.length === 0) return null;
 

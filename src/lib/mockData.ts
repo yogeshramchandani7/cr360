@@ -541,6 +541,43 @@ const internalRatings = ['YLC3', 'YLC5', 'YMR1', 'YMR2', 'YHR1', 'YHR2'];
 const securityStatuses = ['Secured', 'Clean', 'Part Secured'];
 const usStates = ['California', 'Texas', 'New York', 'Florida', 'Illinois'];
 
+// Helper function to generate realistic previous ratings with variation
+const generatePreviousRating = (currentRating: string, ratingsList: string[], seed: number): string => {
+  const currentIndex = ratingsList.indexOf(currentRating);
+  if (currentIndex === -1) return currentRating;
+
+  // Use seed to create different patterns for external vs internal
+  const random = (Math.sin(seed) + 1) / 2; // Convert seed to 0-1 range
+
+  // More varied distribution
+  // 40% chance of no change
+  if (random < 0.4) {
+    return currentRating;
+  }
+  // 25% chance of 1-notch downgrade (if possible)
+  else if (random < 0.65 && currentIndex < ratingsList.length - 1) {
+    return ratingsList[currentIndex + 1];
+  }
+  // 10% chance of 2-notch downgrade (if possible)
+  else if (random < 0.75 && currentIndex < ratingsList.length - 2) {
+    return ratingsList[currentIndex + 2];
+  }
+  // 5% chance of 3+ notch downgrade (if possible)
+  else if (random < 0.80 && currentIndex < ratingsList.length - 3) {
+    return ratingsList[Math.min(currentIndex + 3, ratingsList.length - 1)];
+  }
+  // 15% chance of 1-notch upgrade (if possible)
+  else if (random < 0.95 && currentIndex > 0) {
+    return ratingsList[currentIndex - 1];
+  }
+  // 5% chance of 2+ notch upgrade (if possible)
+  else if (currentIndex > 1) {
+    return ratingsList[Math.max(currentIndex - 2, 0)];
+  }
+
+  return currentRating;
+};
+
 export interface PortfolioCompany {
   id: string;
   customerName: string;
@@ -565,6 +602,8 @@ export interface PortfolioCompany {
   borrowerExternalRating: string;
   borrowerInternalRating: string;
   borrowerCreditScore: number;
+  previousExternalRating: string;
+  previousInternalRating: string;
   riskGrade: string;
   stageClassification: number;
   securityStatus: string;
@@ -714,12 +753,18 @@ export const mockPortfolioCompanies: PortfolioCompany[] = portfolioCompanies.map
     borrowerExternalRating: externalRatings[Math.floor(Math.random() * externalRatings.length)],
     borrowerInternalRating: internalRatings[Math.floor(Math.random() * internalRatings.length)],
     borrowerCreditScore: Math.floor(Math.random() * 300) + 650,
+    previousExternalRating: '',
+    previousInternalRating: '',
     riskGrade: externalRatings[i % externalRatings.length], // Ensure coverage of all grades
     stageClassification: isDelinquent ? 2 : 1,
     securityStatus: securityStatuses[Math.floor(Math.random() * securityStatuses.length)],
     securityValue: Math.floor(Math.random() * 1500),
   };
-});
+}).map((company, idx) => ({
+  ...company,
+  previousExternalRating: generatePreviousRating(company.borrowerExternalRating, externalRatings, idx * 1.5),
+  previousInternalRating: generatePreviousRating(company.borrowerInternalRating, internalRatings, idx * 2.7),
+}));
 
 // AI Insights Mock Data
 import type { Insight } from '../types';

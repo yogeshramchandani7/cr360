@@ -56,8 +56,8 @@ export function getCurrentPageContext(pathname: string, filters: any): string {
 
   if (pathname === '/' || pathname.includes('/dashboard')) {
     pageContext = 'CURRENT PAGE: Dashboard - Overview of portfolio health, trends, and top exposures';
-  } else if (pathname.includes('/portfolio')) {
-    pageContext = 'CURRENT PAGE: Portfolio View - Detailed list of all portfolio companies with filters';
+  } else if (pathname.includes('/customer')) {
+    pageContext = 'CURRENT PAGE: Customer View - Detailed list of all customers with filters';
   } else if (pathname.includes('/company/')) {
     const companyId = pathname.split('/company/')[1]?.split('/')[0];
     const company = mockPortfolioCompanies.find((c) => c.id === companyId);
