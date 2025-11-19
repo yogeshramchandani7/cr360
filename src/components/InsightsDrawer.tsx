@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, TrendingUp, AlertTriangle, Sparkles, Activity, ChevronRight } from 'lucide-react';
+import { X, TrendingUp, AlertTriangle, Sparkles, Activity, ChevronRight, PlayCircle } from 'lucide-react';
 import { useFilterStore } from '../stores/filterStore';
+import { useRiskHubStore } from '../stores/riskHubStore';
 import { getInsightsByChartId } from '../lib/mockData';
 import type { Insight } from '../types';
 
@@ -72,15 +73,23 @@ const getCategoryBadgeStyles = (category: Insight['category']) => {
 interface InsightCardProps {
   insight: Insight;
   onDrillDown?: (insight: Insight) => void;
+  onExecute?: (insight: Insight) => void;
 }
 
-function InsightCard({ insight, onDrillDown }: InsightCardProps) {
+function InsightCard({ insight, onDrillDown, onExecute }: InsightCardProps) {
   const Icon = getCategoryIcon(insight.category);
   const isClickable = !!insight.filter;
 
   const handleClick = () => {
     if (isClickable && onDrillDown) {
       onDrillDown(insight);
+    }
+  };
+
+  const handleExecute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onExecute) {
+      onExecute(insight);
     }
   };
 
@@ -118,6 +127,17 @@ function InsightCard({ insight, onDrillDown }: InsightCardProps) {
               ))}
             </div>
           )}
+
+          {/* Execute Button */}
+          <div className="mt-3 pt-3 border-t border-oracle-border">
+            <button
+              onClick={handleExecute}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-oracle-red text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium w-full justify-center"
+            >
+              <PlayCircle className="w-4 h-4" />
+              Execute Action
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -129,6 +149,7 @@ export default function InsightsDrawer() {
   const selectedInsightChartId = useFilterStore((state) => state.selectedInsightChartId);
   const clearSelectedInsightChartId = useFilterStore((state) => state.clearSelectedInsightChartId);
   const setDrillDownFilter = useFilterStore((state) => state.setDrillDownFilter);
+  const openRiskHubDrawer = useRiskHubStore((state) => state.openDrawer);
 
   const insights = selectedInsightChartId ? getInsightsByChartId(selectedInsightChartId) : [];
   const chartName = selectedInsightChartId ? chartNames[selectedInsightChartId] || 'Chart' : '';
@@ -150,6 +171,27 @@ export default function InsightsDrawer() {
 
     // Navigate to portfolio view
     navigate('/customer');
+  };
+
+  // Handle Execute button click
+  const handleExecute = (insight: Insight) => {
+    // Close insights drawer
+    clearSelectedInsightChartId();
+
+    // Navigate to Risk Hub
+    navigate('/risk-hub');
+
+    // Open Risk Hub drawer with prefilled data from insight
+    // Small delay to ensure navigation completes
+    setTimeout(() => {
+      openRiskHubDrawer({
+        actionTitle: insight.title,
+        actionDescription: insight.description,
+        priority: insight.severity === 'critical' ? 'high' : insight.severity === 'warning' ? 'medium' : 'low',
+        sourceInsightId: insight.id,
+        sourceInsightTitle: insight.title,
+      });
+    }, 100);
   };
 
   // Group insights by category
@@ -225,6 +267,7 @@ export default function InsightsDrawer() {
                         key={insight.id}
                         insight={insight}
                         onDrillDown={handleInsightDrillDown}
+                        onExecute={handleExecute}
                       />
                     ))}
                   </div>

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import InsightCard from './InsightCard';
 import { getAllKPIInsights } from '../../lib/kpiInsights';
-import { generateMacroInsights } from '../../lib/macroInsightsGenerator';
-import type { KPIInsight, MacroInsight } from '../../types';
+import type { KPIInsight } from '../../types';
 
 interface DisplayInsight {
   id: string;
@@ -10,12 +9,12 @@ interface DisplayInsight {
   description: string;
   severity: 'info' | 'warning' | 'critical';
   keyInsights: string[];
-  source: KPIInsight | MacroInsight;
+  source: KPIInsight;
 }
 
 interface InsightsPanelProps {
-  onEvidenceClick: (insight: KPIInsight | MacroInsight) => void;
-  onDrilldown?: (insight: KPIInsight | MacroInsight) => void;
+  onEvidenceClick: (insight: KPIInsight) => void;
+  onDrilldown: (insight: KPIInsight) => void;
 }
 
 export default function InsightsPanel({ onEvidenceClick, onDrilldown }: InsightsPanelProps) {
@@ -23,9 +22,8 @@ export default function InsightsPanel({ onEvidenceClick, onDrilldown }: Insights
   const [expandedInsightId, setExpandedInsightId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Combine KPI insights and macro insights
+    // Get only the filtered KPI insights (7 specific insights)
     const kpiInsights = getAllKPIInsights();
-    const macroInsights = generateMacroInsights();
 
     // Convert to display format
     const kpiDisplay: DisplayInsight[] = kpiInsights.map((insight) => ({
@@ -37,34 +35,23 @@ export default function InsightsPanel({ onEvidenceClick, onDrilldown }: Insights
       source: insight,
     }));
 
-    const macroDisplay: DisplayInsight[] = macroInsights.map((insight) => ({
-      id: insight.id,
-      title: insight.theme,
-      description: insight.implication,
-      severity: insight.severity,
-      keyInsights: [], // Macro insights don't have key insights array
-      source: insight,
-    }));
-
-    // Combine and sort by severity
-    const combined = [...kpiDisplay, ...macroDisplay].sort((a, b) => {
+    // Sort by severity
+    const sorted = kpiDisplay.sort((a, b) => {
       const severityOrder = { critical: 0, warning: 1, info: 2 };
       return severityOrder[a.severity] - severityOrder[b.severity];
     });
 
-    setDisplayInsights(combined);
+    setDisplayInsights(sorted);
   }, []);
 
-  const handleEvidenceClick = (insightId: string, source: KPIInsight | MacroInsight) => {
+  const handleEvidenceClick = (insightId: string, source: KPIInsight) => {
     // Toggle expansion: if already expanded, collapse it; otherwise expand it
     setExpandedInsightId(expandedInsightId === insightId ? null : insightId);
     onEvidenceClick(source);
   };
 
-  const handleDrilldown = (source: KPIInsight | MacroInsight) => {
-    if (onDrilldown) {
-      onDrilldown(source);
-    }
+  const handleDrilldown = (source: KPIInsight) => {
+    onDrilldown(source);
   };
 
   return (

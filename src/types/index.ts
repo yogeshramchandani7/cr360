@@ -927,6 +927,84 @@ export interface KPIInsight {
   severity: 'info' | 'warning' | 'critical';
   timestamp: string;                // ISO timestamp
   filters?: InsightFilter[];        // Optional: Filters to apply when insight is clicked
+  agentRecommendation?: AgentRecommendation; // Optional: Agent's recommended next step
+  evidenceCharts?: string[];        // Optional: IDs of evidence charts for drilldown
+}
+
+/**
+ * Agent Recommendation for Insight Drilldown
+ * Structured guidance on next steps for addressing the insight
+ */
+export interface AgentRecommendation {
+  title: string;                    // e.g., "Immediate Action Required"
+  description: string;              // Detailed explanation of recommended approach
+  actionItems: string[];            // Specific action steps
+  ctas?: AgentCTA[];               // Optional call-to-action buttons
+  priority: 'high' | 'medium' | 'low';
+  estimatedImpact: string;         // Expected outcome if action is taken
+}
+
+/**
+ * Call-to-Action button for agent recommendations
+ */
+export interface AgentCTA {
+  label: string;                    // Button text (e.g., "Review Exception Portfolio")
+  action: string;                   // Action identifier for handling click
+  variant: 'primary' | 'secondary'; // Button style
+  icon?: string;                    // Optional icon name
+}
+
+/**
+ * Evidence Chart Configuration for Insight Drilldown
+ * Defines the charts/visualizations that support an insight
+ */
+export interface EvidenceChart {
+  id: string;                       // Unique chart identifier
+  title: string;                    // Chart title (e.g., "Default Rate Comparison")
+  keyHighlight: string;             // Key takeaway shown in highlight bar
+  chartType: 'bar' | 'line' | 'scatter' | 'area' | 'pie' | 'donut' | 'heatmap' |
+             'table' | 'gauge' | 'venn' | 'treemap' | 'network' | 'waterfall' |
+             'radar' | 'funnel' | 'dual-axis';
+  data: any[];                      // Chart data array
+  config: EvidenceChartConfig;      // Chart-specific configuration
+  filterField?: string;             // Field for filtering (if clickable)
+  filterLabel?: string;             // Label template for filters
+  timelineMarker?: {                // Optional timeline marker for time-series charts
+    date: Date | string;
+    label: string;
+  };
+}
+
+/**
+ * Configuration options for evidence charts
+ */
+export interface EvidenceChartConfig {
+  xAxis?: {
+    key: string;
+    label?: string;
+    type?: 'category' | 'number' | 'time';
+  };
+  yAxis?: {
+    key: string;
+    label?: string;
+    type?: 'category' | 'number';
+    format?: 'percent' | 'currency' | 'number';
+  };
+  series?: Array<{
+    key: string;
+    name: string;
+    color?: string;
+    type?: 'line' | 'bar' | 'area';
+  }>;
+  colors?: string[];                // Color palette for chart
+  showLegend?: boolean;
+  showGrid?: boolean;
+  columns?: Array<{                 // For table type
+    key: string;
+    header: string;
+    format?: 'percent' | 'currency' | 'number' | 'text';
+    align?: 'left' | 'center' | 'right';
+  }>;
 }
 
 // ============================================================================
@@ -1098,4 +1176,63 @@ export interface NewsItem {
   relatedIndicators?: string[];        // Macro indicator IDs
   severity?: 'critical' | 'warning' | 'info';
   url?: string;                        // External link (optional)
+}
+
+// ============================================================================
+// Risk Hub Types
+// ============================================================================
+
+/**
+ * Risk Hub Item - Tracks action items created from insights
+ */
+export interface RiskItem {
+  id: string;                          // Unique identifier
+  actionTitle: string;                 // Title of the action
+  actionDescription: string;           // Detailed description
+  assignee: string[];                  // Teams assigned to this action
+  reporter: string;                    // Person who created this action
+  priority: 'high' | 'medium' | 'low'; // Action priority
+  status: 'open' | 'in_progress' | 'completed' | 'closed'; // Current status
+  dueDate: string;                     // Due date (ISO string)
+  createdAt: Date;                     // Creation timestamp
+  updatedAt?: Date;                    // Last update timestamp
+  completedAt?: Date;                  // Timestamp when status changed to 'completed'
+  lastActivity: string;                // Description of last activity
+  sourceInsightId?: string;            // Optional: ID of insight that created this
+  sourceInsightTitle?: string;         // Optional: Title of source insight
+  companyId?: string;                  // Optional: Related company ID
+  companyName?: string;                // Optional: Related company name
+}
+
+/**
+ * Risk Hub Filters
+ */
+export interface RiskHubFilters {
+  priorities?: ('high' | 'medium' | 'low')[];
+  statuses?: ('open' | 'in_progress' | 'completed' | 'closed')[];
+  assignees?: string[];
+  dateRange?: { start: Date; end: Date };
+}
+
+/**
+ * Risk Hub Store State
+ */
+export interface RiskHubStore {
+  items: RiskItem[];
+  filters: RiskHubFilters;
+  selectedItem: RiskItem | null;
+  isDrawerOpen: boolean;
+  editingItem: RiskItem | null;        // Item being edited
+  prefilledData: Partial<RiskItem> | null; // Data from insight to prefill
+
+  // Actions
+  addItem: (item: Omit<RiskItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateItem: (id: string, updates: Partial<RiskItem>) => void;
+  deleteItem: (id: string) => void;
+  setFilters: (filters: Partial<RiskHubFilters>) => void;
+  clearFilters: () => void;
+  openDrawer: (prefilledData?: Partial<RiskItem>) => void;
+  closeDrawer: () => void;
+  selectItem: (item: RiskItem | null) => void;
+  openEditDrawer: (item: RiskItem) => void;
 }

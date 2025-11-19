@@ -56,12 +56,12 @@ interface PDFContext {
 // ============= UTILITY FUNCTIONS =============
 
 /**
- * Format currency in Indian Rupees
+ * Format currency in US Dollars
  */
 const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-IN', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'INR',
+    currency: 'USD',
     maximumFractionDigits: 0,
   }).format(value);
 };
@@ -233,15 +233,24 @@ const addKeyValue = (ctx: PDFContext, key: string, value: string): void => {
  */
 export const captureChartAsImage = async (chartId: string): Promise<string | null> => {
   try {
+    console.log(`Attempting to capture chart: ${chartId}`);
     const chartElement = document.getElementById(chartId);
-    if (!chartElement) return null;
 
+    if (!chartElement) {
+      console.warn(`Chart element not found: ${chartId}`);
+      return null;
+    }
+
+    console.log(`Found chart element, capturing with html2canvas...`);
     const canvas = await html2canvas(chartElement, {
       scale: 2,
       backgroundColor: '#ffffff',
       logging: false,
+      useCORS: true,
+      allowTaint: true,
     });
 
+    console.log(`Successfully captured chart: ${chartId}`);
     return canvas.toDataURL('image/png');
   } catch (error) {
     console.error(`Error capturing chart ${chartId}:`, error);
@@ -614,7 +623,7 @@ const generateProfitability = (ctx: PDFContext, companyId: string): void => {
     const topLevelItems = profitDetails.incomeStatement.filter(item => item.level <= 2);
     autoTable(ctx.doc, {
       startY: ctx.yPosition,
-      head: [['Item', 'Amount (₹ Cr)']],
+      head: [['Item', 'Amount ($ M)']],
       body: topLevelItems.map(item => [
         item.lineItemLeafName,
         item.amount >= 0 ? formatCurrencyInMillions(item.amount) : `(${formatCurrencyInMillions(Math.abs(item.amount))})`,
@@ -775,5 +784,870 @@ export const generateCompanyProfilePDF = async (
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw new Error('Failed to generate PDF report');
+  }
+};
+
+/**
+ * Generate Insight Report PDF
+ * Generates a comprehensive PDF report for a KPI insight with evidence charts
+ */
+export const generateInsightReportPDF = async (
+  insight: {
+    id: string;
+    theme: string;
+    keyInsights: string[];
+    implication: string;
+    severity: 'info' | 'warning' | 'critical';
+    timestamp: string;
+    agentRecommendation?: {
+      actionItems: string[];
+      estimatedImpact: string;
+      priority: 'high' | 'medium' | 'low';
+    };
+  },
+  evidenceCharts: Array<{
+    id: string;
+    title: string;
+    keyHighlight: string;
+    chartType: string;
+    data: any[];
+    config: any;
+  }>,
+  onProgress?: (progress: number, message: string) => void
+): Promise<void> => {
+  try {
+    onProgress?.(0, 'Initializing PDF generation...');
+
+    // Initialize PDF
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const ctx: PDFContext = {
+      doc,
+      currentPage: 1,
+      yPosition: CONFIG.margins.top,
+      tocEntries: [],
+    };
+
+    // Add header
+    addPageHeader(ctx);
+
+    onProgress?.(5, 'Adding title and overview...');
+
+    // Add title
+    ctx.yPosition = 25;
+    doc.setFontSize(CONFIG.fontSize.title);
+    doc.setTextColor(CONFIG.colors.primary);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Insight Report', CONFIG.margins.left, ctx.yPosition);
+
+    ctx.yPosition += 12;
+
+    // Add insight theme
+    doc.setFontSize(CONFIG.fontSize.heading1);
+    doc.setTextColor(CONFIG.colors.text);
+    const splitTheme = doc.splitTextToSize(insight.theme, CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10);
+    doc.text(splitTheme, CONFIG.margins.left + 5, ctx.yPosition);
+    ctx.yPosition += splitTheme.length * 7 + 5;
+
+    // Add severity badge
+    const severityColors: Record<string, { bg: string; text: string }> = {
+      critical: { bg: '#FEE2E2', text: '#991B1B' },
+      warning: { bg: '#FEF3C7', text: '#92400E' },
+      info: { bg: '#DBEAFE', text: '#1E40AF' },
+    };
+
+    const severityColor = severityColors[insight.severity] || severityColors.info;
+    doc.setFillColor(severityColor.bg);
+    doc.roundedRect(CONFIG.margins.left + 5, ctx.yPosition - 3, 30, 8, 2, 2, 'F');
+    doc.setFontSize(CONFIG.fontSize.body);
+    doc.setTextColor(severityColor.text);
+    doc.setFont('helvetica', 'bold');
+    doc.text(insight.severity.toUpperCase(), CONFIG.margins.left + 7, ctx.yPosition + 2);
+
+    // Add timestamp
+    doc.setFontSize(CONFIG.fontSize.small);
+    doc.setTextColor(CONFIG.colors.lightText);
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      `Generated: ${new Date().toLocaleString('en-IN')}`,
+      CONFIG.pageWidth - CONFIG.margins.right,
+      ctx.yPosition + 2,
+      { align: 'right' }
+    );
+
+    ctx.yPosition += 15;
+
+    onProgress?.(10, 'Adding key insights...');
+
+    // Section: Key Insights
+    addSectionHeading(ctx, 'Key Insights', 1);
+    doc.setFontSize(CONFIG.fontSize.body);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(CONFIG.colors.text);
+
+    insight.keyInsights.forEach((keyInsight, index) => {
+      checkPageBreak(ctx, 10);
+
+      // Bullet point
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${index + 1}.`, CONFIG.margins.left + 5, ctx.yPosition);
+
+      // Text
+      doc.setFont('helvetica', 'normal');
+      const splitText = doc.splitTextToSize(keyInsight, CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 15);
+      doc.text(splitText, CONFIG.margins.left + 12, ctx.yPosition);
+
+      ctx.yPosition += splitText.length * 5 + 3;
+    });
+
+    onProgress?.(20, 'Adding business implication...');
+
+    // Section: Business Implication
+    addSectionHeading(ctx, 'Business Implication', 1);
+    doc.setFontSize(CONFIG.fontSize.body);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(CONFIG.colors.text);
+
+    const splitImplication = doc.splitTextToSize(
+      insight.implication,
+      CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10
+    );
+    doc.text(splitImplication, CONFIG.margins.left + 5, ctx.yPosition);
+    ctx.yPosition += splitImplication.length * 5 + 10;
+
+    onProgress?.(30, 'Adding recommended actions...');
+
+    // Section: Agent Recommended Actions
+    if (insight.agentRecommendation && insight.agentRecommendation.actionItems.length > 0) {
+      addSectionHeading(ctx, 'Recommended Actions', 1);
+
+      // Priority badge
+      const priorityColors: Record<string, { bg: string; text: string }> = {
+        high: { bg: '#FEE2E2', text: '#991B1B' },
+        medium: { bg: '#FEF3C7', text: '#92400E' },
+        low: { bg: '#D1FAE5', text: '#065F46' },
+      };
+
+      const priorityColor = priorityColors[insight.agentRecommendation.priority] || priorityColors.medium;
+      doc.setFillColor(priorityColor.bg);
+      doc.roundedRect(CONFIG.margins.left + 5, ctx.yPosition - 3, 35, 8, 2, 2, 'F');
+      doc.setFontSize(CONFIG.fontSize.body);
+      doc.setTextColor(priorityColor.text);
+      doc.setFont('helvetica', 'bold');
+      doc.text(
+        `Priority: ${insight.agentRecommendation.priority.toUpperCase()}`,
+        CONFIG.margins.left + 7,
+        ctx.yPosition + 2
+      );
+
+      ctx.yPosition += 12;
+
+      // Action items
+      doc.setFontSize(CONFIG.fontSize.body);
+      doc.setTextColor(CONFIG.colors.text);
+
+      insight.agentRecommendation.actionItems.forEach((action, index) => {
+        checkPageBreak(ctx, 10);
+
+        // Number badge
+        doc.setFillColor('#0D9488'); // Teal
+        doc.circle(CONFIG.margins.left + 7, ctx.yPosition - 1.5, 3, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(CONFIG.fontSize.small);
+        doc.text(`${index + 1}`, CONFIG.margins.left + 7, ctx.yPosition, { align: 'center' });
+
+        // Action text
+        doc.setTextColor(CONFIG.colors.text);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(CONFIG.fontSize.body);
+        const splitAction = doc.splitTextToSize(action, CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 20);
+        doc.text(splitAction, CONFIG.margins.left + 15, ctx.yPosition);
+
+        ctx.yPosition += splitAction.length * 5 + 3;
+      });
+
+      // Expected Impact
+      ctx.yPosition += 5;
+      checkPageBreak(ctx, 15);
+
+      doc.setFillColor('#F0FDFA'); // Light teal background
+      doc.roundedRect(
+        CONFIG.margins.left + 5,
+        ctx.yPosition - 3,
+        CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10,
+        12,
+        2,
+        2,
+        'F'
+      );
+
+      doc.setFontSize(CONFIG.fontSize.small);
+      doc.setTextColor('#0F766E'); // Dark teal
+      doc.setFont('helvetica', 'bold');
+      doc.text('EXPECTED IMPACT', CONFIG.margins.left + 8, ctx.yPosition + 2);
+
+      doc.setFontSize(CONFIG.fontSize.body);
+      doc.setTextColor(CONFIG.colors.text);
+      doc.setFont('helvetica', 'normal');
+      const splitImpact = doc.splitTextToSize(
+        insight.agentRecommendation.estimatedImpact,
+        CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 16
+      );
+      doc.text(splitImpact, CONFIG.margins.left + 8, ctx.yPosition + 7);
+
+      ctx.yPosition += 18;
+    }
+
+    onProgress?.(40, 'Capturing evidence charts...');
+
+    // Section: Evidence
+    if (evidenceCharts.length > 0) {
+      addSectionHeading(ctx, 'Evidence', 1);
+
+      for (let i = 0; i < evidenceCharts.length; i++) {
+        const chart = evidenceCharts[i];
+        const progress = 40 + Math.floor((i / evidenceCharts.length) * 50);
+        onProgress?.(progress, `Capturing chart ${i + 1} of ${evidenceCharts.length}...`);
+
+        // Add page break if needed
+        checkPageBreak(ctx, 120);
+
+        // Chart title
+        doc.setFontSize(CONFIG.fontSize.heading3);
+        doc.setTextColor(CONFIG.colors.text);
+        doc.setFont('helvetica', 'bold');
+        doc.text(chart.title, CONFIG.margins.left + 5, ctx.yPosition);
+        ctx.yPosition += 7;
+
+        // Key highlight
+        doc.setFillColor('#FEF3C7'); // Yellow highlight
+        doc.roundedRect(
+          CONFIG.margins.left + 5,
+          ctx.yPosition - 3,
+          CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10,
+          10,
+          2,
+          2,
+          'F'
+        );
+
+        doc.setFontSize(CONFIG.fontSize.small);
+        doc.setTextColor('#92400E'); // Dark yellow
+        doc.setFont('helvetica', 'bold');
+        doc.text('KEY HIGHLIGHT', CONFIG.margins.left + 8, ctx.yPosition + 1);
+
+        doc.setFontSize(CONFIG.fontSize.body);
+        doc.setTextColor(CONFIG.colors.text);
+        doc.setFont('helvetica', 'normal');
+        const splitHighlight = doc.splitTextToSize(chart.keyHighlight, CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 16);
+        doc.text(splitHighlight, CONFIG.margins.left + 8, ctx.yPosition + 5);
+
+        ctx.yPosition += 15;
+
+        // Capture and add chart image
+        const chartImage = await captureChartAsImage(`evidence-chart-${chart.id}`);
+        if (chartImage) {
+          const imgWidth = CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10;
+          const imgHeight = 90; // Fixed height for consistency
+
+          doc.addImage(chartImage, 'PNG', CONFIG.margins.left + 5, ctx.yPosition, imgWidth, imgHeight);
+          ctx.yPosition += imgHeight + 10;
+        } else {
+          // If chart capture fails, show placeholder
+          doc.setFontSize(CONFIG.fontSize.small);
+          doc.setTextColor(CONFIG.colors.lightText);
+          doc.setFont('helvetica', 'italic');
+          doc.text('[Chart could not be captured]', CONFIG.margins.left + 5, ctx.yPosition);
+          ctx.yPosition += 10;
+        }
+
+        ctx.yPosition += 5;
+      }
+    }
+
+    onProgress?.(95, 'Finalizing PDF...');
+
+    // Add footer to all pages
+    const totalPages = ctx.currentPage;
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+
+      // Footer line
+      doc.setDrawColor(CONFIG.colors.border);
+      doc.setLineWidth(0.3);
+      doc.line(
+        CONFIG.margins.left,
+        CONFIG.pageHeight - 15,
+        CONFIG.pageWidth - CONFIG.margins.right,
+        CONFIG.pageHeight - 15
+      );
+
+      // Insight title on left
+      doc.setFontSize(CONFIG.fontSize.small);
+      doc.setTextColor(CONFIG.colors.lightText);
+      doc.setFont('helvetica', 'italic');
+      const footerTitle = insight.theme.length > 40 ? insight.theme.substring(0, 37) + '...' : insight.theme;
+      doc.text(
+        `${footerTitle}`,
+        CONFIG.margins.left,
+        CONFIG.pageHeight - 10
+      );
+
+      // Page number on right
+      doc.text(
+        `Page ${i} of ${totalPages}`,
+        CONFIG.pageWidth - CONFIG.margins.right,
+        CONFIG.pageHeight - 10,
+        { align: 'right' }
+      );
+
+      // Generation timestamp in center
+      doc.setFontSize(CONFIG.fontSize.small - 1);
+      doc.text(
+        `Generated: ${new Date().toLocaleString('en-IN')}`,
+        CONFIG.pageWidth / 2,
+        CONFIG.pageHeight - 10,
+        { align: 'center' }
+      );
+    }
+
+    onProgress?.(100, 'Downloading PDF...');
+
+    // Generate filename
+    const sanitizedTheme = insight.theme
+      .replace(/[^a-z0-9]/gi, '_')
+      .substring(0, 50);
+    const filename = `Insight_Report_${sanitizedTheme}_${getTimestamp()}.pdf`;
+
+    // Save PDF
+    doc.save(filename);
+
+  } catch (error) {
+    console.error('Error generating insight PDF:', error);
+    throw new Error('Failed to generate insight report PDF');
+  }
+};
+
+/**
+ * Generate Agent Analysis Report PDF
+ * Creates a comprehensive PDF report for risk action items
+ */
+export const generateAgentAnalysisReportPDF = async (
+  riskItem: {
+    id: string;
+    actionTitle: string;
+    actionDescription: string;
+    assignee: string;
+    reporter: string;
+    priority: 'high' | 'medium' | 'low';
+    status: 'open' | 'in_progress' | 'completed' | 'closed';
+    dueDate: string;
+    createdAt: Date;
+    updatedAt?: Date;
+    completedAt?: Date;
+    lastActivity: string;
+    sourceInsightId?: string;
+    sourceInsightTitle?: string;
+    companyId?: string;
+    companyName?: string;
+  },
+  agentRecommendation: {
+    title: string;
+    description: string;
+    actionItems: string[];
+    priority: 'high' | 'medium' | 'low';
+    estimatedImpact: string;
+  },
+  evidenceCharts: Array<{
+    id: string;
+    title: string;
+    keyHighlight: string;
+    chartType: string;
+    data: any[];
+    config: any;
+  }>,
+  postActionCharts?: Array<{
+    id: string;
+    title: string;
+    keyHighlight: string;
+    chartType: string;
+    data: any[];
+    config: any;
+  }>,
+  onProgress?: (progress: number, message: string) => void
+): Promise<void> => {
+  try {
+    onProgress?.(0, 'Initializing PDF generation...');
+
+    // Initialize PDF
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const ctx: PDFContext = {
+      doc,
+      currentPage: 1,
+      yPosition: CONFIG.margins.top,
+      tocEntries: [],
+    };
+
+    // Add header
+    addPageHeader(ctx);
+
+    onProgress?.(5, 'Adding cover page...');
+
+    // ========== COVER PAGE ==========
+    ctx.yPosition = 25;
+    doc.setFontSize(CONFIG.fontSize.title);
+    doc.setTextColor(CONFIG.colors.primary);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Agent Analysis Report', CONFIG.margins.left, ctx.yPosition);
+
+    ctx.yPosition += 12;
+
+    // Risk action title
+    doc.setFontSize(CONFIG.fontSize.heading1);
+    doc.setTextColor(CONFIG.colors.text);
+    const splitTitle = doc.splitTextToSize(
+      riskItem.actionTitle,
+      CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10
+    );
+    doc.text(splitTitle, CONFIG.margins.left + 5, ctx.yPosition);
+    ctx.yPosition += splitTitle.length * 7 + 5;
+
+    // Status and Priority Badges
+    const statusColors: Record<string, { bg: string; text: string }> = {
+      open: { bg: '#DBEAFE', text: '#1E40AF' },
+      in_progress: { bg: '#FEF3C7', text: '#92400E' },
+      completed: { bg: '#D1FAE5', text: '#065F46' },
+      closed: { bg: '#E5E7EB', text: '#374151' },
+    };
+
+    const priorityColors: Record<string, { bg: string; text: string }> = {
+      high: { bg: '#FEE2E2', text: '#991B1B' },
+      medium: { bg: '#FEF3C7', text: '#92400E' },
+      low: { bg: '#D1FAE5', text: '#065F46' },
+    };
+
+    const statusColor = statusColors[riskItem.status];
+    const priorityColor = priorityColors[riskItem.priority];
+
+    // Status badge
+    doc.setFillColor(statusColor.bg);
+    doc.roundedRect(CONFIG.margins.left + 5, ctx.yPosition - 3, 35, 8, 2, 2, 'F');
+    doc.setFontSize(CONFIG.fontSize.body);
+    doc.setTextColor(statusColor.text);
+    doc.setFont('helvetica', 'bold');
+    doc.text(
+      riskItem.status.replace('_', ' ').toUpperCase(),
+      CONFIG.margins.left + 7,
+      ctx.yPosition + 2
+    );
+
+    // Priority badge
+    doc.setFillColor(priorityColor.bg);
+    doc.roundedRect(CONFIG.margins.left + 45, ctx.yPosition - 3, 35, 8, 2, 2, 'F');
+    doc.setTextColor(priorityColor.text);
+    doc.text(
+      `Priority: ${riskItem.priority.toUpperCase()}`,
+      CONFIG.margins.left + 47,
+      ctx.yPosition + 2
+    );
+
+    ctx.yPosition += 15;
+
+    // Key Details
+    doc.setFontSize(CONFIG.fontSize.body);
+    doc.setTextColor(CONFIG.colors.text);
+    doc.setFont('helvetica', 'normal');
+
+    addKeyValue(ctx, 'Assignee', riskItem.assignee);
+    addKeyValue(ctx, 'Reporter', riskItem.reporter);
+    addKeyValue(ctx, 'Due Date', formatDate(riskItem.dueDate));
+    addKeyValue(ctx, 'Created', formatDate(riskItem.createdAt.toISOString()));
+
+    if (riskItem.completedAt) {
+      addKeyValue(ctx, 'Completed', formatDate(riskItem.completedAt.toISOString()));
+    }
+
+    if (riskItem.sourceInsightTitle) {
+      addKeyValue(ctx, 'Source Insight', riskItem.sourceInsightTitle);
+    }
+
+    if (riskItem.companyName) {
+      addKeyValue(ctx, 'Related Company', riskItem.companyName);
+    }
+
+    ctx.yPosition += 10;
+
+    onProgress?.(15, 'Adding overview...');
+
+    // ========== OVERVIEW SECTION ==========
+    addSectionHeading(ctx, 'Overview', 1);
+
+    doc.setFontSize(CONFIG.fontSize.body);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(CONFIG.colors.text);
+
+    const splitDescription = doc.splitTextToSize(
+      riskItem.actionDescription,
+      CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10
+    );
+    doc.text(splitDescription, CONFIG.margins.left + 5, ctx.yPosition);
+    ctx.yPosition += splitDescription.length * 5 + 10;
+
+    onProgress?.(25, 'Adding agent briefing...');
+
+    // ========== AGENT BRIEFING SECTION ==========
+    addSectionHeading(ctx, 'Agent Briefing', 1);
+
+    // Briefing title
+    doc.setFontSize(CONFIG.fontSize.heading3);
+    doc.setTextColor(CONFIG.colors.text);
+    doc.setFont('helvetica', 'bold');
+    doc.text(agentRecommendation.title, CONFIG.margins.left + 5, ctx.yPosition);
+    ctx.yPosition += 7;
+
+    // Briefing description
+    doc.setFontSize(CONFIG.fontSize.body);
+    doc.setFont('helvetica', 'normal');
+    const splitBriefing = doc.splitTextToSize(
+      agentRecommendation.description,
+      CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10
+    );
+    doc.text(splitBriefing, CONFIG.margins.left + 5, ctx.yPosition);
+    ctx.yPosition += splitBriefing.length * 5 + 10;
+
+    onProgress?.(35, 'Adding recommended actions...');
+
+    // ========== RECOMMENDED ACTIONS ==========
+    addSectionHeading(ctx, 'Recommended Actions', 2);
+
+    doc.setFontSize(CONFIG.fontSize.body);
+    doc.setTextColor(CONFIG.colors.text);
+
+    agentRecommendation.actionItems.forEach((action, index) => {
+      checkPageBreak(ctx, 10);
+
+      // Number badge
+      doc.setFillColor('#0D9488'); // Teal
+      doc.circle(CONFIG.margins.left + 7, ctx.yPosition - 1.5, 3, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(CONFIG.fontSize.small);
+      doc.text(`${index + 1}`, CONFIG.margins.left + 7, ctx.yPosition, { align: 'center' });
+
+      // Action text
+      doc.setTextColor(CONFIG.colors.text);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(CONFIG.fontSize.body);
+      const splitAction = doc.splitTextToSize(
+        action,
+        CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 20
+      );
+      doc.text(splitAction, CONFIG.margins.left + 15, ctx.yPosition);
+
+      ctx.yPosition += splitAction.length * 5 + 3;
+    });
+
+    // Expected Impact
+    ctx.yPosition += 5;
+    checkPageBreak(ctx, 15);
+
+    doc.setFillColor('#F0FDFA'); // Light teal background
+    doc.roundedRect(
+      CONFIG.margins.left + 5,
+      ctx.yPosition - 3,
+      CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10,
+      12,
+      2,
+      2,
+      'F'
+    );
+
+    doc.setFontSize(CONFIG.fontSize.small);
+    doc.setTextColor('#0F766E'); // Dark teal
+    doc.setFont('helvetica', 'bold');
+    doc.text('EXPECTED IMPACT', CONFIG.margins.left + 8, ctx.yPosition + 2);
+
+    doc.setFontSize(CONFIG.fontSize.body);
+    doc.setTextColor(CONFIG.colors.text);
+    doc.setFont('helvetica', 'normal');
+    const splitImpact = doc.splitTextToSize(
+      agentRecommendation.estimatedImpact,
+      CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 16
+    );
+    doc.text(splitImpact, CONFIG.margins.left + 8, ctx.yPosition + 7);
+
+    ctx.yPosition += 18;
+
+    onProgress?.(45, 'Capturing evidence charts...');
+
+    // ========== EVIDENCE SECTION ==========
+    const showPrePostLayout = postActionCharts && postActionCharts.length > 0;
+
+    if (showPrePostLayout) {
+      // Pre/Post Action Comparison Layout
+      addSectionHeading(ctx, 'Evidence: Pre vs Post Action', 1);
+
+      for (let i = 0; i < evidenceCharts.length; i++) {
+        const preChart = evidenceCharts[i];
+        const postChart = postActionCharts[i];
+        const progress = 45 + Math.floor((i / evidenceCharts.length) * 45);
+        onProgress?.(progress, `Capturing chart pair ${i + 1} of ${evidenceCharts.length}...`);
+
+        // Add new page for each chart pair for better layout
+        if (i > 0) {
+          doc.addPage();
+          ctx.currentPage++;
+          ctx.yPosition = CONFIG.margins.top;
+          addPageHeader(ctx);
+        }
+
+        // Check page break for chart pair
+        checkPageBreak(ctx, 240);
+
+        // Section title for this chart
+        doc.setFontSize(CONFIG.fontSize.heading3);
+        doc.setTextColor(CONFIG.colors.text);
+        doc.setFont('helvetica', 'bold');
+        doc.text(preChart.title.replace(' - Post Implementation', ''), CONFIG.margins.left + 5, ctx.yPosition);
+        ctx.yPosition += 10;
+
+        // PRE ACTION
+        doc.setFontSize(CONFIG.fontSize.heading3);
+        doc.setTextColor(CONFIG.colors.primary);
+        doc.text('Pre Action', CONFIG.margins.left + 5, ctx.yPosition);
+        ctx.yPosition += 7;
+
+        // Pre action key highlight
+        doc.setFillColor('#FEF3C7'); // Yellow highlight
+        doc.roundedRect(
+          CONFIG.margins.left + 5,
+          ctx.yPosition - 3,
+          CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10,
+          10,
+          2,
+          2,
+          'F'
+        );
+
+        doc.setFontSize(CONFIG.fontSize.small);
+        doc.setTextColor('#92400E');
+        doc.setFont('helvetica', 'bold');
+        doc.text('KEY HIGHLIGHT', CONFIG.margins.left + 8, ctx.yPosition + 1);
+
+        doc.setFontSize(CONFIG.fontSize.body);
+        doc.setTextColor(CONFIG.colors.text);
+        doc.setFont('helvetica', 'normal');
+        const splitPreHighlight = doc.splitTextToSize(
+          preChart.keyHighlight,
+          CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 16
+        );
+        doc.text(splitPreHighlight, CONFIG.margins.left + 8, ctx.yPosition + 5);
+
+        ctx.yPosition += 15;
+
+        // Capture pre action chart
+        const preChartImage = await captureChartAsImage(`evidence-chart-${preChart.id}`);
+        if (preChartImage) {
+          const imgWidth = CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10;
+          const imgHeight = 80;
+          doc.addImage(preChartImage, 'PNG', CONFIG.margins.left + 5, ctx.yPosition, imgWidth, imgHeight);
+          ctx.yPosition += imgHeight + 10;
+        } else {
+          doc.setFontSize(CONFIG.fontSize.small);
+          doc.setTextColor(CONFIG.colors.lightText);
+          doc.setFont('helvetica', 'italic');
+          doc.text('[Chart could not be captured]', CONFIG.margins.left + 5, ctx.yPosition);
+          ctx.yPosition += 10;
+        }
+
+        // POST ACTION
+        ctx.yPosition += 5;
+        checkPageBreak(ctx, 110);
+
+        doc.setFontSize(CONFIG.fontSize.heading3);
+        doc.setTextColor(CONFIG.colors.primary);
+        doc.text('Post Action', CONFIG.margins.left + 5, ctx.yPosition);
+        ctx.yPosition += 7;
+
+        // Post action key highlight (with comparison)
+        doc.setFillColor('#D1FAE5'); // Green highlight for improvement
+        doc.roundedRect(
+          CONFIG.margins.left + 5,
+          ctx.yPosition - 3,
+          CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10,
+          10,
+          2,
+          2,
+          'F'
+        );
+
+        doc.setFontSize(CONFIG.fontSize.small);
+        doc.setTextColor('#065F46');
+        doc.setFont('helvetica', 'bold');
+        doc.text('IMPROVEMENT', CONFIG.margins.left + 8, ctx.yPosition + 1);
+
+        doc.setFontSize(CONFIG.fontSize.body);
+        doc.setTextColor(CONFIG.colors.text);
+        doc.setFont('helvetica', 'normal');
+        const splitPostHighlight = doc.splitTextToSize(
+          postChart.keyHighlight,
+          CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 16
+        );
+        doc.text(splitPostHighlight, CONFIG.margins.left + 8, ctx.yPosition + 5);
+
+        ctx.yPosition += 15;
+
+        // Capture post action chart
+        const postChartImage = await captureChartAsImage(`evidence-chart-${postChart.id}`);
+        if (postChartImage) {
+          const imgWidth = CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10;
+          const imgHeight = 80;
+          doc.addImage(postChartImage, 'PNG', CONFIG.margins.left + 5, ctx.yPosition, imgWidth, imgHeight);
+          ctx.yPosition += imgHeight + 10;
+        } else {
+          doc.setFontSize(CONFIG.fontSize.small);
+          doc.setTextColor(CONFIG.colors.lightText);
+          doc.setFont('helvetica', 'italic');
+          doc.text('[Chart could not be captured]', CONFIG.margins.left + 5, ctx.yPosition);
+          ctx.yPosition += 10;
+        }
+
+        ctx.yPosition += 5;
+      }
+    } else {
+      // Standard Evidence Layout (for open/in-progress items)
+      if (evidenceCharts.length > 0) {
+        addSectionHeading(ctx, 'Evidence', 1);
+
+        for (let i = 0; i < evidenceCharts.length; i++) {
+          const chart = evidenceCharts[i];
+          const progress = 45 + Math.floor((i / evidenceCharts.length) * 45);
+          onProgress?.(progress, `Capturing chart ${i + 1} of ${evidenceCharts.length}...`);
+
+          checkPageBreak(ctx, 120);
+
+          // Chart title
+          doc.setFontSize(CONFIG.fontSize.heading3);
+          doc.setTextColor(CONFIG.colors.text);
+          doc.setFont('helvetica', 'bold');
+          doc.text(chart.title, CONFIG.margins.left + 5, ctx.yPosition);
+          ctx.yPosition += 7;
+
+          // Key highlight
+          doc.setFillColor('#FEF3C7');
+          doc.roundedRect(
+            CONFIG.margins.left + 5,
+            ctx.yPosition - 3,
+            CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10,
+            10,
+            2,
+            2,
+            'F'
+          );
+
+          doc.setFontSize(CONFIG.fontSize.small);
+          doc.setTextColor('#92400E');
+          doc.setFont('helvetica', 'bold');
+          doc.text('KEY HIGHLIGHT', CONFIG.margins.left + 8, ctx.yPosition + 1);
+
+          doc.setFontSize(CONFIG.fontSize.body);
+          doc.setTextColor(CONFIG.colors.text);
+          doc.setFont('helvetica', 'normal');
+          const splitHighlight = doc.splitTextToSize(
+            chart.keyHighlight,
+            CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 16
+          );
+          doc.text(splitHighlight, CONFIG.margins.left + 8, ctx.yPosition + 5);
+
+          ctx.yPosition += 15;
+
+          // Capture and add chart image
+          const chartImage = await captureChartAsImage(`evidence-chart-${chart.id}`);
+          if (chartImage) {
+            const imgWidth = CONFIG.pageWidth - CONFIG.margins.left - CONFIG.margins.right - 10;
+            const imgHeight = 90;
+            doc.addImage(chartImage, 'PNG', CONFIG.margins.left + 5, ctx.yPosition, imgWidth, imgHeight);
+            ctx.yPosition += imgHeight + 10;
+          } else {
+            doc.setFontSize(CONFIG.fontSize.small);
+            doc.setTextColor(CONFIG.colors.lightText);
+            doc.setFont('helvetica', 'italic');
+            doc.text('[Chart could not be captured]', CONFIG.margins.left + 5, ctx.yPosition);
+            ctx.yPosition += 10;
+          }
+
+          ctx.yPosition += 5;
+        }
+      }
+    }
+
+    onProgress?.(95, 'Finalizing PDF...');
+
+    // Add footer to all pages
+    const totalPages = ctx.currentPage;
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+
+      // Footer line
+      doc.setDrawColor(CONFIG.colors.border);
+      doc.setLineWidth(0.3);
+      doc.line(
+        CONFIG.margins.left,
+        CONFIG.pageHeight - 15,
+        CONFIG.pageWidth - CONFIG.margins.right,
+        CONFIG.pageHeight - 15
+      );
+
+      // Action title on left
+      doc.setFontSize(CONFIG.fontSize.small);
+      doc.setTextColor(CONFIG.colors.lightText);
+      doc.setFont('helvetica', 'italic');
+      const footerTitle =
+        riskItem.actionTitle.length > 40
+          ? riskItem.actionTitle.substring(0, 37) + '...'
+          : riskItem.actionTitle;
+      doc.text(footerTitle, CONFIG.margins.left, CONFIG.pageHeight - 10);
+
+      // Page number on right
+      doc.text(
+        `Page ${i} of ${totalPages}`,
+        CONFIG.pageWidth - CONFIG.margins.right,
+        CONFIG.pageHeight - 10,
+        { align: 'right' }
+      );
+
+      // Generation timestamp in center
+      doc.setFontSize(CONFIG.fontSize.small - 1);
+      doc.text(
+        `Generated: ${new Date().toLocaleString('en-IN')}`,
+        CONFIG.pageWidth / 2,
+        CONFIG.pageHeight - 10,
+        { align: 'center' }
+      );
+    }
+
+    onProgress?.(100, 'Downloading PDF...');
+
+    // Generate filename
+    const sanitizedTitle = riskItem.actionTitle
+      .replace(/[^a-z0-9]/gi, '_')
+      .substring(0, 50);
+    const filename = `Agent_Analysis_Report_${sanitizedTitle}_${getTimestamp()}.pdf`;
+
+    // Save PDF
+    doc.save(filename);
+  } catch (error) {
+    console.error('Error generating agent analysis PDF:', error);
+    throw new Error('Failed to generate agent analysis report PDF');
   }
 };

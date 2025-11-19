@@ -13,6 +13,8 @@ import ClimateRiskPage from './pages/details/ClimateRiskPage';
 import ApprovalsPage from './pages/details/ApprovalsPage';
 import AlertDashboard from './pages/AlertDashboard';
 import KPIDrilldownPage from './pages/KPIDrilldownPage';
+import RiskHubPage from './pages/RiskHubPage';
+import AgentAnalysisPage from './pages/AgentAnalysisPage';
 import ChatWidget from './components/chat/ChatWidget';
 import { initializeAlertMonitoring } from './lib/alertGenerator';
 
@@ -26,9 +28,10 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<DashboardLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="agent" element={<AgentPage />} />
+          <Route index element={<AgentPage />} />
+          <Route path="portfolio" element={<Dashboard />} />
           <Route path="customer" element={<CustomerView />} />
+          <Route path="risk-hub" element={<RiskHubPage />} />
           <Route path="alerts" element={<AlertDashboard />} />
           <Route path="company/:companyId" element={<CompanyProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -36,6 +39,7 @@ function App() {
 
         {/* Detail pages - open in new tabs */}
         <Route path="/kpi/:kpiId" element={<KPIDrilldownPage />} />
+        <Route path="/risk-hub/analysis/:itemId" element={<AgentAnalysisPage />} />
         <Route path="/company/:companyId/risk-details" element={<RiskDetailsPage />} />
         <Route path="/company/:companyId/exposure-details" element={<ExposureDetailsPage />} />
         <Route path="/company/:companyId/group-exposures" element={<GroupExposuresPage />} />

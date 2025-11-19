@@ -62,24 +62,24 @@ export default function InsightCard({
           </div>
         </div>
 
-        {/* Right: Details Button */}
+        {/* Right: Facts Button */}
         <button
           onClick={onEvidenceClick}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors uppercase tracking-wide flex-shrink-0"
         >
-          Details
+          Facts
           <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
-      {/* Drilldown Button - Only show when expanded */}
+      {/* Evidence Button - Only show when expanded */}
       {isExpanded && onDrilldown && (
         <div className="flex justify-end mt-4">
           <button
             onClick={onDrilldown}
             className="px-4 py-2 text-sm font-semibold text-white bg-teal-500 hover:bg-teal-600 rounded-md transition-colors"
           >
-            Drilldown
+            Evidence
           </button>
         </div>
       )}

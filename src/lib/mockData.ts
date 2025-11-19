@@ -807,7 +807,7 @@ export const mockInsights: Insight[] = [
     severity: 'info',
     category: 'opportunity',
     metrics: [
-      { label: 'Current Exposure', value: '₹125 Cr' },
+      { label: 'Current Exposure', value: '$15M' },
       { label: 'Growth Rate', value: '+5.2%' },
       { label: 'Target Growth', value: '6-8%' }
     ],
@@ -853,7 +853,7 @@ export const mockInsights: Insight[] = [
     metrics: [
       { label: 'Top 5 Concentration', value: '60%' },
       { label: 'Recommended Max', value: '45%' },
-      { label: 'Regional Exposure', value: '₹20 Cr' }
+      { label: 'Regional Exposure', value: '$2.4M' }
     ],
     timestamp: new Date().toISOString(),
     filter: {
@@ -966,7 +966,7 @@ export const mockInsights: Insight[] = [
     metrics: [
       { label: 'Current Count', value: '50 accounts' },
       { label: 'MoM Change', value: '+15%' },
-      { label: 'Exposure', value: '₹2 Cr' }
+      { label: 'Exposure', value: '$240K' }
     ],
     timestamp: new Date().toISOString(),
     filter: {
@@ -1003,7 +1003,7 @@ export const mockInsights: Insight[] = [
     category: 'risk',
     metrics: [
       { label: 'At-Risk Accounts', value: '15' },
-      { label: 'Total Exposure', value: '₹1.2 Cr' },
+      { label: 'Total Exposure', value: '$144K' },
       { label: 'Migration Probability', value: '78%' }
     ],
     timestamp: new Date().toISOString(),
@@ -1062,7 +1062,7 @@ export const mockInsights: Insight[] = [
     category: 'risk',
     metrics: [
       { label: 'Downgraded Accounts', value: '3' },
-      { label: 'Combined Exposure', value: '₹8.5 Cr' },
+      { label: 'Combined Exposure', value: '$1.02M' },
       { label: 'Portfolio Impact', value: '6.8%' }
     ],
     timestamp: new Date().toISOString(),
@@ -1082,7 +1082,7 @@ export const mockInsights: Insight[] = [
     metrics: [
       { label: 'Eligible Accounts', value: '8' },
       { label: 'Avg Utilization', value: '45%' },
-      { label: 'Revenue Potential', value: '₹50 Lakhs' }
+      { label: 'Revenue Potential', value: '$60K' }
     ],
     timestamp: new Date().toISOString(),
     filter: {
@@ -1190,12 +1190,12 @@ export const mockInsights: Insight[] = [
     id: 'insight-kpi-forecast-1',
     kpiId: 'forward_delinquency',
     title: 'Top 10 Accounts = 65% of Risk',
-    description: '127 accounts predicted to slip, but top 10 account for ₹29.4Cr (65% of expected slippages). Focus intervention on high-value accounts.',
+    description: '127 accounts predicted to slip, but top 10 account for $3.5M (65% of expected slippages). Focus intervention on high-value accounts.',
     severity: 'warning',
     category: 'risk',
     metrics: [
       { label: 'Total Predicted', value: '127' },
-      { label: 'Top 10 Exposure', value: '₹29.4Cr' },
+      { label: 'Top 10 Exposure', value: '$3.5M' },
       { label: 'Model Confidence', value: '82%' }
     ],
     timestamp: new Date().toISOString(),
@@ -1215,7 +1215,7 @@ export const mockInsights: Insight[] = [
     metrics: [
       { label: 'SME Predicted Slippages', value: '57' },
       { label: 'Average PD', value: '28%' },
-      { label: 'Expected Loss', value: '₹18.2Cr' }
+      { label: 'Expected Loss', value: '$2.2M' }
     ],
     timestamp: new Date().toISOString(),
     filter: {
@@ -1236,7 +1236,7 @@ export const mockInsights: Insight[] = [
     metrics: [
       { label: 'Critical Accounts', value: '15' },
       { label: 'Avg Stress Score', value: '76.2' },
-      { label: 'Combined Exposure', value: '₹8.5Cr' }
+      { label: 'Combined Exposure', value: '$1.02M' }
     ],
     timestamp: new Date().toISOString(),
     filter: {
@@ -1299,14 +1299,14 @@ export const mockInsights: Insight[] = [
   {
     id: 'insight-kpi-migration-1',
     kpiId: 'net_pd_migration',
-    title: '₹28.5Cr Downgraded Stage 1→2',
-    description: 'Significant stage migration: 45 accounts with ₹28.5Cr moved from Stage 1 to Stage 2 this month. Immediate review and remediation required.',
+    title: '$3.4M Downgraded Stage 1→2',
+    description: 'Significant stage migration: 45 accounts with $3.4M moved from Stage 1 to Stage 2 this month. Immediate review and remediation required.',
     severity: 'critical',
     category: 'risk',
     metrics: [
-      { label: 'Downgraded Exposure', value: '₹28.5Cr' },
+      { label: 'Downgraded Exposure', value: '$3.4M' },
       { label: 'Account Count', value: '45' },
-      { label: 'Avg Exposure', value: '₹63L' }
+      { label: 'Avg Exposure', value: '$76K' }
     ],
     timestamp: new Date().toISOString(),
     filter: {
@@ -1340,11 +1340,11 @@ export const mockInsights: Insight[] = [
     id: 'insight-kpi-concentration-1',
     kpiId: 'concentration_contagion',
     title: 'Mega Corp Group = 40% Top 10',
-    description: 'Mega Corp Group and subsidiaries represent 40% of top 10 exposures (₹50Cr). Group contagion risk significant if parent entity deteriorates.',
+    description: 'Mega Corp Group and subsidiaries represent 40% of top 10 exposures ($6M). Group contagion risk significant if parent entity deteriorates.',
     severity: 'warning',
     category: 'risk',
     metrics: [
-      { label: 'Group Exposure', value: '₹50Cr' },
+      { label: 'Group Exposure', value: '$6M' },
       { label: 'Top 10 Share', value: '40%' },
       { label: 'Linked Entities', value: '3' }
     ],
@@ -1359,11 +1359,11 @@ export const mockInsights: Insight[] = [
     id: 'insight-kpi-concentration-2',
     kpiId: 'concentration_contagion',
     title: 'Common Promoter Linkage Detected',
-    description: '2 large exposures share common promoter with cross-holdings. Combined exposure ₹18Cr presents correlated default risk.',
+    description: '2 large exposures share common promoter with cross-holdings. Combined exposure $2.2M presents correlated default risk.',
     severity: 'warning',
     category: 'risk',
     metrics: [
-      { label: 'Combined Exposure', value: '₹18Cr' },
+      { label: 'Combined Exposure', value: '$2.2M' },
       { label: 'Correlation Risk', value: 'High' },
       { label: 'Linked Accounts', value: '2' }
     ],
@@ -1400,7 +1400,7 @@ export const mockInsights: Insight[] = [
     metrics: [
       { label: 'LCB Stress Rate', value: '8%' },
       { label: 'Portfolio Average', value: '3%' },
-      { label: 'Stressed Exposure', value: '₹12Cr' }
+      { label: 'Stressed Exposure', value: '$1.4M' }
     ],
     timestamp: new Date().toISOString(),
     filter: {
@@ -1449,14 +1449,14 @@ export const mockInsights: Insight[] = [
   {
     id: 'insight-kpi-ecl-1',
     kpiId: 'ecl_sensitivity',
-    title: 'Mild Stress: +₹36Cr Provision Needed',
-    description: 'Forward ECL sensitivity shows ₹36Cr additional provision requirement under mild stress scenario (PD +50%, LGD +20%). Plan for capital allocation.',
+    title: 'Mild Stress: +$4.3M Provision Needed',
+    description: 'Forward ECL sensitivity shows $4.3M additional provision requirement under mild stress scenario (PD +50%, LGD +20%). Plan for capital allocation.',
     severity: 'warning',
     category: 'risk',
     metrics: [
-      { label: 'Base ECL', value: '₹45Cr' },
-      { label: 'Mild Stress ECL', value: '₹81Cr' },
-      { label: 'Delta', value: '+₹36Cr' }
+      { label: 'Base ECL', value: '$5.4M' },
+      { label: 'Mild Stress ECL', value: '$9.7M' },
+      { label: 'Delta', value: '+$4.3M' }
     ],
     timestamp: new Date().toISOString(),
   },
@@ -1580,7 +1580,7 @@ export const getRiskDetails = (companyId: string): RiskDetails | null => {
           'Diversified revenue streams and customer base',
           company.securityStatus === 'Secured' ? 'Adequate security coverage' : 'Clean facility structure',
         ],
-        detailedCommentary: `The rating reflects ${company.customerName}'s established market position in the ${company.industry} industry. The company has demonstrated consistent operational performance with a credit exposure of ₹${company.creditExposure.toFixed(2)} Cr against a sanctioned limit of ₹${company.creditLimit.toFixed(2)} Cr. The ${company.securityStatus.toLowerCase()} nature of facilities provides ${company.securityStatus === 'Secured' ? 'adequate collateral coverage' : 'reflects strong creditworthiness'}. The outlook remains ${outlooks[i % outlooks.length].toLowerCase()} based on industry dynamics and company-specific factors.`,
+        detailedCommentary: `The rating reflects ${company.customerName}'s established market position in the ${company.industry} industry. The company has demonstrated consistent operational performance with a credit exposure of $${(company.creditExposure * 0.12).toFixed(2)}M against a sanctioned limit of $${(company.creditLimit * 0.12).toFixed(2)}M. The ${company.securityStatus.toLowerCase()} nature of facilities provides ${company.securityStatus === 'Secured' ? 'adequate collateral coverage' : 'reflects strong creditworthiness'}. The outlook remains ${outlooks[i % outlooks.length].toLowerCase()} based on industry dynamics and company-specific factors.`,
       };
     });
   };
@@ -1630,8 +1630,8 @@ export const getRiskDetails = (companyId: string): RiskDetails | null => {
     riskMetrics: {
       probabilityOfDefault: `${(Math.random() * 5 + 0.5).toFixed(2)}%`,
       lossGivenDefault: `${(Math.random() * 20 + 30).toFixed(2)}%`,
-      totalExposureAtDefault: `₹${company.creditExposure.toFixed(2)} Cr`,
-      expectedCreditLoss: `₹${(company.creditExposure * (Math.random() * 0.05)).toFixed(2)} Cr`,
+      totalExposureAtDefault: `$${(company.creditExposure * 0.12).toFixed(2)}M`,
+      expectedCreditLoss: `$${(company.creditExposure * 0.12 * (Math.random() * 0.05)).toFixed(2)}M`,
       loanToValueRatio: company.securityStatus === 'Secured'
         ? `${((company.creditExposure / company.securityValue) * 100).toFixed(2)}%`
         : 'N/A',

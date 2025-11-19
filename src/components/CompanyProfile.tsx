@@ -446,37 +446,37 @@ export default function CompanyProfile() {
                 <div>
                   <p className="text-sm text-gray-600">Credit Limit</p>
                   <p className="text-sm font-medium text-gray-900">
-                    ₹{(profileData.exposureSummary.creditLimit * 1000000).toLocaleString('en-IN')}
+                    ${(profileData.exposureSummary.creditLimit * 1000000).toLocaleString('en-US')}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total Gross Credit Exposure</p>
                   <p className="text-sm font-medium text-gray-900">
-                    ₹{(profileData.exposureSummary.totalExposure * 1000000).toLocaleString('en-IN')}
+                    ${(profileData.exposureSummary.totalExposure * 1000000).toLocaleString('en-US')}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total Credit Outstanding</p>
                   <p className="text-sm font-medium text-gray-900">
-                    ₹{(profileData.exposureSummary.totalCreditOutstanding * 1000000).toLocaleString('en-IN')}
+                    ${(profileData.exposureSummary.totalCreditOutstanding * 1000000).toLocaleString('en-US')}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Fund Based Limit</p>
                   <p className="text-sm font-medium text-gray-900">
-                    ₹{(profileData.exposureSummary.fundBasedLimit * 1000000).toLocaleString('en-IN')}
+                    ${(profileData.exposureSummary.fundBasedLimit * 1000000).toLocaleString('en-US')}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Non-Fund Based Limit</p>
                   <p className="text-sm font-medium text-gray-900">
-                    ₹{(profileData.exposureSummary.nonFundBasedLimit * 1000000).toLocaleString('en-IN')}
+                    ${(profileData.exposureSummary.nonFundBasedLimit * 1000000).toLocaleString('en-US')}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Undrawn Exposure</p>
                   <p className="text-sm font-medium text-gray-900">
-                    ₹{(profileData.exposureSummary.undrawnExposure * 1000000).toLocaleString('en-IN')}
+                    ${(profileData.exposureSummary.undrawnExposure * 1000000).toLocaleString('en-US')}
                   </p>
                 </div>
                 <div>
@@ -486,7 +486,7 @@ export default function CompanyProfile() {
                 <div>
                   <p className="text-sm text-gray-600">Total Overdues</p>
                   <p className="text-sm font-medium text-gray-900">
-                    ₹{profileData.exposureSummary.totalOverdues.toLocaleString('en-IN')}
+                    ${profileData.exposureSummary.totalOverdues.toLocaleString('en-US')}
                   </p>
                 </div>
                 <div>
@@ -517,10 +517,10 @@ export default function CompanyProfile() {
                       <tr key={idx}>
                         <td className="px-4 py-2 text-sm text-gray-900">{exposure.group}</td>
                         <td className="px-4 py-2 text-sm text-gray-900">{exposure.noOfObligors}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900">₹{(exposure.creditLimit * 1000000).toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900">₹{(exposure.totalGrossCreditExposure * 1000000).toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900">₹{(exposure.totalCreditExposure * 1000000).toLocaleString('en-IN')}</td>
-                        <td className="px-4 py-2 text-sm text-gray-900">₹{exposure.totalOverdues.toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">${(exposure.creditLimit * 1000000).toLocaleString('en-US')}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">${(exposure.totalGrossCreditExposure * 1000000).toLocaleString('en-US')}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">${(exposure.totalCreditExposure * 1000000).toLocaleString('en-US')}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900">${exposure.totalOverdues.toLocaleString('en-US')}</td>
                         <td className="px-4 py-2 text-sm text-gray-900">{exposure.maxDaysInDefault}</td>
                       </tr>
                     ))}
@@ -580,7 +580,7 @@ export default function CompanyProfile() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Customer Lifetime Value</p>
-                  <p className="text-sm font-medium text-gray-900">₹{profileData.profitability.customerLifetimeValue.toLocaleString('en-IN')}</p>
+                  <p className="text-sm font-medium text-gray-900">${profileData.profitability.customerLifetimeValue.toLocaleString('en-US')}</p>
                 </div>
               </div>
             </section>

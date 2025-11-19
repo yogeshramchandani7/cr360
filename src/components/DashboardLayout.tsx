@@ -38,7 +38,8 @@ export default function DashboardLayout() {
         <div className="px-6 border-t border-oracle-darkNavy">
           <nav className="flex space-x-8">
             <NavLink
-              to="/agent"
+              to="/"
+              end
               className={({ isActive }) =>
                 `py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   isActive
@@ -50,8 +51,7 @@ export default function DashboardLayout() {
               Agent
             </NavLink>
             <NavLink
-              to="/"
-              end
+              to="/portfolio"
               className={({ isActive }) =>
                 `py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   isActive
@@ -73,6 +73,18 @@ export default function DashboardLayout() {
               }
             >
               Customer View
+            </NavLink>
+            <NavLink
+              to="/risk-hub"
+              className={({ isActive }) =>
+                `py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  isActive
+                    ? 'border-white text-white'
+                    : 'border-transparent text-gray-300 hover:text-white hover:border-gray-500'
+                }`
+              }
+            >
+              Risk Hub
             </NavLink>
             {isCompanyPage && (
               <NavLink

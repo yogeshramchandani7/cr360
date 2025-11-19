@@ -27,13 +27,13 @@ export function getPortfolioContext(): string {
   const top5Companies = [...mockPortfolioCompanies]
     .sort((a, b) => b.creditExposure - a.creditExposure)
     .slice(0, 5)
-    .map((c) => `${c.customerName} (₹${c.creditExposure.toFixed(2)} Cr)`)
+    .map((c) => `${c.customerName} ($${(c.creditExposure * 0.12).toFixed(2)}M)`)
     .join(', ');
 
   return `
 PORTFOLIO SUMMARY:
 - Total Companies: ${totalCompanies}
-- Total Credit Exposure: ₹${totalExposure.toFixed(2)} Cr
+- Total Credit Exposure: $${(totalExposure * 0.12).toFixed(2)}M
 - Delinquent Companies: ${delinquentCompanies}
 - Watchlist Companies: ${watchlistCompanies}
 - Top 5 Exposures: ${top5Companies}
@@ -41,7 +41,7 @@ PORTFOLIO SUMMARY:
 KEY KPIs:
 - NPA: ${mockKPIs.npa.value}% (${mockKPIs.npa.trend})
 - PAR: ${mockKPIs.par.value}% (${mockKPIs.par.trend})
-- Total Exposure: ₹${(mockKPIs.totalExposure.value / 10000000).toFixed(0)} Cr
+- Total Exposure: $${(mockKPIs.totalExposure.value / 1000000).toFixed(0)}M
 - Delinquency Rate: ${mockKPIs.delinquency.value}%
 - Utilization: ${mockKPIs.utilization.value}%
 - RAROC: ${mockKPIs.raroc.value}%
@@ -123,11 +123,11 @@ SELECTED COMPANY: ${company.customerName}
 - Region: ${company.region}
 
 FINANCIAL DETAILS:
-- Credit Limit: ₹${company.creditLimit.toFixed(2)} Cr
-- Credit Exposure: ₹${company.creditExposure.toFixed(2)} Cr
-- Gross Credit Exposure: ₹${company.grossCreditExposure.toFixed(2)} Cr
-- Undrawn Exposure: ₹${company.undrawnExposure.toFixed(2)} Cr
-- Overdues: ₹${company.overdues.toFixed(2)} Cr
+- Credit Limit: $${(company.creditLimit * 0.12).toFixed(2)}M
+- Credit Exposure: $${(company.creditExposure * 0.12).toFixed(2)}M
+- Gross Credit Exposure: $${(company.grossCreditExposure * 0.12).toFixed(2)}M
+- Undrawn Exposure: $${(company.undrawnExposure * 0.12).toFixed(2)}M
+- Overdues: $${(company.overdues * 0.12).toFixed(2)}M
 
 RISK PROFILE:
 - Credit Status: ${company.creditStatus}
@@ -137,7 +137,7 @@ RISK PROFILE:
 - Credit Score: ${company.borrowerCreditScore}
 - Stage Classification: ${company.stageClassification}
 - Security Status: ${company.securityStatus}
-- Security Value: ₹${company.securityValue.toFixed(2)} Cr
+- Security Value: $${(company.securityValue * 0.12).toFixed(2)}M
 `;
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Smile, Paperclip, Image, ArrowUpCircle, Sparkles, Star, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Smile, Paperclip, Image, ArrowUpCircle, Sparkles, Star, AlertTriangle } from 'lucide-react';
 import ActionCard from '../components/agent/ActionCard';
 import DailyBriefingView from '../components/agent/DailyBriefingView';
 
@@ -9,10 +9,10 @@ export default function AgentPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showWorkflowsMessage, setShowWorkflowsMessage] = useState(false);
 
-  const showDailyBriefing = searchParams.get('view') === 'daily-briefing';
+  const showDailyBriefing = searchParams.get('view') !== 'chat';
 
   const handleDailyBriefingClick = () => {
-    setSearchParams({ view: 'daily-briefing' });
+    setSearchParams({});
   };
 
   const handleWorkflowsClick = () => {
@@ -37,21 +37,7 @@ export default function AgentPage() {
 
   // If Daily Briefing is shown, render the new view
   if (showDailyBriefing) {
-    return (
-      <div className="min-h-screen">
-        {/* Back Button */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
-          <button
-            onClick={() => setSearchParams({})}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to Agent</span>
-          </button>
-        </div>
-        <DailyBriefingView />
-      </div>
-    );
+    return <DailyBriefingView />;
   }
 
   // Default Agent Page View

@@ -10,10 +10,12 @@ const cmiInsights: KPIInsight[] = [
     kpiId: 'qm_12m_mortality',
     theme: 'Sector Stress Alert',
     keyInsights: [
-      'Real Estate CMI = 61.5 vs 57.0 (CRISIL) → +4.5 gap',
-      'NBFC CMI = 58.4 vs 54.8 (CRISIL) → +3.6 gap',
-      'Below Investment Grade exposure up by 7%; 40% of Real Estate book is BBB & below',
-      'Catch-up ratio = 0.78 → internal downgrades lag market'
+      'Real Estate CMI at 61.5 vs market 57.0 (+4.5 gap); NBFC at 58.4 vs 54.8 (+3.6 gap)',
+      'Sample accounts showing >2 notch gap between internal and external ratings - representing $58M exposure',
+      '68% of downgrades from these 2 sectors - concentration risk at critical level',
+      'Sample showing 4 critical accounts with >90 days lag since external downgrade - immediate review required',
+      'Commercial Office and Housing Finance showing highest stress - 44% of sector exposure ($42M of $96M)',
+      '40% of Real Estate book and 35% of NBFC book rated BBB & below - significantly above bank average of 24%'
     ],
     implication: 'These sectors are deteriorating faster than peers, and internal rating updates are delayed — potential under-recognition of risk.',
     croActions: [
@@ -36,7 +38,26 @@ const cmiInsights: KPIInsight[] = [
         label: 'Industry: NBFC',
         source: 'Sector Stress Alert insight'
       }
-    ]
+    ],
+    agentRecommendation: {
+      title: 'Critical: Sector Portfolio Review and Rating Recalibration Required',
+      description: 'Real Estate and NBFC sectors showing systemic deterioration - CMI gaps of +4.5 and +3.6 points vs market, with 40% and 35% rated BBB & below respectively. Internal rating lag (catch-up ratio 0.78) masks true risk. Combined exposure of these 2 sectors at $515M represents material systemic risk.',
+      actionItems: [
+        'Trigger immediate portfolio-level review for all Real Estate & NBFC exposures >$3M',
+        'Mandate external rating alignment within 30 days for 23 accounts with >2 notch gap',
+        'Tighten incremental exposure limits for both sectors (reduce by 30%)',
+        'Initiate PD/EWS model recalibration specifically for RE and NBFC to address lag',
+        'Establish monthly Credit Committee review for these sector exposures',
+        'Increase provision coverage to 12% for BBB & below rated accounts in these sectors'
+      ],
+      ctas: [
+        { label: 'View RE/NBFC Portfolio', action: 'view_sector_portfolio', variant: 'primary' },
+        { label: 'Generate Sector Analysis', action: 'generate_sector_report', variant: 'secondary' }
+      ],
+      priority: 'high',
+      estimatedImpact: 'Proactive rating recalibration and exposure limits can reduce potential losses by $14-18M over 18 months. Current trajectory suggests 8-10% of BBB & below book may migrate to NPA - early intervention can halve this migration rate.'
+    },
+    evidenceCharts: ['sector_stress_chart_1', 'sector_stress_chart_2', 'sector_stress_chart_3', 'sector_stress_chart_4', 'sector_stress_chart_5', 'sector_stress_chart_6']
   },
   {
     id: 'cmi_insight_2',
@@ -121,12 +142,12 @@ const originationQualityInsights: KPIInsight[] = [
     kpiId: 'quick_mortality',
     theme: 'Risk-Return Imbalance in New Originations',
     keyInsights: [
-      'Weighted PD: ↑ from 1.32% → 1.42% (MoM +10 bps)',
-      'Portfolio RAROC: ↓ from 14.4% → 13.8% (−0.6 p.p.)',
-      '% Rated BBB & below: ↑ to 38% (↑6 p.p.)',
-      'RWA intensity: ₹0.78 Cr per ₹1 Cr exposure (↑ from ₹0.72)',
-      'Sector Mix: Real Estate + NBFC = 52% of new book',
-      'Sector Sentiment: Negative — liquidity & refinancing stress'
+      '42% of new originations fall below minimum RAROC hurdle of 15% despite elevated PD',
+      'Real Estate & NBFC in "Problem" quadrant - high growth but below-hurdle RAROC',
+      'RAROC declining quarter-over-quarter - from 14.4% to 13.8% in last 3 quarters',
+      'Infrastructure & Real Estate consuming 44% of RWA ($425M) with below-average RAROC of 12.2-13.5%',
+      'Bottom 20 deals by RAROC represent $102M exposure - requiring pricing review',
+      'Median pricing spread 40 bps below peers for BBB-rated accounts - under-pricing risk'
     ],
     implication: 'Business growth is being driven by higher-risk, lower-yield sectors. Despite expanding origination volumes, the RAROC gap versus PD indicates erosion in underwriting profitability. Risk capital consumption rising faster than returns.',
     croActions: [
@@ -150,21 +171,35 @@ const originationQualityInsights: KPIInsight[] = [
         label: 'Industry: NBFC',
         source: 'Risk-Return Imbalance insight'
       }
-    ]
+    ],
+    agentRecommendation: {
+      title: 'Strategic Realignment: Implement Sector-Specific RAROC Hurdles',
+      description: '42% of new originations fall below 15% RAROC hurdle despite elevated PD. Real Estate and NBFC in "Problem" quadrant with high growth but sub-par returns. Portfolio RAROC declined from 14.4% to 13.8% despite volume growth, indicating value-destroying originations. RWA intensity rising faster than returns.',
+      actionItems: [
+        'Set PD-linked pricing floors immediately across all product segments',
+        'Route all sub-floor RAROC deals to Capital Allocation Committee for approval'
+      ],
+      assignedTo: 'Credit Risk Modeling & Capital Allocation teams',
+      ctas: [
+        { label: 'Execute', action: 'view_raroc_portfolio', variant: 'primary' },
+        { label: 'Generate Report', action: 'generate_raroc_report', variant: 'secondary' }
+      ],
+      priority: 'medium',
+      estimatedImpact: 'Implementing RAROC hurdles and repricing can improve portfolio returns by 1.2-1.5 percentage points over 12 months, generating an additional $18-22M in risk-adjusted income. Halting value-destroying originations prevents further capital erosion.'
+    },
+    evidenceCharts: ['risk_return_chart_1', 'risk_return_chart_2', 'risk_return_chart_3', 'risk_return_chart_4', 'risk_return_chart_5', 'risk_return_chart_6']
   },
   {
     id: 'origination_insight_2',
     kpiId: 'quick_mortality',
     theme: 'South Region Lending Surge: Volume Spike, Quality Erosion',
     keyInsights: [
-      'Origination Growth: +28% MoM (highest among all regions)',
-      'Sector Concentration: 64% of South\'s new business → Infrastructure sector',
-      'Sector Sentiment: Negative, outlook = Weak',
-      'Weighted PD: ↑ from 1.25% → 1.58%',
-      'RAROC: ↓ from 14.6% → 12.9%',
-      'Weighted GDS / TDS: ↓ 8–10% MoM → affordability tightening',
-      'Deviation Rate: 26% (vs bank average 21%) → mainly DSCR and Collateral Coverage relaxations',
-      'Early Mortality: 1.1% of accounts sanctioned in last 12 months already in DPD >30 → double bank average'
+      'South region grew 28% MoM - highest among all regions, now represents 26% of total originations',
+      '64% of South originations concentrated in Infrastructure - far above bank average of 28%',
+      'All risk metrics deteriorated in South - PD up 26%, RAROC down 12%, GDS/TDS down 9%',
+      'Deviation rate spiked from 18% to 26% over 6 months - mainly DSCR and collateral relaxations',
+      'Top 10 infrastructure deals total $64M representing major portion of South infra book - 7 have approved deviations',
+      'South cohorts show 2x early mortality rate - 1.1% at 30 DPD by month 3 vs 0.5% for other regions'
     ],
     implication: 'Growth in South is volume-led, not differentiated. The spike stems from a few large infrastructure exposures — a sector already under watch. The region\'s risk metrics (PD, GDS/TDS, RAROC) all worsened simultaneously, while deviation approvals rose. Early mortality in this cohort signals quality compromise and policy laxity.',
     croActions: [
@@ -188,18 +223,36 @@ const originationQualityInsights: KPIInsight[] = [
         label: 'Industry: Infrastructure',
         source: 'South Region Lending Surge insight'
       }
-    ]
+    ],
+    agentRecommendation: {
+      title: 'Urgent: Impose Controls on South Infrastructure Lending',
+      description: 'The 28% MoM growth in South region, heavily concentrated in Infrastructure (64%), combined with deteriorating risk metrics (PD +26%, RAROC -12%, deviation rate at 26%) and 2x early mortality rate signals aggressive, quality-compromised lending. Immediate intervention required to prevent significant losses.',
+      actionItems: [
+        'Cut deviation limits by 50% for South region',
+        'Freeze new infrastructure sanctions exceeding $2.4M until revalidation',
+        'Require risk memo sign-off from regional risk head for all exceptions'
+      ],
+      assignedTo: 'Regional Credit Risk & Infrastructure Lending teams',
+      ctas: [
+        { label: 'Execute', action: 'view_south_portfolio', variant: 'primary' },
+        { label: 'Generate Report', action: 'generate_south_report', variant: 'secondary' }
+      ],
+      priority: 'high',
+      estimatedImpact: 'Implementing origination caps and enhanced governance can prevent estimated $10-12M in potential credit losses from deteriorating South infrastructure book. Early mortality trends suggest 1.5-2% of recent originations may slip to NPL - timely intervention can reduce this by 40-50%.'
+    },
+    evidenceCharts: ['south_region_chart_1', 'south_region_chart_2', 'south_region_chart_3', 'south_region_chart_4', 'south_region_chart_5', 'south_region_chart_6']
   },
   {
     id: 'origination_insight_3',
     kpiId: 'quick_mortality',
     theme: 'Top 10% underwriters by volume show 2.5× higher default rates on their book',
     keyInsights: [
-      'Top decile underwriters: Avg. monthly approvals +45% above median',
-      'Default rate on their booked loans: 5.4% vs 2.1% (×2.5)',
-      'Exception rate: 19.6% vs 11.2% (×1.8)',
-      'Avg. case review time: −28% shorter than peers',
-      'Avg. tenure of high-volume underwriters: <12 months (new hires)'
+      'Top 5 by volume (flagged) show 5.6% avg default rate vs 4.6% for next 5 - quality deteriorates with volume',
+      'Clear inverse correlation - higher volume underwriters show 2.5x elevated default rates',
+      'Underwriters with >80% approval rates show 2.8x higher defaults - lax credit discipline',
+      'Q2 2024 cohort by high-volume UWs shows 6.7% avg defaults vs 2.3% for low-volume UWs - consistent quality gap',
+      'High-volume UWs grant 2.8x more exceptions with 3.2x higher default rates on those exceptions',
+      'High-default UWs average <15 months experience vs 36 months for low-default UWs'
     ],
     implication: 'A review of individual underwriter performance highlights that high throughput correlates negatively with loan performance. Training or workload balancing required to maintain credit discipline.',
     croActions: [
@@ -210,7 +263,24 @@ const originationQualityInsights: KPIInsight[] = [
       'Conduct forensic review of recent approvals by high-default-rate underwriters'
     ],
     severity: 'critical',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    agentRecommendation: {
+      title: 'Urgent: Underwriter Quality Control and Workload Rebalancing',
+      description: 'Top 10% underwriters by volume show 2.5x higher default rates (5.4% vs 2.1%), correlating with 1.8x higher exception rates, 28% shorter case review times, and <15 months average experience. Clear evidence of quality compromise due to volume pressure and inadequate training.',
+      actionItems: [
+        'Reduce approval authorities for flagged underwriters by 50%',
+        'Implement mandatory co-approval for all flagged underwriters',
+        'Recommend individual performance reviews for flagged underwriters'
+      ],
+      assignedTo: 'Credit Operations & Quality Assurance teams',
+      ctas: [
+        { label: 'Execute', action: 'view_underwriter_dashboard', variant: 'primary' },
+        { label: 'Generate Report', action: 'generate_underwriter_report', variant: 'secondary' }
+      ],
+      priority: 'high',
+      estimatedImpact: 'Workload rebalancing and enhanced training can reduce default rates for high-volume underwriters from 5.4% to 3.0-3.5% over 9-12 months, preventing $7-10M in losses. Quality-focused metrics will improve overall origination standards.'
+    },
+    evidenceCharts: ['underwriters_chart_1', 'underwriters_chart_2', 'underwriters_chart_3', 'underwriters_chart_4', 'underwriters_chart_5', 'underwriters_chart_6']
   },
   {
     id: 'origination_insight_4',
@@ -222,12 +292,12 @@ const originationQualityInsights: KPIInsight[] = [
       'RAROC: 12.7% (vs Portfolio Avg 13.8%)',
       'Sectoral Distribution: 10 in Infrastructure, 6 in Real Estate, 4 in NBFC, 5 in Misc.',
       '8/25 rated BBB or below; 6 accounts with approved policy deviations',
-      'RWA per ₹ Cr exposure: ₹0.83 Cr (↑ from ₹0.78) → higher capital intensity',
+      'RWA per $ M exposure: $0.83M (↑ from $0.78M) → higher capital intensity',
       'Benchmark Comparison: 60% of these accounts have RAROC below peer average for same sector and rating class'
     ],
     implication: 'The bank\'s largest new exposures are not demonstrating superior differentiation. Instead, they are below-par vs peers on RAROC and PD, adding disproportionate risk without incremental return. These accounts are materially diluting the bank\'s overall origination quality index.',
     croActions: [
-      'Mandate Credit Committee review for all exposures >₹50 Cr with RAROC <14%',
+      'Mandate Credit Committee review for all exposures >$6M with RAROC <14%',
       'Implement peer benchmarking requirement for all large exposures before approval',
       'Review pricing strategy — consider relationship profitability beyond RAROC',
       'Establish quarterly quality review of top exposures by CRO office'
@@ -267,11 +337,12 @@ const weightedPDInsights: KPIInsight[] = [
     kpiId: 'qm_weighted_pd',
     theme: 'Higher default rates in loans made with Income Policy Exception',
     keyInsights: [
-      'Exception loans default rate: 8.7% (vs 2.3% standard underwriting, +278%)',
-      'Total exception loan portfolio: ₹1,247 Cr (11.2% of total originations)',
-      '90+ DPD rate for exception loans: 12.4% (vs 3.1% standard, +300%)',
-      'Loss given default (LGD) on exceptions: 68% (vs 45% standard, +51%)',
-      'Exception loans aged 12-24 months: 73% of all exception defaults'
+      'Income exceptions show 278% higher default rates compared to standard underwriting (8.7% vs 2.3%)',
+      'North and West regions account for 62% of exception volume but show 32% lower default rates than East region',
+      'Loans with 3+ exceptions have 18.5% default rate - 3x higher than single exception loans (6.2%)',
+      'Exception volumes grew 47% over 24 months while default rates increased from 6.8% to 8.7%',
+      '2024 Q2 and Q3 cohorts showing accelerated defaults - 9-11% cumulative by month 6 vs historical 4-5%',
+      'Top 3 underwriters by exception volume have 2.8x higher default rates than their standard book'
     ],
     implication: 'Income policy exceptions show 278% higher default rates, indicating weakened underwriting controls and systemic credit quality deterioration.',
     croActions: [
@@ -290,6 +361,38 @@ const weightedPDInsights: KPIInsight[] = [
         label: 'Policy: Income Exception',
         source: 'Income Policy Exception insight'
       }
+    ],
+    agentRecommendation: {
+      title: 'Immediate Action Required: Tighten Exception Controls',
+      description: 'The 278% higher default rate on income policy exceptions represents a critical risk to portfolio quality. With $150M in exposure and 73% of defaults occurring in the 12-24 month vintage, immediate intervention is required to prevent further deterioration. The data suggests that current exception approval processes lack adequate risk assessment and ongoing monitoring.',
+      actionItems: [
+        'Enforce 100% Dual review for all income-based exception loans',
+        'Auto-decline multi-exception cases > $120K',
+        'Ask all regional credit heads to submit explanation report on increase in policy exception related defaults'
+      ],
+      assignedTo: 'Underwriting & Credit Policy teams',
+      ctas: [
+        {
+          label: 'Execute',
+          action: 'view_exception_portfolio',
+          variant: 'primary'
+        },
+        {
+          label: 'Generate Report',
+          action: 'generate_exception_report',
+          variant: 'secondary'
+        }
+      ],
+      priority: 'high',
+      estimatedImpact: 'Implementing these controls could reduce exception default rates by 40-50% (from 8.7% to 4.5-5%), preventing an estimated $6-7M in credit losses over the next 12 months. Enhanced monitoring will also improve early detection, allowing proactive restructuring before accounts reach NPA status.'
+    },
+    evidenceCharts: [
+      'income_exception_chart_1',
+      'income_exception_chart_2',
+      'income_exception_chart_3',
+      'income_exception_chart_4',
+      'income_exception_chart_5',
+      'income_exception_chart_6'
     ]
   },
   {
@@ -297,13 +400,14 @@ const weightedPDInsights: KPIInsight[] = [
     kpiId: 'qm_weighted_pd',
     theme: 'Newly announced tariffs impact on portfolio',
     keyInsights: [
-      'Total exposure to tariff-impacted sectors: ₹3,847 Cr (34.6% of portfolio)',
-      'Manufacturing exposure: ₹2,135 Cr (19.2% of portfolio, steel/aluminum +15% input costs)',
-      'Auto & Auto Components: ₹892 Cr (8.0%, facing 25% tariff on imports)',
-      'Electronics & Technology: ₹820 Cr (7.4%, supply chain disruption expected)',
-      'Estimated margin compression: 180-220 bps across impacted borrowers'
+      '$463M (35% of portfolio) directly or indirectly impacted by tariff announcements',
+      'Manufacturing has $257M exposure with 65% import dependency - highest risk',
+      'Average 180-220 bps margin compression expected across impacted sectors',
+      'Sample borrowers in critical quadrant with high margin compression (>2%) and low ICR (<2.5x)',
+      'Sample showing varying pricing power - borrowers with "High" pricing power can better absorb tariff impacts',
+      'Sample accounts showing stressed ICR below 2.0x and DSCR below 1.25x in post-tariff scenario'
     ],
-    implication: 'Tariff announcements impact 35% of portfolio (₹3,847 Cr), causing margin compression and elevated risk of rating migrations in manufacturing and auto sectors.',
+    implication: 'Tariff announcements impact 35% of portfolio ($463M), causing margin compression and elevated risk of rating migrations in manufacturing and auto sectors.',
     croActions: [
       'Conduct urgent stress testing for all tariff-exposed obligors',
       'Review and update industry outlook assumptions for manufacturing and auto sectors',
@@ -326,18 +430,35 @@ const weightedPDInsights: KPIInsight[] = [
         label: 'Industry: Automobiles',
         source: 'Tariffs Impact insight'
       }
-    ]
+    ],
+    agentRecommendation: {
+      title: 'Immediate: Stress Test and Contingency Planning for Tariff-Impacted Portfolio',
+      description: '35% of portfolio ($463M) exposed to tariff impacts with expected 180-220 bps margin compression. 42 accounts show stressed ICR below 2.0x and DSCR below 1.25x. Manufacturing, Auto, and Electronics sectors at highest risk. Only 35% of borrowers have pricing power to pass through costs.',
+      actionItems: [
+        'Tag all margin-impacted accounts with risk overlay flags',
+        'Halt renewals without CFO-certified margin impact disclosure'
+      ],
+      assignedTo: 'Industry Analytics & Relationship Management teams',
+      ctas: [
+        { label: 'Execute', action: 'view_tariff_portfolio', variant: 'primary' },
+        { label: 'Generate Report', action: 'generate_tariff_report', variant: 'secondary' }
+      ],
+      priority: 'high',
+      estimatedImpact: 'Early engagement and restructuring support can prevent $12-16M in potential NPL slippages. Borrowers with low ICR (<2.0x) and fixed contract terms are at highest risk - proactive restructuring can reduce default probability by 35-45%.'
+    },
+    evidenceCharts: ['tariff_impact_chart_1', 'tariff_impact_chart_2', 'tariff_impact_chart_3', 'tariff_impact_chart_4', 'tariff_impact_chart_5', 'tariff_impact_chart_6']
   },
   {
     id: 'weighted_pd_insight_3',
     kpiId: 'qm_weighted_pd',
     theme: 'Borrower concentration breaches internal threshold; top 10 names now represent 29% of total corporate exposure',
     keyInsights: [
-      'Top 10 borrowers share: 29.2% (vs. policy threshold 25%)',
-      'Top 3 borrowers: 14.1% of total group limits',
-      'Sector overlap: 70% in infra & energy',
-      'Avg. internal rating of top 10: BBB– (vs. portfolio avg. BBB+)',
-      'Incremental drawdowns last quarter: ₹1,842 Cr (+19% QoQ)'
+      'Top 10 now at 29.2% (breach of 25% policy limit) - grew from 26.2% in 6 months',
+      'Single largest exposure at $58.4M approaching internal limit of $60M',
+      '25% policy threshold breached in August 2024 - driven by $66.7M incremental drawdowns over 11 months',
+      'If fully drawn, top 10 would reach 38.5% concentration - creating severe systemic risk',
+      '12 distinct group structures with $299M exposure - hidden concentration through linkages',
+      '70% of top 10 exposure in Infrastructure & Energy - sector + name concentration risk compounded'
     ],
     implication: 'Rapid drawdowns from a few large conglomerates have tilted portfolio concentration, raising systemic exposure risk. The largest three borrowers now account for 14% of total group limits.',
     croActions: [
@@ -362,7 +483,24 @@ const weightedPDInsights: KPIInsight[] = [
         label: 'Industry: Energy',
         source: 'Borrower Concentration Breach insight'
       }
-    ]
+    ],
+    agentRecommendation: {
+      title: 'Critical: Enforce Concentration Limits and Diversification Strategy',
+      description: 'Top 10 obligors at 29.2% (breach of 25% policy limit), with single largest at $58.4M approaching $60M ceiling. If undrawn commitments are fully utilized, concentration would reach 38.5%. Hidden concentration through 12 group structures with $299M exposure. 70% of top 10 in Infrastructure & Energy compounds sectoral risk.',
+      actionItems: [
+        'Freeze incremental limits for top 5 obligor groups',
+        'Demand 12-month cash flow forecasts from all top 5 groups within 30 days',
+        'Require board-signed repayment plans for all existing commitments from top 5 groups'
+      ],
+      assignedTo: 'Corporate Credit Risk & Exposure Management teams',
+      ctas: [
+        { label: 'Execute', action: 'view_concentration_dashboard', variant: 'primary' },
+        { label: 'Generate Report', action: 'generate_concentration_report', variant: 'secondary' }
+      ],
+      priority: 'high',
+      estimatedImpact: 'Reducing concentration to <27% and implementing group limits significantly reduces tail risk. A correlated default scenario of top 3 obligors could result in $228M exposure at risk - diversification reduces this single-event risk by 40-50%.'
+    },
+    evidenceCharts: ['concentration_chart_1', 'concentration_chart_2', 'concentration_chart_3', 'concentration_chart_4', 'concentration_chart_5', 'concentration_chart_6']
   },
   {
     id: 'weighted_pd_insight_4',
@@ -969,7 +1107,18 @@ export function getKPIDisplayName(kpiId: string): string {
  * @returns Array of all insights
  */
 export function getAllKPIInsights(): KPIInsight[] {
-  return [
+  // Only return specific insights for Daily Briefing
+  const allowedInsightIds = [
+    'weighted_pd_insight_1',  // Income Policy Exception
+    'origination_insight_2',  // South Region Lending Surge
+    'cmi_insight_1',          // Sector Stress Alert
+    'weighted_pd_insight_2',  // Tariffs impact
+    'origination_insight_1',  // Risk-Return Imbalance
+    'origination_insight_3',  // Top 10% underwriters
+    'weighted_pd_insight_3'   // Borrower concentration breach
+  ];
+
+  const allInsights = [
     ...weightedPDInsights,
     ...cmiInsights,
     ...originationQualityInsights,
@@ -980,4 +1129,6 @@ export function getAllKPIInsights(): KPIInsight[] {
     ...provisioningInsights,
     ...concentrationInsights
   ];
+
+  return allInsights.filter(insight => allowedInsightIds.includes(insight.id));
 }

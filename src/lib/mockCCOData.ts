@@ -110,8 +110,8 @@ export const KPI_TOOLTIPS: Record<string, KPITooltip> = {
     businessImplication: 'Portfolio quality trend',
   },
   qm_rwa_intensity: {
-    definition: 'RWA per ₹ Cr Exposure',
-    formula: 'Total RWA / (Total Exposure / 10,000,000)',
+    definition: 'RWA per $ M Exposure',
+    formula: 'Total RWA / (Total Exposure / 1,000,000)',
     businessImplication: 'Capital efficiency',
   },
   qm_npl_ratio: {
@@ -1390,15 +1390,15 @@ export function calculateCCOKPIs(): Record<string, AdvancedKPI> {
   const exceptionData = generateMockExceptionData();
   const channelPerformanceData = generateMockChannelPerformanceData();
 
-  // Sub-KPI #1: New Origination (₹ Cr)
-  const totalSanctioned = 8450; // ₹8,450 Cr
-  const baselineSanctioned = 7800; // Previous month ₹7,800 Cr
+  // Sub-KPI #1: New Origination ($ M)
+  const totalSanctioned = 1018; // $1,018M (converted from ₹8,450 Cr)
+  const baselineSanctioned = 940; // Previous month $940M (converted from ₹7,800 Cr)
   const qmNewOrigination: AdvancedKPI = {
     id: 'qm_new_origination',
-    label: 'New Origination (₹ Cr)',
+    label: 'New Origination ($ M)',
     value: totalSanctioned,
     unit: 'currency',
-    displayValue: `₹${totalSanctioned.toLocaleString('en-IN')} Cr`,
+    displayValue: `$${totalSanctioned.toLocaleString('en-US')}M`,
     trend: 'up',
     changePercent: ((totalSanctioned - baselineSanctioned) / baselineSanctioned) * 100,
     tooltip: KPI_TOOLTIPS.qm_new_origination,
@@ -1649,10 +1649,10 @@ export function getKPIsForDrilldown(kpiId: string): AdvancedKPI[] {
       return [
         {
           id: 'qm_drill_new_origination',
-          label: 'New Origination (₹ Cr)',
-          value: 8245.5,
+          label: 'New Origination ($ M)',
+          value: 993,
           unit: 'currency',
-          displayValue: '₹8,245.5 Cr',
+          displayValue: '$993M',
           trend: 'up',
           changePercent: 5.8,
           changeLabel: '%',
@@ -1725,8 +1725,8 @@ export function getKPIsForDrilldown(kpiId: string): AdvancedKPI[] {
           changePercent: 4.4,
           changeLabel: '%',
           tooltip: {
-            definition: 'RWA per ₹ Cr Exposure',
-            formula: 'Total RWA / (Total Exposure / 10,000,000)',
+            definition: 'RWA per $ M Exposure',
+            formula: 'Total RWA / (Total Exposure / 1,000,000)',
             businessImplication: 'Capital efficiency'
           },
           threshold: { green: 52, amber: 48, status: 'green' },
