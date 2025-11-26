@@ -46,28 +46,30 @@ export default function ChatInput({ onSend, disabled, placeholder = 'Type here..
   };
 
   return (
-    <div className="border-t border-gray-700 p-4 bg-white">
-      <div className="flex gap-2 items-end">
-        <textarea
-          ref={textareaRef}
-          value={message}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={disabled}
-          rows={1}
-          className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed max-h-[120px] overflow-y-auto"
-        />
+    <div className="p-4 bg-transparent">
+      <div className="flex gap-3 items-center">
+        <div className="flex-1 relative">
+          <textarea
+            ref={textareaRef}
+            value={message}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            disabled={disabled}
+            rows={1}
+            className="w-full resize-none rounded-lg bg-transparent text-gray-900 placeholder-gray-400 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed max-h-[120px] overflow-y-auto border border-gray-300"
+          />
+        </div>
         <button
           onClick={handleSend}
           disabled={disabled || !message.trim()}
-          className="flex-shrink-0 bg-blue-600 text-white rounded-lg p-2 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="flex-shrink-0 bg-teal-600 text-white rounded-lg p-3 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="Send message"
         >
           <Send className="w-5 h-5" />
         </button>
       </div>
-      <p className="text-xs text-gray-500 mt-2">
+      <p className="text-xs text-gray-500 mt-2 text-center">
         Press Enter to send, Shift+Enter for new line
       </p>
     </div>

@@ -1,10 +1,11 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { User } from 'lucide-react';
 import FilterBar from './FilterBar';
 import AlertBell from './AlertBell';
 
 export default function DashboardLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isCompanyPage = location.pathname.startsWith('/company/');
 
   // Show FilterBar only on Customer View and Company Profile pages (not on Dashboard)
@@ -37,19 +38,16 @@ export default function DashboardLayout() {
         {/* Tab Navigation */}
         <div className="px-6 border-t border-oracle-darkNavy">
           <nav className="flex space-x-8">
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                `py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  isActive
-                    ? 'border-white text-white'
-                    : 'border-transparent text-gray-300 hover:text-white hover:border-gray-500'
-                }`
-              }
+            <button
+              onClick={() => navigate('/?reset=true')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                location.pathname === '/'
+                  ? 'border-white text-white'
+                  : 'border-transparent text-gray-300 hover:text-white hover:border-gray-500'
+              }`}
             >
               Agent
-            </NavLink>
+            </button>
             <NavLink
               to="/portfolio"
               className={({ isActive }) =>
@@ -75,7 +73,7 @@ export default function DashboardLayout() {
               Customer View
             </NavLink>
             <NavLink
-              to="/risk-hub"
+              to="/workbench"
               className={({ isActive }) =>
                 `py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   isActive
@@ -84,7 +82,7 @@ export default function DashboardLayout() {
                 }`
               }
             >
-              Risk Hub
+              Workbench
             </NavLink>
             {isCompanyPage && (
               <NavLink

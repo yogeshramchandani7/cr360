@@ -39,28 +39,29 @@ export const sectorStressCharts: EvidenceChart[] = [
   },
   {
     id: 'sector_stress_chart_2',
-    title: 'Internal vs External Rating Gap Analysis',
-    keyHighlight: 'Sample accounts showing >2 notch gap between internal and external ratings - representing $58M exposure',
-    chartType: 'scatter',
+    title: 'Rating Migration by Region',
+    keyHighlight: 'West & South regions account for 62% of downgrades - concentration of Real Estate & NBFC stress in these regions',
+    chartType: 'bar',
     data: [
-      { company: 'ABC RE', internalRating: 7, externalRating: 4, exposure: 85, sector: 'Real Estate' },
-      { company: 'XYZ NBFC', internalRating: 6, externalRating: 4, exposure: 65, sector: 'NBFC' },
-      { company: 'Delta Properties', internalRating: 8, externalRating: 5, exposure: 45, sector: 'Real Estate' },
-      { company: 'Omega Finance', internalRating: 7, externalRating: 4, exposure: 58, sector: 'NBFC' },
-      { company: 'Sigma Realty', internalRating: 6, externalRating: 3, exposure: 72, sector: 'Real Estate' },
-      { company: 'Gamma NBFC', internalRating: 8, externalRating: 6, exposure: 38, sector: 'NBFC' },
-      { company: 'Beta Builders', internalRating: 7, externalRating: 5, exposure: 42, sector: 'Real Estate' },
-      { company: 'Alpha Finance', internalRating: 6, externalRating: 4, exposure: 48, sector: 'NBFC' },
-      { company: 'Theta RE', internalRating: 7, externalRating: 4, exposure: 32, sector: 'Real Estate' },
+      { region: 'North', downgrades: 18, stable: 142, upgrades: 22 },
+      { region: 'South', downgrades: 35, stable: 98, upgrades: 12 },
+      { region: 'East', downgrades: 12, stable: 86, upgrades: 8 },
+      { region: 'West', downgrades: 38, stable: 128, upgrades: 18 },
+      { region: 'Central', downgrades: 12, stable: 95, upgrades: 15 },
     ],
     config: {
-      xAxis: { key: 'internalRating', label: 'Internal Rating (1-10)', type: 'number' },
-      yAxis: { key: 'externalRating', label: 'External Rating (1-10)', type: 'number' },
-      series: [{ key: 'exposure', name: 'Exposure ($ M)', color: '#ef4444' }],
-      showLegend: false,
+      xAxis: { key: 'region', label: 'Region' },
+      yAxis: { key: 'count', label: 'Number of Accounts', format: 'number' },
+      series: [
+        { key: 'downgrades', name: 'Downgrades', color: '#ef4444' },
+        { key: 'stable', name: 'Stable', color: '#10b981' },
+        { key: 'upgrades', name: 'Upgrades', color: '#3b82f6' },
+      ],
+      showLegend: true,
+      showGrid: true,
     },
-    filterField: 'borrowerName',
-    filterLabel: 'Company: {value}'
+    filterField: 'region',
+    filterLabel: 'Region: {value}'
   },
   {
     id: 'sector_stress_chart_3',
@@ -94,11 +95,11 @@ export const sectorStressCharts: EvidenceChart[] = [
     keyHighlight: 'Sample showing 4 critical accounts with >90 days lag since external downgrade - immediate review required',
     chartType: 'table',
     data: [
-      { borrower: 'ABC Real Estate Co', exposure: 85, bankRating: 'BBB+', extRating: 'BBB-', gap: 2, extDate: '2024-06-15', days: 148, alert: true },
-      { borrower: 'XYZ NBFC Ltd', exposure: 65, bankRating: 'BBB', extRating: 'BB+', gap: 2, extDate: '2024-07-01', days: 132, alert: true },
-      { borrower: 'Delta Properties', exposure: 45, bankRating: 'A-', extRating: 'BBB', gap: 2, extDate: '2024-07-20', days: 113, alert: true },
-      { borrower: 'Omega Finance Corp', exposure: 58, bankRating: 'BBB+', extRating: 'BBB-', gap: 2, extDate: '2024-08-05', days: 97, alert: true },
-      { borrower: 'Sigma Developers', exposure: 72, bankRating: 'BBB', extRating: 'BB+', gap: 2, extDate: '2024-08-15', days: 87, alert: false },
+      { borrower: 'Brookfield Properties', exposure: 85, bankRating: 'BBB+', extRating: 'BBB-', gap: 2, extDate: '2024-06-15', days: 148, alert: true },
+      { borrower: 'Bajaj Finance Ltd', exposure: 65, bankRating: 'BBB', extRating: 'BB+', gap: 2, extDate: '2024-07-01', days: 132, alert: true },
+      { borrower: 'Simon Property Group', exposure: 45, bankRating: 'A-', extRating: 'BBB', gap: 2, extDate: '2024-07-20', days: 113, alert: true },
+      { borrower: 'Muthoot Finance Corp', exposure: 58, bankRating: 'BBB+', extRating: 'BBB-', gap: 2, extDate: '2024-08-05', days: 97, alert: true },
+      { borrower: 'DLF Developers Ltd', exposure: 72, bankRating: 'BBB', extRating: 'BB+', gap: 2, extDate: '2024-08-15', days: 87, alert: false },
     ],
     config: {
       columns: [
@@ -179,9 +180,9 @@ export const tariffImpactCharts: EvidenceChart[] = [
     keyHighlight: '$463M (35% of portfolio) directly or indirectly impacted by tariff announcements',
     chartType: 'bar',
     data: [
-      { category: 'Direct Impact', exposure: 2145, percentage: 19.3 },
-      { category: 'Indirect Impact', exposure: 1702, percentage: 15.3 },
-      { category: 'Not Impacted', exposure: 7253, percentage: 65.4 },
+      { category: 'Direct Impact', exposure: 257, percentage: 19.4 },
+      { category: 'Indirect Impact', exposure: 206, percentage: 15.6 },
+      { category: 'Not Impacted', exposure: 860, percentage: 65.0 },
     ],
     config: {
       xAxis: { key: 'category', label: 'Impact Category' },
@@ -197,12 +198,12 @@ export const tariffImpactCharts: EvidenceChart[] = [
     keyHighlight: 'Manufacturing has $257M exposure with 65% import dependency - highest risk',
     chartType: 'table',
     data: [
-      { sector: 'Manufacturing', exposure: 2135, preMargin: 8.5, importDep: 65, impact: 'High' },
-      { sector: 'Auto & Components', exposure: 892, preMargin: 7.2, importDep: 58, impact: 'High' },
-      { sector: 'Electronics', exposure: 820, preMargin: 9.8, importDep: 72, impact: 'High' },
-      { sector: 'Pharma', exposure: 485, preMargin: 12.5, importDep: 42, impact: 'Medium' },
-      { sector: 'Textiles', exposure: 315, preMargin: 6.8, importDep: 48, impact: 'Medium' },
-      { sector: 'Other', exposure: 200, preMargin: 10.2, importDep: 28, impact: 'Low' },
+      { sector: 'Manufacturing', exposure: 257, preMargin: 8.5, importDep: 65, impact: 'High' },
+      { sector: 'Auto & Components', exposure: 112, preMargin: 7.2, importDep: 58, impact: 'High' },
+      { sector: 'Electronics', exposure: 87, preMargin: 9.8, importDep: 72, impact: 'High' },
+      { sector: 'Pharma', exposure: 42, preMargin: 12.5, importDep: 42, impact: 'Medium' },
+      { sector: 'Textiles', exposure: 28, preMargin: 6.8, importDep: 48, impact: 'Medium' },
+      { sector: 'Other', exposure: 9, preMargin: 10.2, importDep: 28, impact: 'Low' },
     ],
     config: {
       columns: [
@@ -218,7 +219,7 @@ export const tariffImpactCharts: EvidenceChart[] = [
   },
   {
     id: 'tariff_impact_chart_3',
-    title: 'Margin Compression Analysis',
+    title: 'Stress Testing Margins',
     keyHighlight: 'Average 180-220 bps margin compression expected across impacted sectors',
     chartType: 'bar',
     data: [
@@ -243,27 +244,26 @@ export const tariffImpactCharts: EvidenceChart[] = [
   },
   {
     id: 'tariff_impact_chart_4',
-    title: 'Borrower Vulnerability Matrix',
-    keyHighlight: 'Sample borrowers in critical quadrant with high margin compression (>2%) and low ICR (<2.5x)',
-    chartType: 'scatter',
+    title: 'Risk Category Summary',
+    keyHighlight: '87 borrowers ($463M) impacted: 38% Critical Risk, 42% Moderate Risk, 20% Normal Risk',
+    chartType: 'bar',
     data: [
-      { company: 'ABC Steel', marginComp: 2.8, icr: 2.1, exposure: 125, quad: 'Critical' },
-      { company: 'XYZ Auto', marginComp: 2.2, icr: 2.3, exposure: 98, quad: 'Critical' },
-      { company: 'Delta Electronics', marginComp: 2.5, icr: 2.0, exposure: 85, quad: 'Critical' },
-      { company: 'Omega Pharma', marginComp: 1.5, icr: 3.5, exposure: 72, quad: 'Monitor' },
-      { company: 'Sigma Textiles', marginComp: 1.8, icr: 2.2, exposure: 65, quad: 'Critical' },
-      { company: 'Gamma Manufacturing', marginComp: 2.0, icr: 2.8, exposure: 58, quad: 'Watch' },
-      { company: 'Beta Components', marginComp: 1.2, icr: 3.2, exposure: 48, quad: 'Monitor' },
-      { company: 'Alpha Steel', marginComp: 2.3, icr: 2.4, exposure: 52, quad: 'Critical' },
+      { category: 'Critical Risk', count: 28, exposure: 175, avgMarginComp: 2.5, avgICR: 2.1 },
+      { category: 'Moderate Risk', count: 38, exposure: 195, avgMarginComp: 1.8, avgICR: 2.7 },
+      { category: 'Normal Risk', count: 21, exposure: 93, avgMarginComp: 1.4, avgICR: 3.4 },
     ],
     config: {
-      xAxis: { key: 'marginComp', label: 'Margin Compression %', type: 'number' },
-      yAxis: { key: 'icr', label: 'Pre-Tariff ICR', type: 'number' },
-      series: [{ key: 'exposure', name: 'Exposure ($ M)', color: '#ef4444' }],
-      showLegend: false,
+      xAxis: { key: 'category', label: 'Risk Category' },
+      yAxis: { key: 'value', label: 'Count / Exposure', format: 'number' },
+      series: [
+        { key: 'count', name: 'Borrower Count', color: '#3b82f6' },
+        { key: 'exposure', name: 'Total Exposure ($M)', color: '#ef4444' },
+      ],
+      showLegend: true,
+      showGrid: true,
     },
-    filterField: 'borrowerName',
-    filterLabel: 'Borrower: {value}'
+    filterField: 'riskCategory',
+    filterLabel: 'Risk Category: {value}'
   },
   {
     id: 'tariff_impact_chart_5',

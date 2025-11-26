@@ -40,7 +40,7 @@ export default function AgentPage() {
     return <DailyBriefingView />;
   }
 
-  // Default Agent Page View
+  // Default Agent Hub Page View
   return (
     <div className="min-h-[calc(100vh-200px)] bg-gray-50 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-4xl">

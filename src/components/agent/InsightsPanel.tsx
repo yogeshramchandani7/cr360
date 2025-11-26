@@ -70,11 +70,7 @@ export default function InsightsPanel({ onEvidenceClick, onDrilldown }: Insights
             keyInsights={insight.keyInsights}
             isExpanded={expandedInsightId === insight.id}
             onEvidenceClick={() => handleEvidenceClick(insight.id, insight.source)}
-            onDrilldown={
-              insight.keyInsights.length > 0
-                ? () => handleDrilldown(insight.source)
-                : undefined
-            }
+            insightId={insight.id}
           />
         ))}
       </div>

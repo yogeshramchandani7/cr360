@@ -6,86 +6,9 @@ import type { EvidenceChart } from '../types';
 // ============================================================================
 
 const incomePolicyExceptionCharts: EvidenceChart[] = [
-  // Chart 1: Default Rate Comparison
+  // Chart 1: Exception Volume & Default Trend (MOVED TO FIRST POSITION)
   {
     id: 'income_exception_chart_1',
-    title: 'Default Rate Comparison by Exception Type',
-    keyHighlight: 'Income exceptions show 278% higher default rates compared to standard underwriting (8.7% vs 2.3%)',
-    chartType: 'bar',
-    data: [
-      { exceptionType: 'Standard', defaultRate: 2.3, indexed: 100 },
-      { exceptionType: 'Income', defaultRate: 8.7, indexed: 378 },
-      { exceptionType: 'LTV', defaultRate: 4.8, indexed: 209 },
-      { exceptionType: 'DTI', defaultRate: 5.2, indexed: 226 },
-      { exceptionType: 'Credit Score', defaultRate: 6.1, indexed: 265 },
-      { exceptionType: 'Multi-exception', defaultRate: 12.4, indexed: 539 },
-    ],
-    config: {
-      xAxis: { key: 'exceptionType', label: 'Exception Type' },
-      yAxis: { key: 'defaultRate', label: 'Default Rate (%)', format: 'percent' },
-      series: [
-        { key: 'defaultRate', name: 'Default Rate', color: '#ef4444' }
-      ],
-      showLegend: false,
-      showGrid: true,
-    },
-    filterField: 'exceptionType',
-    filterLabel: 'Exception Type: {value}'
-  },
-
-  // Chart 2: Geographic Distribution
-  {
-    id: 'income_exception_chart_2',
-    title: 'Exception Distribution by Region',
-    keyHighlight: 'North and West regions account for 62% of exception volume but show 32% lower default rates than East region',
-    chartType: 'table',
-    data: [
-      { region: 'North', volume: 342, count: 1245, defaultRate: 7.2, delinquentVolume: 24.6 },
-      { region: 'South', volume: 185, count: 678, defaultRate: 9.8, delinquentVolume: 18.1 },
-      { region: 'East', volume: 156, count: 542, defaultRate: 10.6, delinquentVolume: 16.5 },
-      { region: 'West', volume: 432, count: 1583, defaultRate: 7.5, delinquentVolume: 32.4 },
-      { region: 'Central', volume: 132, count: 486, defaultRate: 8.9, delinquentVolume: 11.7 },
-    ],
-    config: {
-      columns: [
-        { key: 'region', header: 'Region', format: 'text', align: 'left' },
-        { key: 'volume', header: 'Volume ($ M)', format: 'currency', align: 'right' },
-        { key: 'count', header: 'Count', format: 'number', align: 'right' },
-        { key: 'defaultRate', header: 'Default Rate', format: 'percent', align: 'right' },
-        { key: 'delinquentVolume', header: 'Delinquent Vol ($ M)', format: 'currency', align: 'right' },
-      ],
-    },
-    filterField: 'region',
-    filterLabel: 'Region: {value}'
-  },
-
-  // Chart 3: Multiple Exception Overlap
-  {
-    id: 'income_exception_chart_3',
-    title: 'Multiple Exception Overlap Analysis',
-    keyHighlight: 'Loans with 3+ exceptions have 18.5% default rate - 3x higher than single exception loans (6.2%)',
-    chartType: 'pie',
-    data: [
-      { name: 'Income Only', value: 642, defaultRate: 6.2 },
-      { name: 'Income + LTV', value: 289, defaultRate: 10.8 },
-      { name: 'Income + DTI', value: 215, defaultRate: 11.4 },
-      { name: 'Income + Credit Score', value: 178, defaultRate: 13.2 },
-      { name: '2 Exceptions', value: 156, defaultRate: 14.5 },
-      { name: '3+ Exceptions', value: 67, defaultRate: 18.5 },
-    ],
-    config: {
-      xAxis: { key: 'name' },
-      yAxis: { key: 'value', format: 'number' },
-      series: [{ key: 'value', name: 'Count', color: '#3b82f6' }],
-      showLegend: true,
-    },
-    filterField: 'exceptionCategory',
-    filterLabel: 'Exception Category: {value}'
-  },
-
-  // Chart 4: Exception Volume & Default Trend
-  {
-    id: 'income_exception_chart_4',
     title: 'Exception Volume & Default Rate Trend',
     keyHighlight: 'Exception volumes grew 47% over 24 months while default rates increased from 6.8% to 8.7%',
     chartType: 'dual-axis',
@@ -111,6 +34,81 @@ const incomePolicyExceptionCharts: EvidenceChart[] = [
     }
   },
 
+  // Chart 2: Default Rate Comparison (MOVED FROM POSITION 1)
+  {
+    id: 'income_exception_chart_2',
+    title: 'Default Rate Comparison by Exception Type',
+    keyHighlight: 'Income exceptions show 192% higher default rates compared to standard underwriting (3.8% vs 1.3%)',
+    chartType: 'bar',
+    data: [
+      { exceptionType: 'Standard', defaultRate: 1.3, indexed: 100 },
+      { exceptionType: 'Income', defaultRate: 3.8, indexed: 292 },
+      { exceptionType: 'LTV', defaultRate: 2.4, indexed: 185 },
+      { exceptionType: 'DTI', defaultRate: 2.6, indexed: 200 },
+      { exceptionType: 'Credit Score', defaultRate: 3.1, indexed: 238 },
+      { exceptionType: 'Multi-exception', defaultRate: 6.5, indexed: 500 },
+    ],
+    config: {
+      xAxis: { key: 'exceptionType', label: 'Exception Type' },
+      yAxis: { key: 'defaultRate', label: 'Default Rate (%)', format: 'percent' },
+      series: [
+        { key: 'defaultRate', name: 'Default Rate', color: '#ef4444' }
+      ],
+      showLegend: false,
+      showGrid: true,
+    },
+    filterField: 'exceptionType',
+    filterLabel: 'Exception Type: {value}'
+  },
+
+  // Chart 3: Multiple Exception Overlap (SIMPLIFIED TO 4 CATEGORIES)
+  {
+    id: 'income_exception_chart_3',
+    title: 'Multiple Exception Overlap Analysis',
+    keyHighlight: 'Loans with 3+ exceptions have 7.2% default rate - 3x higher than single exception loans (2.4%)',
+    chartType: 'pie',
+    data: [
+      { name: '1 Exception', value: 642, defaultRate: 2.4 },
+      { name: '2 Exceptions', value: 838, defaultRate: 4.2 },
+      { name: '3 Exceptions', value: 45, defaultRate: 7.2 },
+      { name: '3+ Exceptions', value: 22, defaultRate: 7.2 },
+    ],
+    config: {
+      xAxis: { key: 'name' },
+      yAxis: { key: 'value', format: 'number' },
+      series: [{ key: 'value', name: 'Count', color: '#3b82f6' }],
+      showLegend: true,
+    },
+    filterField: 'exceptionCategory',
+    filterLabel: 'Exception Category: {value}'
+  },
+
+  // Chart 4: Geographic Distribution (MOVED FROM POSITION 2)
+  {
+    id: 'income_exception_chart_4',
+    title: 'Exception Distribution by Region',
+    keyHighlight: 'North and West regions account for 62% of exception volume but show 45% lower default rates than South region',
+    chartType: 'table',
+    data: [
+      { region: 'North', volume: 342, count: 1245, defaultRate: 2.5, delinquentVolume: 8.6 },
+      { region: 'South', volume: 185, count: 678, defaultRate: 4.5, delinquentVolume: 8.3 },
+      { region: 'East', volume: 156, count: 542, defaultRate: 3.8, delinquentVolume: 5.9 },
+      { region: 'West', volume: 432, count: 1583, defaultRate: 2.7, delinquentVolume: 11.7 },
+      { region: 'Central', volume: 132, count: 486, defaultRate: 2.8, delinquentVolume: 3.7 },
+    ],
+    config: {
+      columns: [
+        { key: 'region', header: 'Region', format: 'text', align: 'left' },
+        { key: 'volume', header: 'Volume ($ M)', format: 'currency', align: 'right' },
+        { key: 'count', header: 'Count', format: 'number', align: 'right' },
+        { key: 'defaultRate', header: 'Default Rate', format: 'percent', align: 'right' },
+        { key: 'delinquentVolume', header: 'Delinquent Vol ($ M)', format: 'currency', align: 'right' },
+      ],
+    },
+    filterField: 'region',
+    filterLabel: 'Region: {value}'
+  },
+
   // Chart 5: Vintage Cohort Performance (Heatmap)
   {
     id: 'income_exception_chart_5',
@@ -130,14 +128,20 @@ const incomePolicyExceptionCharts: EvidenceChart[] = [
     config: {
       columns: [
         { key: 'vintage', header: 'Vintage', format: 'text', align: 'left' },
-        { key: 'm1', header: 'Month 1', format: 'percent', align: 'center' },
-        { key: 'm3', header: 'Month 3', format: 'percent', align: 'center' },
-        { key: 'm6', header: 'Month 6', format: 'percent', align: 'center' },
-        { key: 'm9', header: 'Month 9', format: 'percent', align: 'center' },
-        { key: 'm12', header: 'Month 12', format: 'percent', align: 'center' },
-        { key: 'm18', header: 'Month 18', format: 'percent', align: 'center' },
-        { key: 'm24', header: 'Month 24', format: 'percent', align: 'center' },
+        { key: 'm1', header: 'Month 1', format: 'heatmap', align: 'center' },
+        { key: 'm3', header: 'Month 3', format: 'heatmap', align: 'center' },
+        { key: 'm6', header: 'Month 6', format: 'heatmap', align: 'center' },
+        { key: 'm9', header: 'Month 9', format: 'heatmap', align: 'center' },
+        { key: 'm12', header: 'Month 12', format: 'heatmap', align: 'center' },
+        { key: 'm18', header: 'Month 18', format: 'heatmap', align: 'center' },
+        { key: 'm24', header: 'Month 24', format: 'heatmap', align: 'center' },
       ],
+      heatmapConfig: {
+        minValue: 0,
+        maxValue: 13,
+        colorScale: ['#eff6ff', '#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8', '#1e40af'],
+        hideZeros: true
+      }
     },
     filterField: 'vintage',
     filterLabel: 'Vintage: {value}'
@@ -356,11 +360,26 @@ import {
   concentrationBreachCharts
 } from './insightEvidenceDataPart3';
 
+import {
+  creditPipelineCharts
+} from './insightEvidenceDataPart4';
+
+import {
+  helocUtilizationCharts
+} from './insightEvidenceDataPart5';
+
+import {
+  midwestOriginationCharts
+} from './insightEvidenceDataPart6';
+
 /**
  * Get evidence charts for a specific insight ID
  */
 export function getEvidenceChartsForInsight(insightId: string): EvidenceChart[] {
   switch (insightId) {
+    case 'midwest_origination_insight_1':
+      return midwestOriginationCharts;
+
     case 'weighted_pd_insight_1':
       return incomePolicyExceptionCharts;
 
@@ -381,6 +400,12 @@ export function getEvidenceChartsForInsight(insightId: string): EvidenceChart[] 
 
     case 'weighted_pd_insight_3':
       return concentrationBreachCharts;
+
+    case 'credit_pipeline_insight_1':
+      return creditPipelineCharts;
+
+    case 'heloc_utilization_insight_1':
+      return helocUtilizationCharts;
 
     default:
       return [];

@@ -8,6 +8,7 @@ interface InsightCardProps {
   isExpanded: boolean;
   onEvidenceClick: () => void;
   onDrilldown?: () => void;
+  insightId?: string;
 }
 
 export default function InsightCard({
@@ -18,6 +19,7 @@ export default function InsightCard({
   isExpanded,
   onEvidenceClick,
   onDrilldown,
+  insightId,
 }: InsightCardProps) {
   const getSeverityColor = () => {
     switch (severity) {
@@ -73,10 +75,13 @@ export default function InsightCard({
       </div>
 
       {/* Evidence Button - Only show when expanded */}
-      {isExpanded && onDrilldown && (
+      {isExpanded && insightId && (
         <div className="flex justify-end mt-4">
           <button
-            onClick={onDrilldown}
+            onClick={() => {
+              // Open evidence page in new tab
+              window.open(`/agent/evidence/${insightId}`, '_blank');
+            }}
             className="px-4 py-2 text-sm font-semibold text-white bg-teal-500 hover:bg-teal-600 rounded-md transition-colors"
           >
             Evidence

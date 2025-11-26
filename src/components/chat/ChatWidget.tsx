@@ -27,6 +27,9 @@ export default function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
+  // Hide ChatWidget when on the Agent page
+  const isAgentPage = location.pathname === '/';
+
   // Chat store
   const { messages, isOpen, isTyping, addMessage, setIsOpen, toggleChat, setIsTyping, setError, clearChat, loadMessagesFromStorage } = useChatStore();
 
@@ -122,6 +125,11 @@ export default function ChatWidget() {
   const handleSuggestedQuery = (query: string) => {
     handleSendMessage(query);
   };
+
+  // Don't render ChatWidget on Agent page
+  if (isAgentPage) {
+    return null;
+  }
 
   return (
     <>

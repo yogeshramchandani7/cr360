@@ -17,7 +17,7 @@ const cmiInsights: KPIInsight[] = [
       'Commercial Office and Housing Finance showing highest stress - 44% of sector exposure ($42M of $96M)',
       '40% of Real Estate book and 35% of NBFC book rated BBB & below - significantly above bank average of 24%'
     ],
-    implication: 'These sectors are deteriorating faster than peers, and internal rating updates are delayed — potential under-recognition of risk.',
+    implication: 'Real Estate and NBFCs are deteriorating faster than peers, and internal rating updates are delayed — potential under-recognition of risk.',
     croActions: [
       'Trigger portfolio-level review for Real Estate & NBFCs',
       'Tighten incremental exposure limits',
@@ -43,19 +43,15 @@ const cmiInsights: KPIInsight[] = [
       title: 'Critical: Sector Portfolio Review and Rating Recalibration Required',
       description: 'Real Estate and NBFC sectors showing systemic deterioration - CMI gaps of +4.5 and +3.6 points vs market, with 40% and 35% rated BBB & below respectively. Internal rating lag (catch-up ratio 0.78) masks true risk. Combined exposure of these 2 sectors at $515M represents material systemic risk.',
       actionItems: [
-        'Trigger immediate portfolio-level review for all Real Estate & NBFC exposures >$3M',
-        'Mandate external rating alignment within 30 days for 23 accounts with >2 notch gap',
-        'Tighten incremental exposure limits for both sectors (reduce by 30%)',
-        'Initiate PD/EWS model recalibration specifically for RE and NBFC to address lag',
-        'Establish monthly Credit Committee review for these sector exposures',
-        'Increase provision coverage to 12% for BBB & below rated accounts in these sectors'
+        'Add all the obligors with >2 notch gap in watchlist',
+        'Tighten incremental exposure limits for both sectors (require CCO approval for exposures >$3M)'
       ],
       ctas: [
         { label: 'View RE/NBFC Portfolio', action: 'view_sector_portfolio', variant: 'primary' },
         { label: 'Generate Sector Analysis', action: 'generate_sector_report', variant: 'secondary' }
       ],
       priority: 'high',
-      estimatedImpact: 'Proactive rating recalibration and exposure limits can reduce potential losses by $14-18M over 18 months. Current trajectory suggests 8-10% of BBB & below book may migrate to NPA - early intervention can halve this migration rate.'
+      estimatedImpact: 'Adding 23 accounts with >2 notch gap to watchlist enables enhanced monitoring and early intervention. Requiring CCO approval for new exposures >$3M in these sectors will prevent concentration build-up and ensure senior oversight of high-risk lending. These controls can reduce potential migration to NPA by 30-40%, preventing estimated losses of $8-12M over 12-18 months.'
     },
     evidenceCharts: ['sector_stress_chart_1', 'sector_stress_chart_2', 'sector_stress_chart_3', 'sector_stress_chart_4', 'sector_stress_chart_5', 'sector_stress_chart_6']
   },
@@ -145,7 +141,7 @@ const originationQualityInsights: KPIInsight[] = [
       '42% of new originations fall below minimum RAROC hurdle of 15% despite elevated PD',
       'Real Estate & NBFC in "Problem" quadrant - high growth but below-hurdle RAROC',
       'RAROC declining quarter-over-quarter - from 14.4% to 13.8% in last 3 quarters',
-      'Infrastructure & Real Estate consuming 44% of RWA ($425M) with below-average RAROC of 12.2-13.5%',
+      'Infrastructure & Real Estate consuming 21% of RWA ($425M of $2,034M total) with below-average RAROC of 12.2-13.5% - Portfolio RWA density: 83%',
       'Bottom 20 deals by RAROC represent $102M exposure - requiring pricing review',
       'Median pricing spread 40 bps below peers for BBB-rated accounts - under-pricing risk'
     ],
@@ -182,7 +178,7 @@ const originationQualityInsights: KPIInsight[] = [
       assignedTo: 'Credit Risk Modeling & Capital Allocation teams',
       ctas: [
         { label: 'Execute', action: 'view_raroc_portfolio', variant: 'primary' },
-        { label: 'Generate Report', action: 'generate_raroc_report', variant: 'secondary' }
+        { label: 'Impacted Portfolio', action: 'view_impacted_portfolio', variant: 'secondary' }
       ],
       priority: 'medium',
       estimatedImpact: 'Implementing RAROC hurdles and repricing can improve portfolio returns by 1.2-1.5 percentage points over 12 months, generating an additional $18-22M in risk-adjusted income. Halting value-destroying originations prevents further capital erosion.'
@@ -235,7 +231,7 @@ const originationQualityInsights: KPIInsight[] = [
       assignedTo: 'Regional Credit Risk & Infrastructure Lending teams',
       ctas: [
         { label: 'Execute', action: 'view_south_portfolio', variant: 'primary' },
-        { label: 'Generate Report', action: 'generate_south_report', variant: 'secondary' }
+        { label: 'Impacted Portfolio', action: 'view_impacted_portfolio', variant: 'secondary' }
       ],
       priority: 'high',
       estimatedImpact: 'Implementing origination caps and enhanced governance can prevent estimated $10-12M in potential credit losses from deteriorating South infrastructure book. Early mortality trends suggest 1.5-2% of recent originations may slip to NPL - timely intervention can reduce this by 40-50%.'
@@ -275,7 +271,7 @@ const originationQualityInsights: KPIInsight[] = [
       assignedTo: 'Credit Operations & Quality Assurance teams',
       ctas: [
         { label: 'Execute', action: 'view_underwriter_dashboard', variant: 'primary' },
-        { label: 'Generate Report', action: 'generate_underwriter_report', variant: 'secondary' }
+        { label: 'Impacted Portfolio', action: 'view_impacted_portfolio', variant: 'secondary' }
       ],
       priority: 'high',
       estimatedImpact: 'Workload rebalancing and enhanced training can reduce default rates for high-volume underwriters from 5.4% to 3.0-3.5% over 9-12 months, preventing $7-10M in losses. Quality-focused metrics will improve overall origination standards.'
@@ -328,23 +324,161 @@ const originationQualityInsights: KPIInsight[] = [
 ];
 
 // ============================================================================
+// Credit Pipeline Insights
+// ============================================================================
+
+const creditPipelineInsights: KPIInsight[] = [
+  {
+    id: 'credit_pipeline_insight_1',
+    kpiId: 'quick_mortality',
+    theme: "This Week's Credit Pipeline: 40% of Q1 Budget, 2 Critical Sector Limit Breaches",
+    keyInsights: [
+      'Week-to-date pipeline at $1,730M - brings month to 40% of Q1 budget ($4,850M vs $12,000M target)',
+      '2 sectors breaching 15% portfolio concentration limits - IT $398M vs $368M limit (+$30M breach, 108%) and Health Care $390M vs $368M limit (+$22M breach, 106%)',
+      'Pipeline credit quality deteriorating - average rating BBB vs BBB+ target',
+      '15 high-risk accounts ($850M combined) with multiple risk flags in final approval stage',
+      'Deal velocity increased 28% WoW but quality metrics declining across all stages',
+      'Average deal size $12.5M - 19% above Q1 plan, suggesting concentration risk building'
+    ],
+    implication: 'Aggressive pipeline growth is driving critical sector limit breaches in IT and Health Care, along with quality deterioration. Current trajectory suggests further concentration risk if pipeline converts at historical rates.',
+    croActions: [
+      'Immediately freeze new pipeline entries for IT and Health Care until exposures return to policy limits',
+      'Mandate Credit Committee review for all pipeline deals >$10M with BBB or below ratings',
+      'Implement enhanced due diligence for 15 flagged high-risk accounts before final approval',
+      'Review and recalibrate sector exposure limits vs Q1 business targets',
+      'Establish weekly pipeline quality governance meetings until breach situation normalizes'
+    ],
+    severity: 'critical',
+    timestamp: new Date().toISOString(),
+    filters: [
+      {
+        field: 'industry',
+        value: 'IT',
+        label: 'Industry: IT',
+        source: 'Credit Pipeline insight'
+      },
+      {
+        field: 'industry',
+        value: 'Health Care',
+        label: 'Industry: Health Care',
+        source: 'Credit Pipeline insight'
+      }
+    ],
+    agentRecommendation: {
+      title: 'Critical: Immediate Pipeline Controls and Quality Recalibration',
+      description: '2 critical sectors breaching 15% portfolio limits. IT at $398M vs $368M limit (+$30M, 108%) and Health Care at $390M vs $368M limit (+$22M, 106%). Pipeline velocity up 28% WoW but average deal quality down to BBB. 15 accounts with critical risk flags ($850M) awaiting final approval.',
+      actionItems: [
+        'Require Credit Committee sign-off for all deals >$10M in Healthcare and IT',
+        'Conduct forensic review of 15 flagged high-risk accounts in the pipeline'
+      ],
+      ctas: [
+        { label: 'View Pipeline Dashboard', action: 'view_pipeline', variant: 'primary' },
+        { label: 'Impacted Portfolio', action: 'view_impacted_portfolio', variant: 'secondary' }
+      ],
+      priority: 'high',
+      estimatedImpact: 'Requiring Credit Committee oversight for large Healthcare and IT deals prevents further concentration build-up in these breached sectors. Forensic review of 15 high-risk accounts ($850M) can prevent $45-60M in potential NPL migrations over 12-18 months through early identification and enhanced due diligence.'
+    },
+    evidenceCharts: [
+      'credit_pipeline_chart_1',
+      'credit_pipeline_chart_2',
+      'credit_pipeline_chart_3',
+      'credit_pipeline_chart_4',
+      'credit_pipeline_chart_5'
+    ]
+  }
+];
+
+// ============================================================================
 // Weighted PD Insights
 // ============================================================================
 
 const weightedPDInsights: KPIInsight[] = [
   {
+    id: 'midwest_origination_insight_1',
+    kpiId: 'qm_weighted_pd',
+    theme: 'High Risk Origination in Midwest region - new loans are up but quality deteriorates',
+    keyInsights: [
+      '30-Day Delinquencies on recent vintages (last 6 months) have breached the 1.5% threshold at 2.5% by Month 4',
+      'Loans with TDS/GDS breach exceptions failing 3x faster - 5.0% 90-day delinquency vs 1.6% for other exceptions',
+      'Bureau scores stable at ~720 while TDS spiked from 40% to 48% in last 3 months - good credit history masking bad capacity to pay',
+      'TDS/GDS breach deviations grew from 5% to 22% of bookings in Q3 - local managers overriding policy to hit volume targets',
+      'Q3 2024 vintage hitting 2.5% default by Month 4 vs Q1 at 0.5% - rapid mortality signals borrower over-leverage',
+      'Risk Ratings 6-8 show negative net margin (-$420 avg per loan) - interest income low but ECL high due to TDS overrides',
+      'Top 25 high-risk loans total $2.85M exposure with $428K expected loss - all have TDS breaches and multiple override approvals'
+    ],
+    implication: '30-Day Delinquencies on recent vintages (last 6 months) have breached the 1.5% threshold. Loans with TDS/GDS policy exceptions failing 3x faster (5.0% delinquency) while credit managers override policy caps to hit volume targets - systemic governance failure requiring immediate suspension of deviated lending in Midwest Region B.',
+    croActions: [
+      'Immediately suspend new unsecured loan originations in Midwest Region B with TDS/GDS breach exceptions',
+      'Conduct forensic review of all deviation approvals by local credit managers in last 6 months',
+      'Implement mandatory dual approval for all exceptions - regional manager cannot override alone',
+      'Launch portfolio-level stress testing for all Midwest unsecured loans with TDS >43%',
+      'Mandate enhanced monthly monitoring for all loans with policy deviations',
+      'Initiate disciplinary review for approvers RM-045, RM-088, RM-122 with highest exception-to-default rates'
+    ],
+    severity: 'critical',
+    timestamp: new Date().toISOString(),
+    filters: [
+      {
+        field: 'region',
+        value: 'Midwest',
+        label: 'Region: Midwest',
+        source: 'Midwest Origination Quality insight'
+      },
+      {
+        field: 'productType',
+        value: 'Unsecured',
+        label: 'Product: Unsecured Loans',
+        source: 'Midwest Origination Quality insight'
+      }
+    ],
+    agentRecommendation: {
+      title: 'Critical: Immediate Lending Suspension and Governance Overhaul - Midwest Region B',
+      description: 'The 30-day delinquency breach (2.5% at Month 4 vs 1.5% threshold), combined with TDS breach exceptions showing 5.0% 90-day delinquency rate (3x higher than other exceptions, 5x higher than clean approvals), represents systemic underwriting failure. Bureau scores stable at 720 while TDS climbed to 48% proves algorithms are ignoring capacity deterioration. The 22% exception rate in Q3 bookings (up from 5%) with rapid vintage mortality demands immediate intervention.',
+      actionItems: [
+        'Freeze all new Midwest Region B unsecured lending with TDS/GDS exceptions until full review complete',
+        'Cut deviation approval limits by 75% for all Midwest regional credit managers',
+        'Require CCO sign-off for all Midwest exceptions >$50K and any multi-deviation cases',
+        'Implement automated TDS breach rejection - no manual overrides permitted for TDS >43%',
+        'Launch investigation into top 3 approvers (RM-045, RM-088, RM-122) with 68% of exception volume'
+      ],
+      assignedTo: 'Chief Credit Officer & Regional Risk teams',
+      ctas: [
+        {
+          label: 'Execute Controls',
+          action: 'view_midwest_portfolio',
+          variant: 'primary'
+        },
+        {
+          label: 'Evidence Dashboard',
+          action: 'view_evidence',
+          variant: 'secondary'
+        }
+      ],
+      priority: 'high',
+      estimatedImpact: 'Immediate suspension of TDS breach lending can prevent estimated $8-12M in future NPL slippages. The top 25 worst originations alone represent $428K in expected loss. If current trajectory continues, 15-20% of recent Midwest originations could migrate to NPL within 12-18 months. Enhanced governance and automated controls can reduce exception-driven defaults by 60-70%, preventing $15-20M in total credit losses.'
+    },
+    evidenceCharts: [
+      'midwest_chart_1',
+      'midwest_chart_2',
+      'midwest_chart_3',
+      'midwest_chart_4',
+      'midwest_chart_5',
+      'midwest_chart_6'
+    ]
+  },
+  {
     id: 'weighted_pd_insight_1',
     kpiId: 'qm_weighted_pd',
     theme: 'Higher default rates in loans made with Income Policy Exception',
     keyInsights: [
-      'Income exceptions show 278% higher default rates compared to standard underwriting (8.7% vs 2.3%)',
-      'North and West regions account for 62% of exception volume but show 32% lower default rates than East region',
-      'Loans with 3+ exceptions have 18.5% default rate - 3x higher than single exception loans (6.2%)',
-      'Exception volumes grew 47% over 24 months while default rates increased from 6.8% to 8.7%',
-      '2024 Q2 and Q3 cohorts showing accelerated defaults - 9-11% cumulative by month 6 vs historical 4-5%',
+      'Income exceptions show 192% higher default rates compared to standard underwriting (3.8% vs 1.3%)',
+      'North and West regions account for 62% of exception volume but show 45% lower default rates than South region',
+      'Loans with 3+ exceptions have 7.2% default rate - 3x higher than single exception loans (2.4%)',
+      'Exception volumes grew 47% over 24 months while default rates increased from 2.8% to 3.8%',
+      '2024 Q2 and Q3 cohorts showing accelerated defaults - 4.5-5.2% cumulative by month 6 vs historical 2.0-2.5%',
       'Top 3 underwriters by exception volume have 2.8x higher default rates than their standard book'
     ],
-    implication: 'Income policy exceptions show 278% higher default rates, indicating weakened underwriting controls and systemic credit quality deterioration.',
+    implication: 'Income policy exceptions show 192% higher default rates (3.8% vs 1.3%), indicating weakened underwriting controls and systemic credit quality deterioration.',
     croActions: [
       'Immediate review of all active income policy exception cases',
       'Tighten exception approval thresholds and secondary review requirements',
@@ -364,7 +498,7 @@ const weightedPDInsights: KPIInsight[] = [
     ],
     agentRecommendation: {
       title: 'Immediate Action Required: Tighten Exception Controls',
-      description: 'The 278% higher default rate on income policy exceptions represents a critical risk to portfolio quality. With $150M in exposure and 73% of defaults occurring in the 12-24 month vintage, immediate intervention is required to prevent further deterioration. The data suggests that current exception approval processes lack adequate risk assessment and ongoing monitoring.',
+      description: 'The 192% higher default rate on income policy exceptions (3.8% vs 1.3% standard) represents a critical risk to portfolio quality. With $150M in exposure and 73% of defaults occurring in the 12-24 month vintage, immediate intervention is required to prevent further deterioration. The data suggests that current exception approval processes lack adequate risk assessment and ongoing monitoring.',
       actionItems: [
         'Enforce 100% Dual review for all income-based exception loans',
         'Auto-decline multi-exception cases > $120K',
@@ -378,13 +512,13 @@ const weightedPDInsights: KPIInsight[] = [
           variant: 'primary'
         },
         {
-          label: 'Generate Report',
-          action: 'generate_exception_report',
+          label: 'Impacted Portfolio',
+          action: 'view_impacted_portfolio',
           variant: 'secondary'
         }
       ],
       priority: 'high',
-      estimatedImpact: 'Implementing these controls could reduce exception default rates by 40-50% (from 8.7% to 4.5-5%), preventing an estimated $6-7M in credit losses over the next 12 months. Enhanced monitoring will also improve early detection, allowing proactive restructuring before accounts reach NPA status.'
+      estimatedImpact: 'Implementing these controls could reduce exception default rates by 40% (from 3.8% to 2.3%), preventing an estimated $6-7M in credit losses over the next 12 months. Enhanced monitoring will also improve early detection, allowing proactive restructuring before accounts reach NPA status.'
     },
     evidenceCharts: [
       'income_exception_chart_1',
@@ -441,7 +575,7 @@ const weightedPDInsights: KPIInsight[] = [
       assignedTo: 'Industry Analytics & Relationship Management teams',
       ctas: [
         { label: 'Execute', action: 'view_tariff_portfolio', variant: 'primary' },
-        { label: 'Generate Report', action: 'generate_tariff_report', variant: 'secondary' }
+        { label: 'Impacted Portfolio', action: 'view_impacted_portfolio', variant: 'secondary' }
       ],
       priority: 'high',
       estimatedImpact: 'Early engagement and restructuring support can prevent $12-16M in potential NPL slippages. Borrowers with low ICR (<2.0x) and fixed contract terms are at highest risk - proactive restructuring can reduce default probability by 35-45%.'
@@ -457,8 +591,8 @@ const weightedPDInsights: KPIInsight[] = [
       'Single largest exposure at $58.4M approaching internal limit of $60M',
       '25% policy threshold breached in August 2024 - driven by $66.7M incremental drawdowns over 11 months',
       'If fully drawn, top 10 would reach 38.5% concentration - creating severe systemic risk',
-      '12 distinct group structures with $299M exposure - hidden concentration through linkages',
-      '70% of top 10 exposure in Infrastructure & Energy - sector + name concentration risk compounded'
+      '5 distinct group structures with $318M exposure - hidden concentration through linkages',
+      '35% of top 10 exposure in Infrastructure & Energy ($249M of $715M) - sector + name concentration risk compounded'
     ],
     implication: 'Rapid drawdowns from a few large conglomerates have tilted portfolio concentration, raising systemic exposure risk. The largest three borrowers now account for 14% of total group limits.',
     croActions: [
@@ -486,7 +620,7 @@ const weightedPDInsights: KPIInsight[] = [
     ],
     agentRecommendation: {
       title: 'Critical: Enforce Concentration Limits and Diversification Strategy',
-      description: 'Top 10 obligors at 29.2% (breach of 25% policy limit), with single largest at $58.4M approaching $60M ceiling. If undrawn commitments are fully utilized, concentration would reach 38.5%. Hidden concentration through 12 group structures with $299M exposure. 70% of top 10 in Infrastructure & Energy compounds sectoral risk.',
+      description: 'Top 10 obligors at 29.2% (breach of 25% policy limit), with single largest at $58.4M approaching $60M ceiling. If undrawn commitments are fully utilized, concentration would reach 38.5%. Hidden concentration through 5 group structures with $318M exposure. 35% of top 10 ($249M) in Infrastructure & Energy compounds sectoral risk.',
       actionItems: [
         'Freeze incremental limits for top 5 obligor groups',
         'Demand 12-month cash flow forecasts from all top 5 groups within 30 days',
@@ -495,7 +629,7 @@ const weightedPDInsights: KPIInsight[] = [
       assignedTo: 'Corporate Credit Risk & Exposure Management teams',
       ctas: [
         { label: 'Execute', action: 'view_concentration_dashboard', variant: 'primary' },
-        { label: 'Generate Report', action: 'generate_concentration_report', variant: 'secondary' }
+        { label: 'Impacted Portfolio', action: 'view_impacted_portfolio', variant: 'secondary' }
       ],
       priority: 'high',
       estimatedImpact: 'Reducing concentration to <27% and implementing group limits significantly reduces tail risk. A correlated default scenario of top 3 obligors could result in $228M exposure at risk - diversification reduces this single-event risk by 40-50%.'
@@ -557,6 +691,63 @@ const weightedPDInsights: KPIInsight[] = [
     ],
     severity: 'warning',
     timestamp: new Date().toISOString()
+  },
+  {
+    id: 'heloc_utilization_insight_1',
+    kpiId: 'qm_weighted_pd',
+    theme: 'HELOC Utilization Trap: Decreasing prices and Rapid Drawdown in Texas',
+    keyInsights: [
+      '12% of Prime borrowers in this region increased utilization by >40% in the last 30 days along with a 3% dip in HPI',
+      '$450M total exposure in high-velocity HELOC segment with elevated utilization risk',
+      '8% of portfolio loans now above 90% CLTV due to combined HPI decline (-4%) and drawdowns',
+      '65% of new HELOC drawdowns are "Cash to Checking" transfers (vs 20% historical avg) - liquidity stress signal',
+      '15% of portfolio projected to be underwater (CLTV >100%) within 3 months at current HPI trends',
+      '85% of monthly payment is interest-only for high-utilization segment - no principal reduction',
+      'Credit cards showing 18% 30+ DPD while HELOC current - payment prioritization signals 90-day warning window',
+      '2022 vintage (peak housing originations) showing 3x higher early payment default vs 2019 baseline'
+    ],
+    implication: '12% of Prime borrowers in this region increased utilization by >40% in the last 30 days along with a 3% dip in HPI.',
+    croActions: [
+      'Freeze new HELOC originations for borrowers with >70% utilization in affected regions',
+      'Mandate monthly monitoring and borrower contact for all HELOCs >80% utilized',
+      'Implement enhanced underwriting overlays for Texas zip codes with HPI decline >3%',
+      'Conduct immediate portfolio review of 2022 vintage HELOC originations',
+      'Establish cross-product early warning alerts linking credit card delinquency to HELOC risk',
+      'Require updated property valuations for all HELOCs with estimated CLTV >85%'
+    ],
+    severity: 'critical',
+    timestamp: new Date().toISOString(),
+    filters: [
+      {
+        field: 'productType',
+        value: 'HELOC',
+        label: 'Product: HELOC',
+        source: 'HELOC Utilization Trap insight'
+      },
+      {
+        field: 'region',
+        value: 'Texas',
+        label: 'Region: Texas',
+        source: 'HELOC Utilization Trap insight'
+      }
+    ],
+    agentRecommendation: {
+      title: 'Critical: HELOC Portfolio Review and Utilization Controls Required',
+      description: 'High-velocity HELOC drawdowns in Texas represent behavioral shift from Prime borrowers (FICO >740), with 12% showing >40% utilization increase in 30 days. Combined with -4% HPI decline, 8% of portfolio now exceeds 90% CLTV. The shift from home improvement (14%) to cash transfers (65%) indicates liquidity stress. Credit card delinquencies at 18% while HELOC remains current provides 90-day early warning signal.',
+      actionItems: [
+        'Freeze new HELOC lending and limit increases for affected Texas zip codes',
+        'Implement mandatory quarterly property revaluations for all HELOCs with CLTV >85%',
+        'Create cross-product monitoring dashboard linking credit card DPD to HELOC exposure'
+      ],
+      assignedTo: 'Consumer Credit Risk & Portfolio Management teams',
+      ctas: [
+        { label: 'View HELOC Portfolio', action: 'view_heloc_portfolio', variant: 'primary' },
+        { label: 'Evidence Dashboard', action: 'view_evidence', variant: 'secondary' }
+      ],
+      priority: 'high',
+      estimatedImpact: 'Implementing utilization controls and enhanced monitoring for $450M exposure segment can reduce projected HELOC charge-offs by 35-45%. Early intervention based on credit card delinquency signals enables proactive collections 90 days earlier, potentially preventing $15-22M in losses over 12-18 months.'
+    },
+    evidenceCharts: ['heloc_chart_1', 'heloc_chart_2', 'heloc_chart_3', 'heloc_chart_4', 'heloc_chart_5', 'heloc_chart_6', 'heloc_chart_7', 'heloc_chart_8']
   }
 ];
 
@@ -1109,19 +1300,22 @@ export function getKPIDisplayName(kpiId: string): string {
 export function getAllKPIInsights(): KPIInsight[] {
   // Only return specific insights for Daily Briefing
   const allowedInsightIds = [
-    'weighted_pd_insight_1',  // Income Policy Exception
-    'origination_insight_2',  // South Region Lending Surge
-    'cmi_insight_1',          // Sector Stress Alert
-    'weighted_pd_insight_2',  // Tariffs impact
-    'origination_insight_1',  // Risk-Return Imbalance
-    'origination_insight_3',  // Top 10% underwriters
-    'weighted_pd_insight_3'   // Borrower concentration breach
+    'midwest_origination_insight_1', // Midwest High Risk Origination - NEW
+    'heloc_utilization_insight_1', // HELOC Utilization Trap
+    'weighted_pd_insight_1',     // Income Policy Exception
+    'origination_insight_2',     // South Region Lending Surge
+    'cmi_insight_1',             // Sector Stress Alert
+    'weighted_pd_insight_2',     // Tariffs impact
+    'origination_insight_1',     // Risk-Return Imbalance
+    'weighted_pd_insight_3',     // Borrower concentration breach
+    'credit_pipeline_insight_1'  // Credit Pipeline: 40% Q1 Budget, 8 Sector Breaches
   ];
 
   const allInsights = [
     ...weightedPDInsights,
     ...cmiInsights,
     ...originationQualityInsights,
+    ...creditPipelineInsights,
     ...rarocInsights,
     ...creditQualityInsights,
     ...nplInsights,
@@ -1130,5 +1324,9 @@ export function getAllKPIInsights(): KPIInsight[] {
     ...concentrationInsights
   ];
 
-  return allInsights.filter(insight => allowedInsightIds.includes(insight.id));
+  // Filter and sort by the order in allowedInsightIds
+  const filteredInsights = allInsights.filter(insight => allowedInsightIds.includes(insight.id));
+  return filteredInsights.sort((a, b) => {
+    return allowedInsightIds.indexOf(a.id) - allowedInsightIds.indexOf(b.id);
+  });
 }

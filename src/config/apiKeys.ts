@@ -8,7 +8,7 @@
  * to prevent exposing API keys in version control.
  */
 
-export const GEMINI_API_KEY = 'AIzaSyB79kF7XXZHhiv4Z7DO-ZYL8_aw5aNIZac';
+export const GEMINI_API_KEY = 'AIzaSyAQ4nOdfIiGMjy4mxaq13RgBtK-pXd51zA';
 
 // Instructions to get a Gemini API key:
 // 1. Go to https://makersuite.google.com/app/apikey

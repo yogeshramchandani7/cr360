@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import AgentPage from './pages/AgentPage';
+import AgentChatPage from './pages/AgentChatPage';
+import AgentEvidencePage from './pages/AgentEvidencePage';
+import WorkbenchPage from './pages/WorkbenchPage';
 import CustomerView from './pages/CustomerView';
 import CompanyProfilePage from './pages/CompanyProfilePage';
 import RiskDetailsPage from './pages/details/RiskDetailsPage';
@@ -13,8 +16,6 @@ import ClimateRiskPage from './pages/details/ClimateRiskPage';
 import ApprovalsPage from './pages/details/ApprovalsPage';
 import AlertDashboard from './pages/AlertDashboard';
 import KPIDrilldownPage from './pages/KPIDrilldownPage';
-import RiskHubPage from './pages/RiskHubPage';
-import AgentAnalysisPage from './pages/AgentAnalysisPage';
 import ChatWidget from './components/chat/ChatWidget';
 import { initializeAlertMonitoring } from './lib/alertGenerator';
 
@@ -28,18 +29,19 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<DashboardLayout />}>
-          <Route index element={<AgentPage />} />
+          <Route index element={<AgentChatPage />} />
+          <Route path="agent-hub" element={<AgentPage />} />
           <Route path="portfolio" element={<Dashboard />} />
           <Route path="customer" element={<CustomerView />} />
-          <Route path="risk-hub" element={<RiskHubPage />} />
+          <Route path="workbench" element={<WorkbenchPage />} />
           <Route path="alerts" element={<AlertDashboard />} />
+          <Route path="agent/evidence/:insightId" element={<AgentEvidencePage />} />
           <Route path="company/:companyId" element={<CompanyProfilePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
 
         {/* Detail pages - open in new tabs */}
         <Route path="/kpi/:kpiId" element={<KPIDrilldownPage />} />
-        <Route path="/risk-hub/analysis/:itemId" element={<AgentAnalysisPage />} />
         <Route path="/company/:companyId/risk-details" element={<RiskDetailsPage />} />
         <Route path="/company/:companyId/exposure-details" element={<ExposureDetailsPage />} />
         <Route path="/company/:companyId/group-exposures" element={<GroupExposuresPage />} />

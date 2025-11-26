@@ -1,4 +1,4 @@
-import { ArrowRight, PlayCircle } from 'lucide-react';
+import { ArrowRight, PlayCircle, Users } from 'lucide-react';
 import type { AgentRecommendation } from '../../types';
 
 interface AgentRecommendationCardProps {
@@ -76,7 +76,11 @@ export default function AgentRecommendationCard({
                   `}
                 >
                   {cta.label}
-                  <ArrowRight className="w-4 h-4" />
+                  {cta.action === 'view_impacted_portfolio' ? (
+                    <Users className="w-4 h-4" />
+                  ) : (
+                    <ArrowRight className="w-4 h-4" />
+                  )}
                 </button>
               ))}
           </>

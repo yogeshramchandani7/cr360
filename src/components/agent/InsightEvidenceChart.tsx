@@ -14,6 +14,7 @@ import {
   RadarChart,
   Radar,
   ComposedChart,
+  ReferenceLine,
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
@@ -26,6 +27,7 @@ import {
 } from 'recharts';
 import type { EvidenceChart } from '../../types';
 import KeyHighlightBar from './KeyHighlightBar';
+import GeoMap from '../charts/GeoMap';
 
 const CHART_COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#14b8a6'];
 
@@ -45,7 +47,7 @@ export default function InsightEvidenceChart({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   // Format value based on config
-  const formatValue = (value: number, format?: 'percent' | 'currency' | 'number'): string => {
+  const formatValue = (value: number, format?: 'percent' | 'currency' | 'number' | 'heatmap'): string => {
     if (value == null) return 'N/A';
 
     switch (format) {
@@ -53,10 +55,30 @@ export default function InsightEvidenceChart({
         return `${value.toFixed(1)}%`;
       case 'currency':
         return `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}M`;
+      case 'heatmap':
+        // For heatmap, return percent format
+        return `${value.toFixed(1)}%`;
       case 'number':
       default:
         return value.toLocaleString('en-US', { maximumFractionDigits: 2 });
     }
+  };
+
+  // Get heatmap background color based on value
+  const getHeatmapColor = (value: number): string => {
+    const config = chart.config.heatmapConfig;
+    if (!config || value === 0) return 'transparent';
+
+    const { minValue = 0, maxValue = 100, colorScale } = config;
+    const colors = colorScale || ['#eff6ff', '#dbeafe', '#bfdbfe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8', '#1e40af'];
+
+    // Normalize value to 0-1 range
+    const normalized = Math.min(Math.max((value - minValue) / (maxValue - minValue), 0), 1);
+
+    // Map to color index
+    const colorIndex = Math.floor(normalized * (colors.length - 1));
+
+    return colors[colorIndex];
   };
 
   // Handle click on chart elements
@@ -74,9 +96,45 @@ export default function InsightEvidenceChart({
 
     switch (chart.chartType) {
       case 'bar':
+        const isStacked = chart.config.series?.some((s: any) => s.stack);
+        const hasStackTotals = isStacked && chart.config.series?.length > 0;
+
+        // Calculate totals for each data point if stacked
+        const dataWithTotals = hasStackTotals ? chart.data.map((item: any) => {
+          const total = chart.config.series?.reduce((sum: number, series: any) => {
+            return sum + (Number(item[series.key]) || 0);
+          }, 0) || 0;
+          return { ...item, __stackTotal: total };
+        }) : chart.data;
+
+        // Custom tooltip to show total for stacked bars
+        const CustomStackedTooltip = ({ active, payload, label }: any) => {
+          if (active && payload && payload.length) {
+            const total = payload.reduce((sum: number, entry: any) => sum + (entry.value || 0), 0);
+            return (
+              <div className="bg-white border border-gray-300 rounded-lg shadow-lg p-3">
+                <p className="font-semibold text-gray-900 mb-2">{label}</p>
+                {payload.map((entry: any, index: number) => (
+                  <p key={index} className="text-sm text-gray-600 flex justify-between gap-4">
+                    <span style={{ color: entry.color }}>{entry.name}:</span>
+                    <span className="font-medium">{formatValue(entry.value, chart.config.yAxis?.format)}</span>
+                  </p>
+                ))}
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <p className="text-sm font-bold text-gray-900 flex justify-between gap-4">
+                    <span>Total:</span>
+                    <span>{formatValue(total, chart.config.yAxis?.format)}</span>
+                  </p>
+                </div>
+              </div>
+            );
+          }
+          return null;
+        };
+
         return (
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chart.data}>
+            <BarChart data={dataWithTotals}>
               <CartesianGrid strokeDasharray="3 3" opacity={chart.config.showGrid !== false ? 1 : 0} />
               <XAxis
                 dataKey={chart.config.xAxis?.key || 'label'}
@@ -89,10 +147,14 @@ export default function InsightEvidenceChart({
                 tick={{ fontSize: 12 }}
                 tickFormatter={(value) => formatValue(value, chart.config.yAxis?.format)}
               />
-              <Tooltip
-                formatter={(value: any) => formatValue(value, chart.config.yAxis?.format)}
-                contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
-              />
+              {hasStackTotals ? (
+                <Tooltip content={<CustomStackedTooltip />} />
+              ) : (
+                <Tooltip
+                  formatter={(value: any) => formatValue(value, chart.config.yAxis?.format)}
+                  contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
+                />
+              )}
               {chart.config.showLegend !== false && <Legend />}
               {chart.config.series?.map((series, index) => (
                 <Bar
@@ -100,6 +162,7 @@ export default function InsightEvidenceChart({
                   dataKey={series.key}
                   name={series.name}
                   fill={series.color || colors[index % colors.length]}
+                  stackId={series.stack || undefined}
                   onClick={handleChartClick}
                   cursor="pointer"
                 />
@@ -237,7 +300,7 @@ export default function InsightEvidenceChart({
 
       case 'table':
         return (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-96 overflow-y-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -264,18 +327,33 @@ export default function InsightEvidenceChart({
                     onMouseEnter={() => setHoveredIndex(rowIndex)}
                     onMouseLeave={() => setHoveredIndex(null)}
                   >
-                    {chart.config.columns?.map((col) => (
-                      <td
-                        key={col.key}
-                        className={`px-4 py-3 text-sm text-gray-900 whitespace-nowrap ${
-                          col.align === 'right' ? 'text-right' :
-                          col.align === 'center' ? 'text-center' :
-                          'text-left'
-                        } ${hoveredIndex === rowIndex ? 'font-medium' : ''}`}
-                      >
-                        {col.format && col.format !== 'text' ? formatValue(row[col.key], col.format) : row[col.key]}
-                      </td>
-                    ))}
+                    {chart.config.columns?.map((col) => {
+                      const cellValue = row[col.key];
+                      const isHeatmap = col.format === 'heatmap';
+                      const hideZero = isHeatmap && chart.config.heatmapConfig?.hideZeros && cellValue === 0;
+
+                      return (
+                        <td
+                          key={col.key}
+                          className={`px-4 py-3 text-sm whitespace-nowrap ${
+                            col.align === 'right' ? 'text-right' :
+                            col.align === 'center' ? 'text-center' :
+                            'text-left'
+                          } ${hoveredIndex === rowIndex ? 'font-medium' : ''}`}
+                          style={
+                            isHeatmap && !hideZero
+                              ? {
+                                  backgroundColor: getHeatmapColor(cellValue),
+                                  color: cellValue > 8 ? '#ffffff' : '#1f2937',
+                                  fontWeight: 500
+                                }
+                              : {}
+                          }
+                        >
+                          {hideZero ? '' : (col.format && col.format !== 'text' ? formatValue(cellValue, col.format) : cellValue)}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
@@ -338,20 +416,62 @@ export default function InsightEvidenceChart({
               <YAxis
                 yAxisId="left"
                 tick={{ fontSize: 12 }}
-                label={{ value: 'Volume (₹ Cr)', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
+                label={{ value: chart.config.yAxisLeft?.label || 'Volume (₹ Cr)', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
               />
               {/* Right Y-Axis for lines (rates) */}
               <YAxis
                 yAxisId="right"
                 orientation="right"
                 tick={{ fontSize: 12 }}
-                label={{ value: 'Default Rate (%)', angle: 90, position: 'insideRight', style: { fontSize: 12 } }}
+                label={{ value: chart.config.yAxisRight?.label || 'Default Rate (%)', angle: 90, position: 'insideRight', style: { fontSize: 12 } }}
               />
               <Tooltip
                 contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
               />
               {chart.config.showLegend !== false && <Legend />}
-              {chart.config.series?.map((series, index) => {
+              {/* Reference line if configured */}
+              {chart.config.referenceLine && (
+                <ReferenceLine
+                  x={chart.config.referenceLine.x}
+                  y={chart.config.referenceLine.y}
+                  yAxisId={chart.config.referenceLine.y ? 'left' : undefined}
+                  stroke={chart.config.referenceLine.stroke || '#dc2626'}
+                  strokeDasharray={chart.config.referenceLine.strokeDasharray || '3 3'}
+                  strokeWidth={2}
+                  label={{
+                    value: chart.config.referenceLine.label || '',
+                    position: chart.config.referenceLine.x ? 'top' : 'right',
+                    fill: chart.config.referenceLine.stroke || '#dc2626',
+                    fontSize: 12,
+                    fontWeight: 'bold'
+                  }}
+                />
+              )}
+              {/* Render bars from bars array or series array */}
+              {(chart.config.bars || []).map((bar: any, index: number) => (
+                <Bar
+                  key={bar.key}
+                  dataKey={bar.key}
+                  name={bar.name}
+                  fill={bar.color || colors[index % colors.length]}
+                  yAxisId={bar.axis || 'left'}
+                />
+              ))}
+              {/* Render lines from lines array or series array */}
+              {(chart.config.lines || []).map((line: any, index: number) => (
+                <Line
+                  key={line.key}
+                  type="monotone"
+                  dataKey={line.key}
+                  name={line.name}
+                  stroke={line.color || colors[index % colors.length]}
+                  strokeWidth={2}
+                  yAxisId={line.axis || 'right'}
+                  dot={{ r: 4 }}
+                />
+              ))}
+              {/* Fallback to series array for backwards compatibility */}
+              {chart.config.series?.map((series: any, index: number) => {
                 if (series.type === 'bar') {
                   return (
                     <Bar
@@ -371,7 +491,7 @@ export default function InsightEvidenceChart({
                       name={series.name}
                       stroke={series.color || colors[index % colors.length]}
                       strokeWidth={2}
-                      yAxisId="right"
+                      yAxisId={series.axis || 'right'}
                       dot={{ r: 4 }}
                     />
                   );
@@ -380,6 +500,25 @@ export default function InsightEvidenceChart({
               })}
             </ComposedChart>
           </ResponsiveContainer>
+        );
+
+      case 'geo-map':
+        return (
+          <div className="w-full h-[500px]">
+            <GeoMap
+              data={chart.data}
+              config={chart.config}
+              onCityClick={(city) => {
+                if (chart.filterField && onDataClick) {
+                  const cityData = chart.data.find((d: any) => d.city === city);
+                  if (cityData) {
+                    const filterLabel = chart.filterLabel?.replace('{value}', city) || `${chart.filterField}: ${city}`;
+                    onDataClick(chart.filterField, city, filterLabel);
+                  }
+                }
+              }}
+            />
+          </div>
         );
 
       default:

@@ -28,7 +28,11 @@ export default function HiddenChartRenderer({ charts }: HiddenChartRendererProps
       aria-hidden="true"
     >
       {charts.map((chart) => (
-        <div key={chart.id} style={{ marginBottom: '20px' }}>
+        <div
+          key={chart.id}
+          id={`hidden-chart-${chart.id}`}
+          style={{ marginBottom: '20px', width: '1200px' }}
+        >
           <InsightEvidenceChart chart={chart} />
         </div>
       ))}

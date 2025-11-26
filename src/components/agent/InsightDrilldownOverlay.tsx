@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { X, Download } from 'lucide-react';
 import type { KPIInsight } from '../../types';
-import AgentRecommendationCard from './AgentRecommendationCard';
 import InsightEvidenceChart from './InsightEvidenceChart';
 import { getEvidenceChartsForInsight } from '../../lib/insightEvidenceData';
-import { useRiskHubStore } from '../../stores/riskHubStore';
 import { generateInsightReportPDF } from '../../lib/pdfExport';
 import HiddenChartRenderer from './HiddenChartRenderer';
 
@@ -28,8 +25,6 @@ export default function InsightDrilldownOverlay({
   onCTAClick,
   onChartDataClick
 }: InsightDrilldownOverlayProps) {
-  const navigate = useNavigate();
-  const openRiskHubDrawer = useRiskHubStore((state) => state.openDrawer);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [chartsForPDF, setChartsForPDF] = useState<any[]>([]);
 
@@ -62,36 +57,6 @@ export default function InsightDrilldownOverlay({
     } finally {
       setIsGeneratingPDF(false);
     }
-  };
-
-  // Handle Execute button click
-  const handleExecute = () => {
-    if (!insight) return;
-
-    // Close the overlay
-    onClose();
-
-    // Navigate to Risk Hub
-    navigate('/risk-hub');
-
-    // Format action title from agent recommended actions with numbering
-    const actionTitle = insight.agentRecommendation?.actionItems.length
-      ? insight.agentRecommendation.actionItems.map((item, i) => `${i + 1}. ${item}`).join('\n')
-      : insight.theme;
-
-    // Format description with insight theme and implication
-    const actionDescription = `${insight.theme}\n\n${insight.implication}`;
-
-    // Open Risk Hub drawer with prefilled data
-    setTimeout(() => {
-      openRiskHubDrawer({
-        actionTitle,
-        actionDescription,
-        priority: insight.severity === 'critical' ? 'high' : insight.severity === 'warning' ? 'medium' : 'low',
-        sourceInsightId: insight.id,
-        sourceInsightTitle: insight.theme,
-      });
-    }, 100);
   };
 
   // Handle ESC key press
@@ -195,18 +160,6 @@ export default function InsightDrilldownOverlay({
 
         {/* Content - Scrollable */}
         <div className="px-8 py-6 space-y-8">
-          {/* Agent Recommendation */}
-          {insight.agentRecommendation && (
-            <section>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Agent Recommended Actions</h3>
-              <AgentRecommendationCard
-                recommendation={insight.agentRecommendation}
-                onCTAClick={onCTAClick}
-                onExecute={handleExecute}
-              />
-            </section>
-          )}
-
           {/* Evidence Charts */}
           {evidenceCharts.length > 0 && (
             <section>

@@ -4,6 +4,7 @@
  */
 
 import { mockPortfolioCompanies, mockKPIs, mockInsights } from '../lib/mockData';
+import type { EvidenceChart } from '../types';
 
 /**
  * Get portfolio summary context
@@ -161,9 +162,77 @@ export function getTopInsights(limit: number = 3): string {
 }
 
 /**
+ * Format evidence chart data for AI context
+ */
+export function formatEvidenceContext(evidenceCharts: EvidenceChart[], reportTitle?: string): string {
+  if (!evidenceCharts || evidenceCharts.length === 0) {
+    return '';
+  }
+
+  let context = '\n\n=== EVIDENCE REPORT CONTEXT ===\n\n';
+
+  if (reportTitle) {
+    context += `REPORT: ${reportTitle}\n\n`;
+  }
+
+  context += 'KEY INSIGHTS FROM DISPLAYED CHARTS:\n\n';
+
+  evidenceCharts.forEach((chart, index) => {
+    context += `Chart ${index + 1} - ${chart.title}:\n`;
+    context += `Key Finding: ${chart.keyHighlight}\n`;
+
+    // Add selective data points for critical charts
+    if (chart.chartType === 'geo-map' && chart.data.length > 0) {
+      // For geographic data, include top 3 critical locations
+      const criticalCities = chart.data
+        .filter((d: any) => d.riskLevel === 'critical')
+        .slice(0, 3);
+
+      if (criticalCities.length > 0) {
+        context += 'Critical Locations:\n';
+        criticalCities.forEach((city: any) => {
+          context += `- ${city.city}: ${city.utilizationVelocity}% utilization velocity, $${city.exposureM}M exposure, ${city.avgCLTV}% avg CLTV, ${city.hpiChange}% HPI change\n`;
+        });
+      }
+    } else if (chart.chartType === 'dual-axis' && chart.data.length > 0) {
+      // For trend data, show current and projected values
+      const recentData = chart.data.slice(-3); // Last 3 data points
+      context += 'Recent Trend:\n';
+      recentData.forEach((point: any) => {
+        const keys = Object.keys(point).filter(k => k !== 'month' && k !== 'quarter');
+        const values = keys.map(k => `${k}: ${point[k]}`).join(', ');
+        context += `- ${point.month || point.quarter}: ${values}\n`;
+      });
+    } else if (chart.chartType === 'bar' && chart.config.series && chart.data.length > 0) {
+      // For bar charts with multiple series, show latest values
+      const latestData = chart.data[chart.data.length - 1];
+      context += 'Latest Values:\n';
+      chart.config.series.forEach((series: any) => {
+        if (latestData[series.key] !== undefined) {
+          context += `- ${series.name}: ${latestData[series.key]}\n`;
+        }
+      });
+    }
+
+    context += '\n';
+  });
+
+  context += 'IMPORTANT: Use this evidence data to provide specific, data-driven insights when answering questions. Reference specific numbers, locations, and trends from the charts above.\n';
+  context += '\n=== END EVIDENCE REPORT CONTEXT ===';
+
+  return context;
+}
+
+/**
  * Build complete application context for AI
  */
-export function buildAppContext(pathname: string, filters: any, companyId?: string): string {
+export function buildAppContext(
+  pathname: string,
+  filters: any,
+  companyId?: string,
+  evidenceCharts?: EvidenceChart[],
+  evidenceTitle?: string
+): string {
   let context = '=== CR360 APPLICATION CONTEXT ===\n\n';
 
   context += getCurrentPageContext(pathname, filters);
@@ -176,6 +245,11 @@ export function buildAppContext(pathname: string, filters: any, companyId?: stri
   }
 
   context += getTopInsights();
+
+  // Add evidence context if provided
+  if (evidenceCharts && evidenceCharts.length > 0) {
+    context += formatEvidenceContext(evidenceCharts, evidenceTitle);
+  }
 
   context += '\n\n=== END CONTEXT ===';
 

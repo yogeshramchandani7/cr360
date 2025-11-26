@@ -964,7 +964,7 @@ export interface EvidenceChart {
   keyHighlight: string;             // Key takeaway shown in highlight bar
   chartType: 'bar' | 'line' | 'scatter' | 'area' | 'pie' | 'donut' | 'heatmap' |
              'table' | 'gauge' | 'venn' | 'treemap' | 'network' | 'waterfall' |
-             'radar' | 'funnel' | 'dual-axis';
+             'radar' | 'funnel' | 'dual-axis' | 'geo-map';
   data: any[];                      // Chart data array
   config: EvidenceChartConfig;      // Chart-specific configuration
   filterField?: string;             // Field for filtering (if clickable)
@@ -995,16 +995,60 @@ export interface EvidenceChartConfig {
     name: string;
     color?: string;
     type?: 'line' | 'bar' | 'area';
+    stack?: string;
+    axis?: 'left' | 'right';
   }>;
+  bars?: Array<{
+    key: string;
+    name: string;
+    color?: string;
+    axis?: 'left' | 'right';
+  }>;
+  lines?: Array<{
+    key: string;
+    name: string;
+    color?: string;
+    axis?: 'left' | 'right';
+  }>;
+  yAxisLeft?: {
+    label?: string;
+    format?: 'percent' | 'currency' | 'number';
+  };
+  yAxisRight?: {
+    label?: string;
+    format?: 'percent' | 'currency' | 'number';
+  };
+  referenceLine?: {
+    x?: string;
+    y?: number;
+    label?: string;
+    stroke?: string;
+    strokeDasharray?: string;
+  };
   colors?: string[];                // Color palette for chart
   showLegend?: boolean;
   showGrid?: boolean;
   columns?: Array<{                 // For table type
     key: string;
     header: string;
-    format?: 'percent' | 'currency' | 'number' | 'text';
+    format?: 'percent' | 'currency' | 'number' | 'text' | 'heatmap';
     align?: 'left' | 'center' | 'right';
   }>;
+  heatmapConfig?: {                 // For heatmap styling
+    minValue?: number;
+    maxValue?: number;
+    colorScale?: string[];           // Color gradient (light to dark)
+    hideZeros?: boolean;             // Don't display zero values
+  };
+  mapConfig?: {                     // For geo-map type
+    defaultView?: 'texas' | 'usa';
+    markerColors?: {
+      critical?: string;
+      medium?: string;
+      low?: string;
+    };
+    enableZoom?: boolean;
+  };
 }
 
 // ============================================================================
