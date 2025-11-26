@@ -227,7 +227,9 @@ export default function AssignmentModal({
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Assign Insight</h2>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {existingAssignment ? 'Edit Action' : 'Add Action'}
+                </h2>
                 <p className="text-sm text-gray-500 mt-1">
                   {insightTitle}
                 </p>

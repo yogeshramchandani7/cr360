@@ -15,6 +15,14 @@ export interface Attachment {
 }
 
 /**
+ * Evidence selection for assignments
+ */
+export interface EvidenceSelection {
+  selectedCharts: string[]; // Array of chart IDs to include
+  includeCounterparties: boolean; // Whether to include counterparties table
+}
+
+/**
  * Individual assignment record
  */
 export interface Assignment {
@@ -28,6 +36,7 @@ export interface Assignment {
   status: 'Open' | 'Completed' | 'Closed' | 'Overdue'; // Assignment status
   responseText?: string; // Response from assignee
   responseAttachments?: Attachment[]; // Files attached to response
+  evidenceSelection?: EvidenceSelection; // Evidence charts selected for this task
 }
 
 /**
@@ -40,6 +49,8 @@ export interface WorkbenchItem {
   severity: 'critical' | 'warning' | 'info';
   dateAdded: string; // ISO timestamp
   lastAccessed: string; // ISO timestamp
+  dueDate?: string; // ISO date string (YYYY-MM-DD)
+  createdBy: string; // User who created this item
   assignments: Assignment[]; // Array of assignment records
 }
 
@@ -97,25 +108,46 @@ const migrateItem = (item: any): WorkbenchItem => {
  */
 interface WorkbenchStore {
   items: WorkbenchItem[];
-  addInsight: (insight: KPIInsight) => void;
+  // Drawer state
+  isDrawerOpen: boolean;
+  editingItem: WorkbenchItem | null;
+  pendingTasks: Assignment[];
+  hasUnsavedChanges: boolean;
+  // Item management
+  addInsight: (insight: KPIInsight, dueDate?: string) => void;
+  addItem: (item: Partial<WorkbenchItem>) => void;
+  updateItem: (insightId: string, updates: Partial<WorkbenchItem>) => void;
   removeInsight: (insightId: string) => void;
   updateLastAccessed: (insightId: string) => void;
   assignInsight: (insightId: string, assignmentData: AssignmentData) => void;
   updateAssignment: (insightId: string, assignmentId: string, assignmentData: AssignmentData) => void;
   deleteAssignment: (insightId: string, assignmentId: string) => void;
   getWorkbenchItems: () => WorkbenchItem[];
+  // Drawer management
+  openDrawer: (item?: WorkbenchItem) => void;
+  closeDrawer: () => void;
+  setEditingItem: (item: WorkbenchItem | null) => void;
+  addPendingTask: (task: Assignment) => void;
+  removePendingTask: (taskId: string) => void;
+  clearPendingTasks: () => void;
+  setHasUnsavedChanges: (hasChanges: boolean) => void;
 }
 
 export const useWorkbenchStore = create<WorkbenchStore>()(
   persist(
     (set, get) => ({
       items: [],
+      // Drawer state (not persisted)
+      isDrawerOpen: false,
+      editingItem: null,
+      pendingTasks: [],
+      hasUnsavedChanges: false,
 
       /**
        * Add or update an insight in the workbench
        * If insight already exists, updates lastAccessed timestamp
        */
-      addInsight: (insight: KPIInsight) => {
+      addInsight: (insight: KPIInsight, dueDate?: string) => {
         const existingItem = get().items.find(item => item.insightId === insight.id);
         const now = new Date().toISOString();
 
@@ -124,7 +156,7 @@ export const useWorkbenchStore = create<WorkbenchStore>()(
           set(state => ({
             items: state.items.map(item =>
               item.insightId === insight.id
-                ? { ...item, lastAccessed: now }
+                ? { ...item, lastAccessed: now, dueDate: dueDate || item.dueDate }
                 : item
             )
           }));
@@ -137,6 +169,8 @@ export const useWorkbenchStore = create<WorkbenchStore>()(
             severity: insight.severity,
             dateAdded: now,
             lastAccessed: now,
+            dueDate,
+            createdBy: 'Current User', // TODO: Replace with actual user
             assignments: [], // Initialize with empty assignments array
           };
 
@@ -144,6 +178,42 @@ export const useWorkbenchStore = create<WorkbenchStore>()(
             items: [newItem, ...state.items] // Add to beginning (newest first)
           }));
         }
+      },
+
+      /**
+       * Add a custom workbench item (for customers, manual entries, etc.)
+       */
+      addItem: (item: Partial<WorkbenchItem>) => {
+        const now = new Date().toISOString();
+        const newItem: WorkbenchItem = {
+          insightId: item.insightId || `item-${Date.now()}`,
+          title: item.title || 'Untitled',
+          description: item.description || '',
+          severity: item.severity || 'info',
+          dateAdded: now,
+          lastAccessed: now,
+          dueDate: item.dueDate,
+          createdBy: item.createdBy || 'Current User',
+          assignments: item.assignments || [],
+        };
+
+        set(state => ({
+          items: [newItem, ...state.items]
+        }));
+      },
+
+      /**
+       * Update an existing workbench item
+       */
+      updateItem: (insightId: string, updates: Partial<WorkbenchItem>) => {
+        const now = new Date().toISOString();
+        set(state => ({
+          items: state.items.map(item =>
+            item.insightId === insightId
+              ? { ...item, ...updates, lastAccessed: now }
+              : item
+          )
+        }));
       },
 
       /**
@@ -288,9 +358,75 @@ export const useWorkbenchStore = create<WorkbenchStore>()(
           new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
         );
       },
+
+      /**
+       * Open the workbench drawer
+       */
+      openDrawer: (item?: WorkbenchItem) => {
+        set({
+          isDrawerOpen: true,
+          editingItem: item || null,
+          pendingTasks: item?.assignments || [],
+          hasUnsavedChanges: false
+        });
+      },
+
+      /**
+       * Close the workbench drawer
+       */
+      closeDrawer: () => {
+        set({
+          isDrawerOpen: false,
+          editingItem: null,
+          pendingTasks: [],
+          hasUnsavedChanges: false
+        });
+      },
+
+      /**
+       * Set the item being edited in the drawer
+       */
+      setEditingItem: (item: WorkbenchItem | null) => {
+        set({ editingItem: item });
+      },
+
+      /**
+       * Add a pending task (not yet saved)
+       */
+      addPendingTask: (task: Assignment) => {
+        set(state => ({
+          pendingTasks: [...state.pendingTasks, task],
+          hasUnsavedChanges: true
+        }));
+      },
+
+      /**
+       * Remove a pending task
+       */
+      removePendingTask: (taskId: string) => {
+        set(state => ({
+          pendingTasks: state.pendingTasks.filter(task => task.id !== taskId),
+          hasUnsavedChanges: true
+        }));
+      },
+
+      /**
+       * Clear all pending tasks
+       */
+      clearPendingTasks: () => {
+        set({ pendingTasks: [], hasUnsavedChanges: false });
+      },
+
+      /**
+       * Set unsaved changes flag
+       */
+      setHasUnsavedChanges: (hasChanges: boolean) => {
+        set({ hasUnsavedChanges: hasChanges });
+      },
     }),
     {
       name: 'workbench-storage', // localStorage key
+      partialize: (state) => ({ items: state.items }), // Only persist items, not drawer state
     }
   )
 );

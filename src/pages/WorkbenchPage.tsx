@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, ExternalLink, FileText, UserPlus, ChevronDown, ChevronRight, Edit2, Mail, MailCheck, X } from 'lucide-react';
+import { Trash2, ExternalLink, FileText, UserPlus, ChevronDown, ChevronRight, Edit2, Mail, MailCheck, X, Plus } from 'lucide-react';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import type { AssignmentData, Assignment } from '../stores/workbenchStore';
 import { formatDate, formatRelativeTime } from '../lib/dateUtils';
@@ -15,7 +15,7 @@ import AssignmentModal from '../components/workbench/AssignmentModal';
  * Allows users to track and access frequently reviewed insights
  */
 export default function WorkbenchPage() {
-  const { items, removeInsight, updateLastAccessed, assignInsight, updateAssignment, deleteAssignment } = useWorkbenchStore();
+  const { items, removeInsight, updateLastAccessed, assignInsight, updateAssignment, deleteAssignment, openDrawer } = useWorkbenchStore();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -228,14 +228,23 @@ export default function WorkbenchPage() {
             Track and manage insights you're actively reviewing ({workbenchItems.length} {workbenchItems.length === 1 ? 'item' : 'items'})
           </p>
         </div>
-        <button
-          onClick={() => setIsReportModalOpen(true)}
-          disabled={workbenchItems.length === 0 || isGeneratingPDF}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <FileText className="w-4 h-4" />
-          Generate Report
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => openDrawer()}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Add Insight
+          </button>
+          <button
+            onClick={() => setIsReportModalOpen(true)}
+            disabled={workbenchItems.length === 0 || isGeneratingPDF}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileText className="w-4 h-4" />
+            Generate Report
+          </button>
+        </div>
       </div>
 
       {/* Table */}
@@ -341,10 +350,10 @@ export default function WorkbenchPage() {
                           <button
                             onClick={() => handleCreateAssignment(item.insightId, item.title)}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                            title="Create Assignment"
+                            title="Add Action"
                           >
                             <UserPlus className="w-3 h-3" />
-                            Assign
+                            Add Action
                           </button>
                           <button
                             onClick={() => handleDelete(item.insightId, item.title)}

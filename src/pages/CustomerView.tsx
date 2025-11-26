@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, X, ChevronUp, ChevronDown, Plus } from 'lucide-react';
 import { mockPortfolioCompanies, type PortfolioCompany } from '../lib/mockData';
 import { formatCurrency } from '../lib/utils';
 import { useFilterStore } from '../stores/filterStore';
+import { useWorkbenchStore } from '../stores/workbenchStore';
 import { applyGlobalFilters } from '../lib/filterUtils';
 
 type SortField = keyof PortfolioCompany;
@@ -20,6 +21,7 @@ export default function CustomerView() {
   const navigate = useNavigate();
   const drillDownFilter = useFilterStore((state) => state.drillDownFilter);
   const clearDrillDownFilter = useFilterStore((state) => state.clearDrillDownFilter);
+  const openDrawer = useWorkbenchStore((state) => state.openDrawer);
 
   // Read global filters from store - use individual selectors to prevent infinite loop
   const lob = useFilterStore((state) => state.lob);
@@ -94,6 +96,26 @@ export default function CustomerView() {
       setSortField(field);
       setSortDirection('asc');
     }
+  };
+
+  const handleAddToWorkbench = (company: PortfolioCompany) => {
+    // Create a workbench item from customer data
+    const workbenchItem = {
+      insightId: `customer-${company.id}`,
+      title: company.customerName,
+      description: `Customer: ${company.customerName} | ${company.partyType} | ${company.lineOfBusiness} | Rating: ${company.borrowerInternalRating}`,
+      severity: 'info' as const,
+      dateAdded: new Date().toISOString(),
+      lastAccessed: new Date().toISOString(),
+      createdBy: 'Current User',
+      assignments: [],
+    };
+
+    // Open drawer with customer data
+    openDrawer(workbenchItem);
+
+    // Navigate to workbench
+    navigate('/workbench');
   };
 
   // const addFilterChip = (field: keyof PortfolioCompany, value: string, label: string) => {
@@ -325,6 +347,9 @@ export default function CustomerView() {
                 >
                   Security Value <SortIcon field="securityValue" />
                 </th>
+                <th className="text-center p-3 font-semibold text-gray-900">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -403,6 +428,16 @@ export default function CustomerView() {
                   <td className="p-3 text-gray-900">{company.securityStatus}</td>
                   <td className="p-3 text-right text-gray-900">
                     {formatCurrency(company.securityValue * 1000000)}
+                  </td>
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => handleAddToWorkbench(company)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-md transition-colors"
+                      title="Add to Workbench"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add to Workbench
+                    </button>
                   </td>
                 </tr>
               ))}

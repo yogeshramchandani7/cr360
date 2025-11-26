@@ -18,7 +18,7 @@ export default function AgentEvidencePage() {
   const { insightId } = useParams<{ insightId: string }>();
   const navigate = useNavigate();
   const setDrillDownFilter = useFilterStore((state) => state.setDrillDownFilter);
-  const addInsight = useWorkbenchStore((state) => state.addInsight);
+  const openDrawer = useWorkbenchStore((state) => state.openDrawer);
   const [insight, setInsight] = useState<KPIInsight | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [chartsForPDF, setChartsForPDF] = useState<any[]>([]);
@@ -73,11 +73,23 @@ export default function AgentEvidencePage() {
   const handleWorkbenchClick = () => {
     if (!insight) return;
 
-    // Add insight to workbench
-    addInsight(insight);
+    // Convert insight to WorkbenchItem format for drawer
+    const workbenchItem = {
+      insightId: insight.id,
+      title: insight.theme,
+      description: insight.implication,
+      severity: insight.severity,
+      dateAdded: new Date().toISOString(),
+      lastAccessed: new Date().toISOString(),
+      createdBy: 'Current User',
+      assignments: [],
+    };
 
-    // Open workbench in new tab
-    window.open('/workbench', '_blank');
+    // Open drawer with pre-filled insight data
+    openDrawer(workbenchItem);
+
+    // Navigate to workbench page (close current tab and go to workbench)
+    navigate('/workbench');
   };
 
   // Handle chart data click - navigate to Customer View with filter

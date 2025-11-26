@@ -2,6 +2,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { User } from 'lucide-react';
 import FilterBar from './FilterBar';
 import AlertBell from './AlertBell';
+import WorkbenchDrawer from './workbench/WorkbenchDrawer';
 
 export default function DashboardLayout() {
   const location = useLocation();
@@ -103,6 +104,9 @@ export default function DashboardLayout() {
       <main className="p-6">
         <Outlet />
       </main>
+
+      {/* Workbench Drawer - Available globally */}
+      <WorkbenchDrawer />
     </div>
   );
 }

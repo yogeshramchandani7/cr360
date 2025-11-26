@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Download, Wrench } from 'lucide-react';
 import InsightEvidenceChart from './InsightEvidenceChart';
 import HiddenChartRenderer from './HiddenChartRenderer';
@@ -19,7 +20,8 @@ interface AgentEvidenceReportProps {
 }
 
 export default function AgentEvidenceReport({ title, subtitle, charts, insight }: AgentEvidenceReportProps) {
-  const addInsight = useWorkbenchStore((state) => state.addInsight);
+  const navigate = useNavigate();
+  const openDrawer = useWorkbenchStore((state) => state.openDrawer);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [chartsForPDF, setChartsForPDF] = useState<any[]>([]);
 
@@ -60,11 +62,23 @@ export default function AgentEvidenceReport({ title, subtitle, charts, insight }
   const handleWorkbenchClick = () => {
     if (!insight) return;
 
-    // Add insight to workbench
-    addInsight(insight);
+    // Convert insight to WorkbenchItem format for drawer
+    const workbenchItem = {
+      insightId: insight.id,
+      title: insight.theme,
+      description: insight.implication,
+      severity: insight.severity,
+      dateAdded: new Date().toISOString(),
+      lastAccessed: new Date().toISOString(),
+      createdBy: 'Current User',
+      assignments: [],
+    };
 
-    // Open workbench in new tab
-    window.open('/workbench', '_blank');
+    // Open drawer with pre-filled insight data
+    openDrawer(workbenchItem);
+
+    // Navigate to workbench page
+    navigate('/workbench');
   };
 
   return (
